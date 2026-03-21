@@ -1,0 +1,17 @@
+# Optional Render Blueprint — import this repo in Render → Blueprints → New Blueprint Instance
+# You must still set secret env vars in the Render dashboard (JWT, Square, FRONTEND_ORIGIN, etc.).
+# See docs/DEPLOYMENT.md and backend/.env.example
+
+services:
+  - type: web
+    name: by-celeste-api
+    runtime: node
+    plan: free
+    region: oregon
+    rootDir: backend
+    buildCommand: npm install && npm run build && npx prisma generate
+    startCommand: npx prisma migrate deploy && npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
