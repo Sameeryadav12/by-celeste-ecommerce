@@ -157,6 +157,8 @@ See `backend/.env.example` for placeholders.
 
 GitHub Actions (`.github/workflows/ci.yml`) runs **`npm run build`** for `backend/` and `frontend/` on pushes and PRs to `main` / `master`.
 
+The **backend** job sets a placeholder `DATABASE_URL` so `prisma generate` (via `npm ci` postinstall) can read `prisma.config.ts` without a checked-in `.env`. This does not affect your app — production still uses real env vars on Render.
+
 ## Contributing
 
 See [`CONTRIBUTING.md`](./CONTRIBUTING.md).

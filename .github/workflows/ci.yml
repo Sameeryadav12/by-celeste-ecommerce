@@ -10,6 +10,10 @@ jobs:
   backend-build:
     name: Backend build
     runs-on: ubuntu-latest
+    # Prisma 7 reads DATABASE_URL from prisma.config.ts during `prisma generate` (npm postinstall).
+    # CI has no .env — use a placeholder URL; generate does not connect to the database.
+    env:
+      DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/ci_placeholder?schema=public
     defaults:
       run:
         working-directory: backend
