@@ -25,18 +25,18 @@ export function createApp() {
   if (env.NODE_ENV === 'production' && !env.FRONTEND_ORIGIN) {
     // eslint-disable-next-line no-console
     console.warn(
-      '[by-celeste] FRONTEND_ORIGIN is unset â€” CORS will not allow browser calls from your deployed storefront.',
+      '[by-celeste] FRONTEND_ORIGIN is unset — falling back to reflective CORS for browser requests. Set FRONTEND_ORIGIN to lock this down.',
     )
   }
 
-  if (env.FRONTEND_ORIGIN) {
-    app.use(
-      cors({
-        origin: env.FRONTEND_ORIGIN,
-        credentials: true,
-      }),
-    )
-  }
+  app.use(
+    cors({
+      // If FRONTEND_ORIGIN is missing, reflect request origins so storefront still works.
+      // Keep credentials enabled for auth cookie flows.
+      origin: env.FRONTEND_ORIGIN ?? true,
+      credentials: true,
+    }),
+  )
 
   // Square webhooks: must use raw body for HMAC verification (before express.json).
   // Match JSON even if Square sends `application/json; charset=utf-8`.
@@ -70,4 +70,3 @@ export function createApp() {
 
   return app
 }
-
