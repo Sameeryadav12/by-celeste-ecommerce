@@ -19,8 +19,12 @@ Use this when moving from local development to **Vercel (frontend)** and **Rende
 
 | Setting | Example |
 |---------|---------|
-| Build | `npm install --include=dev && npm run build && npx prisma generate`\n\n> If `DATABASE_URL` is missing at build time, Prisma generate can fail before TypeScript runs. The repo now uses a safe build-time fallback in `backend/prisma.config.ts`, but you should still set real `DATABASE_URL` on Render for runtime and migrations. |
-| Start | `npx prisma migrate deploy && npm start` |
+| Build | `npm install --include=dev && npm run build && npx prisma generate` |
+| Start | `npm run start:render` |
+
+> If `DATABASE_URL` is missing at build time, Prisma generate can fail before TypeScript runs. The repo now uses a safe build-time fallback in `backend/prisma.config.ts`, but you should still set real `DATABASE_URL` on Render for runtime and migrations.
+>
+> `start:render` runs migrations plus idempotent `seedCatalog` and `seedEvents`, useful on free plans where Render Shell is unavailable.
 
 **Environment variables** (mirror `backend/.env.example`):
 

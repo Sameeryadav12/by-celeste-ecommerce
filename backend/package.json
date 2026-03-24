@@ -8,6 +8,7 @@
     "postinstall": "prisma generate",
     "build": "tsc",
     "start": "node dist/server.js",
+    "start:render": "npx prisma migrate deploy && node dist/scripts/seedCatalog.js && node dist/scripts/seedEvents.js && node dist/server.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier . --write",
@@ -17,7 +18,9 @@
     "db:migrate": "prisma migrate dev && prisma generate",
     "seed:admin": "tsx src/scripts/seedAdmin.ts",
     "seed:catalog": "tsx src/scripts/seedCatalog.ts",
-    "seed:events": "tsx src/scripts/seedEvents.ts"
+    "seed:events": "tsx src/scripts/seedEvents.ts",
+    "seed:catalog:prod": "node dist/scripts/seedCatalog.js",
+    "seed:events:prod": "node dist/scripts/seedEvents.js"
   },
   "keywords": [],
   "author": "",

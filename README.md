@@ -114,9 +114,10 @@ Target setup discussed for this project:
 ### Backend (Render)
 
 1. New **Web Service** → connect repo → **Root Directory** `backend`.  
-2. **Build command:** `npm install --include=dev && npm run build && npx prisma generate`\n   - Installs devDependencies required for TypeScript + @types during build.  
-3. **Start command:** `npx prisma migrate deploy && npm start`  
-   (or run migrations in a one-off job / release phase if you prefer.)  
+2. **Build command:** `npm install --include=dev && npm run build && npx prisma generate`  
+   - Installs devDependencies required for TypeScript + @types during build.
+3. **Start command:** `npm run start:render`  
+   - Runs migrations and idempotent catalog/events seeds, then starts the API.
 4. Set all variables from `backend/.env.example` using **production** values.
 
 **Critical production variables**
