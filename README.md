@@ -4,6 +4,8 @@
 
 **Repository:** [github.com/Sameeryadav12/by-celeste-ecommerce](https://github.com/Sameeryadav12/by-celeste-ecommerce)
 
+**Live demo:** [https://by-celeste-ecommerce.vercel.app](https://by-celeste-ecommerce.vercel.app/) — storefront (Shop, cart, events, etc.)
+
 Full-stack e-commerce site for **By Celeste**, an Australian skincare brand: storefront, cart, Square checkout, customer accounts, loyalty, wholesale applications, events, and an admin dashboard.
 
 ```bash
