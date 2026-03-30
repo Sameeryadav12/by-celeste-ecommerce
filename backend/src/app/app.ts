@@ -25,7 +25,7 @@ export function createApp() {
   if (env.NODE_ENV === 'production' && !env.FRONTEND_ORIGIN) {
     // eslint-disable-next-line no-console
     console.warn(
-      '[by-celeste] FRONTEND_ORIGIN is unset — falling back to reflective CORS for browser requests. Set FRONTEND_ORIGIN to lock this down.',
+      '[by-celeste] FRONTEND_ORIGIN is unset ï¿½ falling back to reflective CORS for browser requests. Set FRONTEND_ORIGIN to lock this down.',
     )
   }
 
@@ -70,3 +70,4 @@ export function createApp() {
 
   return app
 }
+
