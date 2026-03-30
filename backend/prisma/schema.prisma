@@ -1,1 +1,279 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  CUSTOMER
+  WHOLESALE
+  ADMIN
+}
+
+/// Separate from `Role`: retail users stay `NONE`. Wholesale applicants use `PENDING` until staff approve (`APPROVED`).
+enum WholesaleApprovalStatus {
+  NONE
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  firstName    String
+  lastName     String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(CUSTOMER)
+  isActive     Boolean  @default(true)
+
+  /** Cached sum of loyalty transactions — fast for headers; history in LoyaltyTransaction is source of truth for audits. */
+  loyaltyPointsBalance Int @default(0)
+
+  wholesaleApprovalStatus WholesaleApprovalStatus @default(NONE)
+  businessName            String?
+  abn                     String?
+  wholesaleNotes          String?
+  approvedAt              DateTime?
+
+  lastLoginAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders              Order[]
+  loyaltyTransactions LoyaltyTransaction[]
+
+  @@index([role])
+  @@index([createdAt])
+  @@index([wholesaleApprovalStatus])
+}
+
+enum LoyaltyTransactionType {
+  EARNED
+  REDEEMED
+  ADJUSTED
+}
+
+/// Append-only style history for loyalty; balance on User should match the sum of pointsChange (maintained in code).
+model LoyaltyTransaction {
+  id           String                 @id @default(cuid())
+  userId       String
+  user         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderId      String?
+  order        Order?                 @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  type         LoyaltyTransactionType
+  pointsChange Int
+  description  String
+  createdAt    DateTime               @default(now())
+
+  @@index([userId])
+  @@index([orderId])
+  @@index([createdAt])
+}
+
+/// High-level order lifecycle (fulfilment-oriented).
+enum OrderStatus {
+  PENDING
+  AWAITING_PAYMENT
+  PAID
+  PAYMENT_FAILED
+  CANCELLED
+}
+
+/// Payment state mirrored on the order for quick reads.
+enum OrderPaymentStatus {
+  UNPAID
+  PENDING
+  PAID
+  FAILED
+  CANCELLED
+}
+
+/// Provider payment row status (Square).
+enum PaymentRecordStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELLED
+}
+
+/// Customer order. Totals use Decimal (NUMERIC) for exact money — same approach as Product.price.
+model Order {
+  id     String  @id @default(cuid())
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  email       String
+  firstName   String
+  lastName    String
+  phone       String
+  addressLine1 String
+  addressLine2 String?
+  suburb      String
+  state       String
+  postcode    String
+  country     String
+  notes       String?
+
+  subtotalAmount  Decimal @db.Decimal(12, 2)
+  shippingAmount  Decimal @db.Decimal(12, 2)
+  totalAmount     Decimal @db.Decimal(12, 2)
+
+  status        OrderStatus        @default(PENDING)
+  paymentStatus OrderPaymentStatus @default(UNPAID)
+
+  squarePaymentLinkId String?
+  squareOrderId       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items               OrderItem[]
+  payments            OrderPayment[]
+  loyaltyTransactions LoyaltyTransaction[]
+
+  @@index([userId])
+  @@index([email])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id      String @id @default(cuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  /** Catalog id at time of purchase; no FK so historic rows stay valid if a product is removed later. */
+  productId String
+
+  productNameSnapshot String
+  productSlugSnapshot String
+  unitPrice           Decimal @db.Decimal(10, 2)
+  quantity            Int
+  lineTotal           Decimal @db.Decimal(12, 2)
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+/// One row per checkout attempt / provider payment (Square).
+model OrderPayment {
+  id      String @id @default(cuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  provider            String
+  providerReference   String?
+  status              PaymentRecordStatus @default(PENDING)
+  amount              Decimal             @db.Decimal(12, 2)
+  rawPayload          Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([orderId])
+  @@index([providerReference])
+}
+
+/// Idempotent webhook handling — Square may retry the same event.
+model ProcessedSquareWebhookEvent {
+  eventId   String   @id
+  createdAt DateTime @default(now())
+}
+
+/// Shop navigation and filtering. Many products can sit in many categories.
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  products Product[]
+
+  @@index([isActive])
+  @@index([slug])
+}
+
+/// Ingredient library for transparency and product detail pages.
+model Ingredient {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String
+  benefits    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  products Product[]
+
+  @@index([slug])
+}
+
+/// Catalog product. Prices use Decimal (Postgres NUMERIC) for exact money; no float rounding issues.
+model Product {
+  id               String   @id @default(cuid())
+  name             String
+  slug             String   @unique
+  shortDescription String
+  description      String
+  howToUse         String
+  benefits         String[] @default([])
+  price            Decimal  @db.Decimal(10, 2)
+  /** Optional lower business price; only applied when viewer is approved wholesale (see wholesalePricing service). */
+  wholesalePrice   Decimal? @db.Decimal(10, 2)
+  compareAtPrice   Decimal? @db.Decimal(10, 2)
+  imageUrl         String
+  isActive         Boolean  @default(true)
+  isFeatured       Boolean  @default(false)
+  stockQuantity    Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  categories  Category[]
+  ingredients Ingredient[]
+
+  @@index([slug])
+  @@index([isActive])
+  @@index([isFeatured])
+  @@index([name])
+}
+
+/// Public-facing brand events: pop-ups, workshops, and seasonal moments.
+model Event {
+  id               String   @id @default(cuid())
+  title            String
+  slug             String   @unique
+  shortDescription String
+  description      String
+
+  locationName String
+  addressLine1 String?
+  addressLine2 String?
+  suburb       String
+  state        String
+  postcode     String
+  country      String   @default("Australia")
+
+  startDateTime DateTime
+  endDateTime   DateTime
+
+  imageUrl String?
+
+  isPublished Boolean @default(false)
+  isFeatured  Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+  @@index([isPublished])
+  @@index([isFeatured])
+  @@index([startDateTime])
+}
 
