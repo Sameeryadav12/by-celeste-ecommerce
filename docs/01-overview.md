@@ -100,7 +100,7 @@ By Celeste now supports a **separate wholesale journey** for stockists and partn
 
 By Celeste now supports a **real events area**.
 
-- Customers can open the **Events** page and see **upcoming pop-ups and workshops** with the key details (title, date/time, and location).
+- Customers can open the **Events** page and see **upcoming pop-ups and community events** with the key details (title, date/time, and location).
 - This helps promote in-person engagement and builds brand visibility beyond the online shop.
 
 ## Admin dashboard (Step 11)
@@ -138,9 +138,18 @@ By Celeste now presents as a **premium Australian skincare brand** with clear id
 
 ### Improved shipping clarity (cart)
 
-- **Freight calculator:** On the **cart** page, customers enter a **4-digit Australian postcode** and tap **Calculate shipping**. Invalid postcodes show a clear error.
-- **Rules (demo, transparent):** Orders under **$120** → **$9.95** shipping; **$120+** → **free shipping**. If the cart already qualifies for free shipping, that is explained up front—no postcode needed.
-- **Totals:** Shipping and **grand total** stay as **—** until shipping is “resolved” (free tier or postcode calculated), and **Continue to checkout** stays disabled until then—so cost before checkout is explicit.
+- **Rules (client update):** Flat-rate shipping is now **$12 per order** via **Australia Post**.
+- **No discount tiers:** There is no free-shipping threshold and no quantity-based shipping discount logic.
+- **Totals:** Shipping and grand total are shown consistently in cart and checkout using the same shared rules as backend checkout.
+
+## Testimonials Feature
+
+By Celeste now includes a dedicated **Testimonials** page to build trust through real customer feedback.
+
+- Customers can open **`/testimonials`** from the main navigation.
+- Testimonials are shown in a calm premium card grid for easy reading.
+- The **Home** page includes a short preview section with a button to view all testimonials.
+- This helps new visitors feel confident before buying by seeing authentic customer experiences.
 
 ### Visibility and polish
 

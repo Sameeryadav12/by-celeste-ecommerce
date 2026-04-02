@@ -4,7 +4,7 @@ export function Card({ children, className }: { children: ReactNode; className?:
   return (
     <div
       className={[
-        'rounded-xl border border-neutral-200 bg-white/80 p-4 shadow-sm backdrop-blur-sm',
+        'rounded-xl border border-neutral-200 bg-white/80 p-4 shadow-sm backdrop-blur-sm transition-all duration-200 ease-in-out',
         className,
       ]
         .filter(Boolean)

@@ -17,6 +17,7 @@
     "prisma:migrate:deploy": "prisma migrate deploy",
     "db:migrate": "prisma migrate dev && prisma generate",
     "seed:admin": "tsx src/scripts/seedAdmin.ts",
+    "seed:demo-admin": "tsx src/scripts/seedDemoAdmin.ts",
     "seed:catalog": "tsx src/scripts/seedCatalog.ts",
     "seed:events": "tsx src/scripts/seedEvents.ts",
     "seed:catalog:prod": "node dist/scripts/seedCatalog.js",

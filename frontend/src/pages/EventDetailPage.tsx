@@ -8,6 +8,7 @@ import { Button } from '../components/ui/Button'
 import { Seo } from '../components/seo/Seo'
 import { SmartImage } from '../components/media/SmartImage'
 import { downloadEventIcs, googleMapsSearchUrl } from '../features/events/eventCalendar'
+import { BrandIcon } from '../components/icons/BrandIcon'
 
 export function EventDetailPage() {
   const { slug } = useParams<{ slug: string }>()
@@ -56,7 +57,7 @@ export function EventDetailPage() {
       <section className="space-y-6">
         <Seo
           title={title}
-          description="Discover details about upcoming By Celeste pop-ups and workshops."
+          description="Discover details about upcoming By Celeste pop-ups and community events."
         />
         <Card>
           <div className="space-y-3 animate-pulse" aria-busy>
@@ -190,7 +191,10 @@ export function EventDetailPage() {
 
           <div className="space-y-4">
             <Card>
-              <h2 className="text-sm font-semibold text-neutral-900">When</h2>
+              <h2 className="flex items-center gap-1.5 text-sm font-semibold text-neutral-900">
+                <BrandIcon name="calendar" className="h-4 w-4 opacity-40" alt="" />
+                When
+              </h2>
               <dl className="mt-3 space-y-1 text-sm text-neutral-700">
                 <dd className="text-base font-medium text-neutral-900">{dateText.primary}</dd>
                 <dd className="text-neutral-600">{dateText.secondary}</dd>
@@ -206,7 +210,10 @@ export function EventDetailPage() {
             </Card>
 
             <Card>
-              <h2 className="text-sm font-semibold text-neutral-900">Where</h2>
+              <h2 className="flex items-center gap-1.5 text-sm font-semibold text-neutral-900">
+                <BrandIcon name="location" className="h-4 w-4 opacity-40" alt="" />
+                Where
+              </h2>
               <p className="mt-3 text-sm font-medium text-neutral-900">
                 {formatEventLocationSummary(event)}
               </p>

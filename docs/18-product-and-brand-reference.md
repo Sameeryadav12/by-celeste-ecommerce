@@ -208,7 +208,7 @@ Small-batch favourites that deliver on the promise of traditional, natural, exce
 
 ### Events section intro copy
 Find Us at Markets & Pop-Ups
-Jane and team at regional Victorian markets/workshops; try products, learn native ingredients, take home made that morning.
+Jane and team at regional Victorian markets/pop-ups; try products, learn native ingredients, take home made that morning.
 
 ### Footer trust message ideas
 Handmade in Australia - Cruelty-Free - Native Botanicals - Small Batch

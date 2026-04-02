@@ -1,16 +1,7 @@
 /**
- * Client business address (postal / studio). Update here to change site-wide.
+ * Client location (public-facing). No street-level details by client request.
  */
-export const BUSINESS_ADDRESS = {
-  street: '10 Mortimer Tce',
-  suburb: 'Leneva',
-  state: 'VIC',
-  postcode: '3691',
+export const BUSINESS_LOCATION = {
+  locality: 'Leneva Victoria',
   country: 'Australia',
 } as const
-
-/** Single line for footer, About, etc. */
-export function formatBusinessAddressLine(): string {
-  const { street, suburb, state, postcode } = BUSINESS_ADDRESS
-  return `${street}, ${suburb} ${state} ${postcode}`
-}

@@ -10,13 +10,14 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
   const nativeBadges = productNativeBadges(product, 2)
 
   return (
-    <Card className="flex h-full flex-col overflow-hidden">
+    <Card className="group flex h-full flex-col overflow-hidden transform-gpu transition-all duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-lg">
       <div className="flex min-h-0 flex-1 flex-col gap-4">
         <div className="relative overflow-hidden rounded-xl bg-neutral-100 ring-1 ring-neutral-200/60">
           <SmartImage
             src={product.imageUrl}
             alt={product.name}
             wrapperClassName="relative aspect-square w-full overflow-hidden"
+            imgClassName="transform-gpu transition-transform duration-200 ease-in-out group-hover:scale-[1.03]"
             loading="lazy"
           />
           {product.isFeatured ? (
@@ -67,6 +68,8 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
               price: product.price,
               compareAtPrice: product.compareAtPrice,
               stockQuantity: product.stockQuantity,
+              categoryName: product.categories[0]?.name,
+              shortDescription: product.shortDescription,
             }}
             className="w-full"
           />

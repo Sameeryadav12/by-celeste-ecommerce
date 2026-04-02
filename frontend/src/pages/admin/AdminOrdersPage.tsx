@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
 import { Card } from '../../components/ui/Card'
 import {
-  getAdminOrder,
   listAdminOrders,
-  type AdminOrderDetail,
   type AdminOrderListRow,
 } from '../../features/admin/adminApi'
 import { AdminStatusBadge } from './components/AdminStatusBadge'
@@ -12,19 +11,23 @@ export function AdminOrdersPage() {
   const [orders, setOrders] = useState<AdminOrderListRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-
-  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
-  const [selected, setSelected] = useState<AdminOrderDetail | null>(null)
-  const [detailLoading, setDetailLoading] = useState(false)
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [paymentFilter, setPaymentFilter] = useState('all')
 
   async function loadOrders() {
     setLoading(true)
     setError(null)
     try {
-      const data = await listAdminOrders(20)
+      const data = await listAdminOrders({
+        limit: 50,
+        search: search.trim() || undefined,
+        status: statusFilter === 'all' ? undefined : statusFilter,
+        paymentStatus: paymentFilter === 'all' ? undefined : paymentFilter,
+      })
       setOrders(data)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not load orders.')
+      setError('Could not load orders. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -32,176 +35,141 @@ export function AdminOrdersPage() {
 
   useEffect(() => {
     void loadOrders()
-  }, [])
-
-  useEffect(() => {
-    let cancelled = false
-    async function loadDetail() {
-      if (!selectedOrderId) return
-      setDetailLoading(true)
-      setError(null)
-      try {
-        const o = await getAdminOrder(selectedOrderId)
-        if (!cancelled) setSelected(o)
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'Could not load order detail.')
-      } finally {
-        if (!cancelled) setDetailLoading(false)
-      }
-    }
-
-    void loadDetail()
-    return () => {
-      cancelled = true
-    }
-  }, [selectedOrderId])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, statusFilter, paymentFilter])
 
   function formatCustomer(row: AdminOrderListRow) {
     return row.customer ? `${row.customer.firstName} ${row.customer.lastName}`.trim() : 'Customer'
   }
 
+  const hasFilters = useMemo(
+    () => search.trim() || statusFilter !== 'all' || paymentFilter !== 'all',
+    [search, statusFilter, paymentFilter],
+  )
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div className="space-y-1">
-        <h2 className="text-xl font-semibold tracking-tight text-neutral-900">Orders</h2>
-        <p className="text-sm text-neutral-600">View recent orders and payment status.</p>
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Orders</h1>
+        <p className="text-sm text-slate-500">Monitor customer orders, payment state, and fulfilment status.</p>
       </div>
 
       {error ? (
         <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
       ) : null}
 
-      <div className="grid gap-4 md:grid-cols-[340px,1fr]">
-        <Card>
-          <div className="space-y-1 p-4">
-            <h3 className="text-base font-semibold text-neutral-900">Recent orders</h3>
-            <p className="text-sm text-neutral-600">Click an order to view details.</p>
+      <Card>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <h2 className="text-base font-semibold text-slate-900">Order list</h2>
+            <p className="text-sm text-slate-500">Newest orders appear first. Use filters to narrow results.</p>
           </div>
-          {loading ? (
-            <div className="p-4 text-sm text-neutral-600">Loading…</div>
-          ) : orders.length === 0 ? (
-            <div className="p-4 text-sm text-neutral-600">No orders found.</div>
-          ) : (
-            <ul className="divide-y divide-neutral-100">
-              {orders.map((o) => (
-                <li key={o.id} className="px-4 py-3">
-                  <button
-                    type="button"
-                    className="w-full text-left"
-                    onClick={() => setSelectedOrderId(o.id)}
-                  >
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-neutral-900">
-                        {formatCustomer(o)} · {o.customer.email}
-                      </p>
-                      <p className="text-xs text-neutral-500">{new Date(o.createdAt).toLocaleString()}</p>
-                      <div className="flex flex-wrap gap-2">
-                        <AdminStatusBadge status={o.status} />
-                        <AdminStatusBadge status={o.paymentStatus} />
-                      </div>
-                      <p className="text-sm font-semibold text-neutral-800">Total: {o.totalAmount}</p>
-                    </div>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
-
-        <Card>
-          <div className="space-y-1 p-4">
-            <h3 className="text-base font-semibold text-neutral-900">Order details</h3>
-            <p className="text-sm text-neutral-600">Status, customer, shipping, and line items.</p>
+          <div className="grid w-full gap-2 sm:w-auto sm:grid-cols-3">
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search customer name or email"
+              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-slate-900 sm:w-72"
+            />
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-slate-900"
+            >
+              <option value="all">All order statuses</option>
+              <option value="PENDING">Pending</option>
+              <option value="AWAITING_PAYMENT">Awaiting payment</option>
+              <option value="PAID">Paid</option>
+              <option value="PAYMENT_FAILED">Payment failed</option>
+              <option value="CANCELLED">Cancelled</option>
+            </select>
+            <select
+              value={paymentFilter}
+              onChange={(e) => setPaymentFilter(e.target.value)}
+              className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-slate-900"
+            >
+              <option value="all">All payment statuses</option>
+              <option value="UNPAID">Unpaid</option>
+              <option value="PENDING">Pending</option>
+              <option value="PAID">Paid</option>
+              <option value="FAILED">Failed</option>
+              <option value="CANCELLED">Cancelled</option>
+            </select>
           </div>
+        </div>
 
-          {!selectedOrderId ? (
-            <div className="p-4 text-sm text-neutral-600">Select an order from the list.</div>
-          ) : detailLoading ? (
-            <div className="p-4 text-sm text-neutral-600">Loading…</div>
-          ) : selected ? (
-            <div className="space-y-5 p-4">
-              <div className="flex flex-wrap gap-3 items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-neutral-900">
-                    {selected.customer.firstName} {selected.customer.lastName}
-                  </p>
-                  <p className="text-xs text-neutral-500">{selected.customer.email}</p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <AdminStatusBadge status={selected.status} />
-                  <AdminStatusBadge status={selected.paymentStatus} />
-                </div>
-              </div>
+        {hasFilters ? <p className="mt-3 text-xs text-slate-500">Filters are applied to this list.</p> : null}
 
-              <div className="rounded-md border border-neutral-200 bg-neutral-50 p-3 text-sm">
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <div>
-                    <p className="text-neutral-600">Order placed</p>
-                    <p className="font-medium text-neutral-900">{new Date(selected.createdAt).toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <p className="text-neutral-600">Order total</p>
-                    <p className="font-medium text-neutral-900">${selected.totalAmount}</p>
-                  </div>
-                  <div>
-                    <p className="text-neutral-600">Shipping</p>
-                    <p className="font-medium text-neutral-900">${selected.shippingAmount}</p>
-                  </div>
-                  <div>
-                    <p className="text-neutral-600">Subtotal</p>
-                    <p className="font-medium text-neutral-900">${selected.subtotalAmount}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-sm font-semibold text-neutral-900">Shipping address</p>
-                <p className="text-sm text-neutral-700">
-                  {selected.shipping.addressLine1}
-                  {selected.shipping.addressLine2 ? `, ${selected.shipping.addressLine2}` : ''} · {selected.shipping.suburb} ·{' '}
-                  {selected.shipping.state} {selected.shipping.postcode} · {selected.shipping.country}
-                </p>
-              </div>
-
-              {selected.notes ? (
-                <div className="space-y-2">
-                  <p className="text-sm font-semibold text-neutral-900">Notes</p>
-                  <p className="text-sm text-neutral-700">{selected.notes}</p>
-                </div>
-              ) : null}
-
-              <div className="space-y-2">
-                <p className="text-sm font-semibold text-neutral-900">Line items</p>
-                <div className="overflow-auto rounded-md border border-neutral-200">
-                  <table className="min-w-full text-left text-sm">
-                    <thead>
-                      <tr className="bg-neutral-100">
-                        <th className="px-3 py-2 font-medium text-neutral-700">Product</th>
-                        <th className="px-3 py-2 font-medium text-neutral-700">Qty</th>
-                        <th className="px-3 py-2 font-medium text-neutral-700">Unit</th>
-                        <th className="px-3 py-2 font-medium text-neutral-700">Line total</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {selected.items.map((it) => (
-                        <tr key={it.id} className="border-t border-neutral-100">
-                          <td className="px-3 py-2 text-neutral-900">{it.name}</td>
-                          <td className="px-3 py-2 text-neutral-700">{it.quantity}</td>
-                          <td className="px-3 py-2 text-neutral-700">${it.unitPrice}</td>
-                          <td className="px-3 py-2 font-medium text-neutral-900">${it.lineTotal}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="p-4 text-sm text-neutral-600">No order selected.</div>
-          )}
-        </Card>
-      </div>
+        {loading ? (
+          <div className="mt-4 text-sm text-slate-500">Loading orders...</div>
+        ) : orders.length === 0 ? (
+          <div className="mt-8 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center">
+            <p className="text-base font-medium text-slate-700">No orders yet</p>
+            <p className="mt-1 text-sm text-slate-500">Try a different search or filter.</p>
+          </div>
+        ) : (
+          <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200">
+            <table className="min-w-full divide-y divide-slate-200 text-left">
+              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                <tr>
+                  <th className="px-4 py-3 font-medium">Order</th>
+                  <th className="px-4 py-3 font-medium">Customer</th>
+                  <th className="px-4 py-3 font-medium">Created</th>
+                  <th className="px-4 py-3 font-medium">Total</th>
+                  <th className="px-4 py-3 font-medium">Order status</th>
+                  <th className="px-4 py-3 font-medium">Payment status</th>
+                  <th className="px-4 py-3 font-medium">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 bg-white text-sm text-slate-700">
+                {orders.map((o) => (
+                  <tr key={o.id}>
+                    <td className="px-4 py-3">
+                      <p className="font-medium text-slate-900">{shortOrderId(o.id)}</p>
+                      <p className="text-xs text-slate-500">{o.id}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="font-medium text-slate-900">{formatCustomer(o)}</p>
+                      <p className="text-xs text-slate-500">{o.customer.email}</p>
+                    </td>
+                    <td className="px-4 py-3 text-slate-600">{new Date(o.createdAt).toLocaleString()}</td>
+                    <td className="px-4 py-3 font-medium text-slate-900">{formatCurrency(o.totalAmount)}</td>
+                    <td className="px-4 py-3">
+                      <AdminStatusBadge status={o.status} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <AdminStatusBadge status={o.paymentStatus} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <Link
+                        to={`/admin/orders/${o.id}`}
+                        className="rounded-md border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
+                      >
+                        View details
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
     </div>
   )
+}
+
+function shortOrderId(id: string) {
+  return `#${id.slice(-8).toUpperCase()}`
+}
+
+function formatCurrency(value: string) {
+  const n = Number(value)
+  if (!Number.isFinite(n)) return value
+  return new Intl.NumberFormat('en-AU', {
+    style: 'currency',
+    currency: 'AUD',
+    minimumFractionDigits: 2,
+  }).format(n)
 }
 

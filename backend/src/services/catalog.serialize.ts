@@ -108,27 +108,35 @@ export function serializeProductForPublic(p: ProductWithRelations, viewer: Prici
     updatedAt: p.updatedAt.toISOString(),
   }
 
-  if (options?.includeRelations && p.categories && p.ingredients) {
-    return {
-      ...base,
-      categories: p.categories.map((c) => ({
-        id: c.id,
-        name: c.name,
-        slug: c.slug,
-        description: c.description,
-        isActive: c.isActive,
-      })),
-      ingredients: p.ingredients.map((i) => ({
-        id: i.id,
-        name: i.name,
-        slug: i.slug,
-        description: i.description,
-        benefits: i.benefits,
-      })),
-    }
+  if (!options?.includeRelations) {
+    return base
   }
 
-  return base
+  return {
+    ...base,
+    ...(p.categories
+      ? {
+          categories: p.categories.map((c) => ({
+            id: c.id,
+            name: c.name,
+            slug: c.slug,
+            description: c.description,
+            isActive: c.isActive,
+          })),
+        }
+      : {}),
+    ...(p.ingredients
+      ? {
+          ingredients: p.ingredients.map((i) => ({
+            id: i.id,
+            name: i.name,
+            slug: i.slug,
+            description: i.description,
+            benefits: i.benefits,
+          })),
+        }
+      : {}),
+  }
 }
 
 /** Admin / raw catalog — always exposes DB retail `price` plus optional `wholesalePrice`. */
@@ -152,25 +160,33 @@ export function serializeProductForAdmin(p: ProductWithRelations, options?: { in
     updatedAt: p.updatedAt.toISOString(),
   }
 
-  if (options?.includeRelations && p.categories && p.ingredients) {
-    return {
-      ...base,
-      categories: p.categories.map((c) => ({
-        id: c.id,
-        name: c.name,
-        slug: c.slug,
-        description: c.description,
-        isActive: c.isActive,
-      })),
-      ingredients: p.ingredients.map((i) => ({
-        id: i.id,
-        name: i.name,
-        slug: i.slug,
-        description: i.description,
-        benefits: i.benefits,
-      })),
-    }
+  if (!options?.includeRelations) {
+    return base
   }
 
-  return base
+  return {
+    ...base,
+    ...(p.categories
+      ? {
+          categories: p.categories.map((c) => ({
+            id: c.id,
+            name: c.name,
+            slug: c.slug,
+            description: c.description,
+            isActive: c.isActive,
+          })),
+        }
+      : {}),
+    ...(p.ingredients
+      ? {
+          ingredients: p.ingredients.map((i) => ({
+            id: i.id,
+            name: i.name,
+            slug: i.slug,
+            description: i.description,
+            benefits: i.benefits,
+          })),
+        }
+      : {}),
+  }
 }

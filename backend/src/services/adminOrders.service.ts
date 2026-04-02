@@ -1,10 +1,37 @@
+import { OrderPaymentStatus, OrderStatus } from '@prisma/client'
 import { prisma } from '../config/prisma'
 import { ApiError } from '../utils/apiError'
 
-export async function listAdminOrders(opts?: { limit?: number }) {
+export async function listAdminOrders(opts?: {
+  limit?: number
+  search?: string
+  status?: OrderStatus
+  paymentStatus?: OrderPaymentStatus
+}) {
   const limit = opts?.limit && Number.isFinite(opts.limit) ? Math.min(50, Math.max(1, opts.limit)) : 20
 
+  const where: {
+    status?: OrderStatus
+    paymentStatus?: OrderPaymentStatus
+    OR?: Array<{
+      firstName?: { contains: string; mode: 'insensitive' }
+      lastName?: { contains: string; mode: 'insensitive' }
+      email?: { contains: string; mode: 'insensitive' }
+    }>
+  } = {}
+  if (opts?.status) where.status = opts.status
+  if (opts?.paymentStatus) where.paymentStatus = opts.paymentStatus
+  if (opts?.search?.trim()) {
+    const search = opts.search.trim()
+    where.OR = [
+      { firstName: { contains: search, mode: 'insensitive' } },
+      { lastName: { contains: search, mode: 'insensitive' } },
+      { email: { contains: search, mode: 'insensitive' } },
+    ]
+  }
+
   const rows = await prisma.order.findMany({
+    where,
     orderBy: { createdAt: 'desc' },
     take: limit,
     select: {
@@ -49,6 +76,16 @@ export async function getAdminOrderById(orderId: string) {
           lineTotal: true,
         },
       },
+      payments: {
+        orderBy: { createdAt: 'desc' },
+        take: 1,
+        select: {
+          provider: true,
+          providerReference: true,
+          status: true,
+          createdAt: true,
+        },
+      },
     },
   })
 
@@ -67,6 +104,8 @@ export async function getAdminOrderById(orderId: string) {
     updatedAt: order.updatedAt.toISOString(),
     status: order.status,
     paymentStatus: order.paymentStatus,
+    squarePaymentLinkId: order.squarePaymentLinkId,
+    squareOrderId: order.squareOrderId,
     subtotalAmount: order.subtotalAmount.toFixed(2),
     shippingAmount: order.shippingAmount.toFixed(2),
     totalAmount: order.totalAmount.toFixed(2),
@@ -85,6 +124,14 @@ export async function getAdminOrderById(orderId: string) {
       country: order.country,
     },
     notes: order.notes,
+    payment: order.payments[0]
+      ? {
+          provider: order.payments[0].provider,
+          providerReference: order.payments[0].providerReference,
+          status: order.payments[0].status,
+          createdAt: order.payments[0].createdAt.toISOString(),
+        }
+      : null,
     items: order.items.map((i) => ({
       id: i.id,
       productId: i.productId,
@@ -94,6 +141,38 @@ export async function getAdminOrderById(orderId: string) {
       quantity: i.quantity,
       lineTotal: i.lineTotal.toFixed(2),
     })),
+  }
+}
+
+export async function updateAdminOrderStatus(orderId: string, status: OrderStatus) {
+  const existing = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: { id: true },
+  })
+  if (!existing) {
+    throw new ApiError({
+      statusCode: 404,
+      code: 'ORDER_NOT_FOUND',
+      message: 'Order not found.',
+    })
+  }
+
+  const updated = await prisma.order.update({
+    where: { id: orderId },
+    data: { status },
+    select: {
+      id: true,
+      status: true,
+      paymentStatus: true,
+      updatedAt: true,
+    },
+  })
+
+  return {
+    id: updated.id,
+    status: updated.status,
+    paymentStatus: updated.paymentStatus,
+    updatedAt: updated.updatedAt.toISOString(),
   }
 }
 

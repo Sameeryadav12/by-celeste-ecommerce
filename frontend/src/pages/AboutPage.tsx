@@ -1,7 +1,7 @@
 import { Card } from '../components/ui/Card'
 import { Seo } from '../components/seo/Seo'
 import { Link } from 'react-router-dom'
-import { BUSINESS_ADDRESS, formatBusinessAddressLine } from '../config/businessAddress'
+import { BUSINESS_LOCATION } from '../config/businessAddress'
 
 export function AboutPage() {
   return (
@@ -25,8 +25,8 @@ export function AboutPage() {
           <h2 className="text-sm font-semibold text-neutral-900">Jane &amp; the beginning</h2>
           <p className="mt-3 text-sm leading-7 text-neutral-700">
             By Celeste grew from Jane&apos;s own search for skincare that felt gentle, considered,
-            and true to Australia — not another imported trend repackaged for our shelves. Working from{' '}
-            {formatBusinessAddressLine()}, she focuses on small batches, careful sourcing, and formulas
+            and true to Australia — not another imported trend repackaged for our shelves. Working from
+            Leneva Victoria, she focuses on small batches, careful sourcing, and ingredients in formulas
             that support the skin barrier without unnecessary drama.
           </p>
           <p className="mt-3 text-sm leading-7 text-neutral-700">
@@ -41,19 +41,12 @@ export function AboutPage() {
           <Card>
             <h2 className="text-sm font-semibold text-neutral-900">Regional Victoria</h2>
             <p className="mt-2 text-xs leading-5 text-neutral-700">
-              We&apos;re rooted outside the big-city rush in {BUSINESS_ADDRESS.suburb}. That distance
-              helps us keep decisions human-sized — from how we blend to how we host workshops and
-              pop-ups around Victoria.
+              We&apos;re rooted outside the big-city rush in Leneva Victoria. That distance helps us
+              keep decisions human-sized — from how we blend to how we host local brand events.
             </p>
-            <address className="mt-3 border-t border-neutral-100 pt-3 text-[11px] leading-5 text-neutral-600 not-italic">
-              <span className="font-medium text-neutral-800">Studio</span>
-              <br />
-              {BUSINESS_ADDRESS.street}
-              <br />
-              {BUSINESS_ADDRESS.suburb} {BUSINESS_ADDRESS.state} {BUSINESS_ADDRESS.postcode}
-              <br />
-              {BUSINESS_ADDRESS.country}
-            </address>
+            <p className="mt-3 border-t border-neutral-100 pt-3 text-[11px] leading-5 text-neutral-600">
+              {BUSINESS_LOCATION.locality}, {BUSINESS_LOCATION.country}
+            </p>
           </Card>
           <Card>
             <h2 className="text-sm font-semibold text-neutral-900">Australian ingredients</h2>

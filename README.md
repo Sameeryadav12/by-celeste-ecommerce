@@ -76,7 +76,7 @@ npm run dev              # http://localhost:4000
 cd frontend
 cp .env.example .env.local   # optional; leave empty to use Vite /api proxy
 npm install
-npm run dev                  # http://localhost:5173
+npm run dev                  # http://localhost:5174 (see vite.config.ts)
 ```
 
 In development, the Vite dev server **proxies** `/api` to `http://localhost:4000`, so you usually **do not** need `VITE_API_BASE_URL` locally.
@@ -88,6 +88,7 @@ In development, the Vite dev server **proxies** `/api` to `http://localhost:4000
 | Backend | `npm run build` | Compile TypeScript → `dist/` |
 | Backend | `npm start` | Run `node dist/server.js` |
 | Backend | `npm run prisma:migrate:deploy` | Apply migrations (production) |
+| Backend | `npm run seed:demo-admin` | Create/refresh demo admin (`admin@byceleste.com`) |
 | Frontend | `npm run build` | Production bundle → `dist/` |
 | Frontend | `npm run preview` | Preview production build locally |
 

@@ -20,7 +20,7 @@ export function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   if (user && status === 'authenticated') {
-    navigate('/account', { replace: true })
+    navigate(user.role === 'ADMIN' ? '/admin' : '/account', { replace: true })
   }
 
   if (status === 'loading' || status === 'idle') {

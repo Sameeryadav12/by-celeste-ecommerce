@@ -8,7 +8,7 @@
 
 ## How this helps the business
 
-- It gives Jane a simple way to promote pop-ups, workshops, and community moments.
+- It gives Jane a simple way to promote pop-ups and community moments.
 - It improves brand visibility by moving beyond online shopping into real-world engagement.
 
 ## How Jane will manage events later

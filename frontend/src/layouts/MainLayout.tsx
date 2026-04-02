@@ -1,18 +1,28 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { Container } from '../components/layout/Container'
 import { Button } from '../components/ui/Button'
 import { useCart } from '../features/cart/CartContext'
-import { BUSINESS_ADDRESS, formatBusinessAddressLine } from '../config/businessAddress'
+import { BUSINESS_LOCATION } from '../config/businessAddress'
 import { BrandLogo } from '../components/branding/BrandLogo'
 import { TrustBadgeRow } from '../components/trust/TrustBadgeRow'
+import { BrandIcon } from '../components/icons/BrandIcon'
+import {
+  getPublicBusinessSettings,
+  getPublicMarketingContent,
+  getPublicThemeSettings,
+  type BusinessSettings,
+  type MarketingContent,
+  type ThemeSettings,
+} from '../features/content/contentApi'
 
 const primaryNavItems = [
   { to: '/', label: 'Home', end: true },
   { to: '/shop', label: 'Shop' },
   { to: '/about', label: 'About' },
   { to: '/events', label: 'Events' },
+  { to: '/testimonials', label: 'Testimonials' },
   { to: '/wholesale', label: 'Wholesale' },
 ]
 
@@ -58,6 +68,9 @@ export function MainLayout() {
   const navigate = useNavigate()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [cartFlash, setCartFlash] = useState(false)
+  const [marketing, setMarketing] = useState<MarketingContent | null>(null)
+  const [theme, setTheme] = useState<ThemeSettings | null>(null)
+  const [business, setBusiness] = useState<BusinessSettings | null>(null)
   const prevBumpRef = useRef(cartBumpVersion)
 
   useEffect(() => {
@@ -70,6 +83,29 @@ export function MainLayout() {
     prevBumpRef.current = cartBumpVersion
   }, [cartBumpVersion])
 
+  useEffect(() => {
+    let cancelled = false
+    Promise.all([
+      getPublicMarketingContent(),
+      getPublicThemeSettings(),
+      getPublicBusinessSettings(),
+    ])
+      .then(([marketingData, themeData, businessData]) => {
+        if (!cancelled) setMarketing(marketingData)
+        if (!cancelled) setTheme(themeData)
+        if (!cancelled) setBusiness(businessData)
+      })
+      .catch(() => {
+        if (cancelled) return
+        setMarketing(null)
+        setTheme(null)
+        setBusiness(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   async function handleLogout() {
     await logout()
     setMobileOpen(false)
@@ -79,7 +115,13 @@ export function MainLayout() {
   const isLoadingAuth = status === 'idle' || status === 'loading'
 
   return (
-    <div className="min-h-screen bg-neutral-50 text-neutral-900">
+    <div
+      className="min-h-screen bg-neutral-50 text-neutral-900"
+      style={{
+        '--brand-primary': theme?.primaryBrandColor || '#171717',
+        '--brand-secondary': theme?.secondaryBrandColor || '#64748b',
+      } as CSSProperties}
+    >
       <header className="border-b border-neutral-200 bg-white/80 backdrop-blur-sm">
         <Container>
           <div className="flex items-center justify-between py-4">
@@ -87,7 +129,7 @@ export function MainLayout() {
               to="/"
               className="flex min-h-0 min-w-0 shrink-0 items-center py-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2"
             >
-              <BrandLogo variant="header" />
+              <BrandLogo variant="header" srcOverride={theme?.headerLogoPath || undefined} />
             </Link>
 
             <div className="flex items-center gap-4">
@@ -127,6 +169,14 @@ export function MainLayout() {
                     >
                       Account
                     </NavLink>
+                    {user.role === 'ADMIN' ? (
+                      <NavLink
+                        to="/admin"
+                        className="rounded-md px-2.5 py-1.5 text-xs font-medium text-neutral-600 ring-1 ring-neutral-200/80 transition hover:bg-neutral-100 hover:text-neutral-900"
+                      >
+                        Admin
+                      </NavLink>
+                    ) : null}
                     <button
                       type="button"
                       onClick={handleLogout}
@@ -215,6 +265,15 @@ export function MainLayout() {
                       >
                         Account
                       </NavLink>
+                      {user.role === 'ADMIN' ? (
+                        <NavLink
+                          to="/admin"
+                          onClick={() => setMobileOpen(false)}
+                          className="block rounded-md px-3 py-2 text-xs font-medium text-neutral-600 ring-1 ring-neutral-200/80 hover:bg-neutral-100"
+                        >
+                          Admin portal
+                        </NavLink>
+                      ) : null}
                       <button
                         type="button"
                         onClick={handleLogout}
@@ -258,18 +317,19 @@ export function MainLayout() {
         </Container>
       </main>
 
-      <TrustBadgeRow />
+      {theme?.trustBadgesVisible !== false ? (
+        <TrustBadgeRow heading={theme?.trustBadgeHeading || undefined} />
+      ) : null}
 
       <footer className="border-t border-neutral-200 bg-white/80 py-10 text-sm text-neutral-700">
         <Container>
           <div className="grid gap-8 md:grid-cols-3">
             <div className="space-y-3">
               <div className="flex items-center">
-                <BrandLogo variant="footer" />
+                <BrandLogo variant="footer" srcOverride={theme?.footerLogoPath || undefined} />
               </div>
-              <p className="text-xs leading-5 text-neutral-600">
-                Thoughtful, skin-first formulas inspired by Australian botanicals. Traditional,
-                natural, exceptional skincare.
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-neutral-800">
+                {marketing?.homepageTagline || 'Traditional, Natural Exceptional Skincare'}
               </p>
             </div>
             <div className="space-y-3">
@@ -282,11 +342,16 @@ export function MainLayout() {
                 </li>
                 <li>
                   <Link to="/events" className="hover:text-neutral-900">
-                    Events and workshops
+                    Events
                   </Link>
                 </li>
                 <li>
-                  <Link to="/wholesale" className="hover:text-neutral-900">
+                  <Link to="/testimonials" className="hover:text-neutral-900">
+                    Testimonials
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/wholesale/apply" className="hover:text-neutral-900">
                     Wholesale and stockists
                   </Link>
                 </li>
@@ -300,19 +365,34 @@ export function MainLayout() {
             <div className="space-y-3">
               <div className="text-sm font-semibold text-neutral-900">Contact</div>
               <address className="text-xs leading-5 text-neutral-600 not-italic">
-                <span className="block font-medium text-neutral-800">By Celeste</span>
-                <span className="mt-1 block">{formatBusinessAddressLine()}</span>
-                <span className="block">{BUSINESS_ADDRESS.country}</span>
+                <span className="block font-medium text-neutral-800">
+                  {business?.businessDisplayName || 'By Celeste'}
+                </span>
+                <span className="mt-1 flex items-center gap-1.5">
+                  <BrandIcon name="location" className="h-3.5 w-3.5 shrink-0 opacity-50" alt="" />
+                  {business?.footerLocationWording || `${BUSINESS_LOCATION.locality}, ${BUSINESS_LOCATION.country}`}
+                </span>
               </address>
               <p className="text-xs leading-5 text-neutral-500">
-                For order questions, use the details on your confirmation or reach out through your
-                account when signed in.
+                {business?.footerSupportText ||
+                  'For order questions, use the details on your confirmation or reach out through your account when signed in.'}
               </p>
+              <a
+                href={business?.facebookUrl || marketing?.facebookUrl || 'https://www.facebook.com'}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-neutral-700 underline underline-offset-2 hover:text-neutral-900"
+              >
+                <BrandIcon name="facebook" className="h-3.5 w-3.5 shrink-0 opacity-60" alt="" />
+                Facebook
+              </a>
             </div>
           </div>
 
           <div className="mt-8 border-t border-neutral-200 pt-6 text-center text-xs leading-relaxed text-neutral-500">
-            Handcrafted in regional Victoria · Boutique Australian skincare
+            {business?.trustStripWording ||
+              marketing?.footerTrustWording ||
+              'Handcrafted in regional Victoria · Boutique Australian skincare'}
           </div>
 
           <div className="mt-4 border-t border-neutral-200 pt-4 text-center text-xs text-neutral-500">

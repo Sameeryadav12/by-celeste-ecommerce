@@ -49,13 +49,13 @@ async function main() {
   })
 
   await prisma.event.upsert({
-    where: { slug: 'winter-skin-barrier-workshop' },
+    where: { slug: 'winter-skin-barrier-evening' },
     create: {
-      title: 'Winter Skin Barrier Workshop',
-      slug: 'winter-skin-barrier-workshop',
-      shortDescription: 'A guided evening workshop on dryness, barrier care, and ingredient choices.',
+      title: 'Winter Skin Barrier Evening',
+      slug: 'winter-skin-barrier-evening',
+      shortDescription: 'A guided evening session on dryness, barrier care, and ingredient choices.',
       description:
-        'This workshop focuses on practical routines for sensitive winter skin. We cover cleansing, layering, and common ingredient myths in a small, Q&A-friendly format.',
+        'This evening session focuses on practical routines for sensitive winter skin. We cover cleansing, layering, and common ingredient myths in a small, Q&A-friendly format.',
       locationName: 'Brunswick Wellness Studio',
       addressLine1: '14 Sydney Road',
       suburb: 'Brunswick',
@@ -70,10 +70,10 @@ async function main() {
       isFeatured: false,
     },
     update: {
-      title: 'Winter Skin Barrier Workshop',
-      shortDescription: 'A guided evening workshop on dryness, barrier care, and ingredient choices.',
+      title: 'Winter Skin Barrier Evening',
+      shortDescription: 'A guided evening session on dryness, barrier care, and ingredient choices.',
       description:
-        'This workshop focuses on practical routines for sensitive winter skin. We cover cleansing, layering, and common ingredient myths in a small, Q&A-friendly format.',
+        'This evening session focuses on practical routines for sensitive winter skin. We cover cleansing, layering, and common ingredient myths in a small, Q&A-friendly format.',
       locationName: 'Brunswick Wellness Studio',
       addressLine1: '14 Sydney Road',
       addressLine2: null,
@@ -172,7 +172,13 @@ async function main() {
     },
   })
 
-  console.log('[seedEvents] Upserted 4 events (3 upcoming, 1 past).')
+  // Retire earlier workshop-branded slug if it exists from prior seeds.
+  await prisma.event.updateMany({
+    where: { slug: 'winter-skin-barrier-workshop' },
+    data: { isPublished: false, isFeatured: false },
+  })
+
+  console.log('[seedEvents] Upserted 4 events (3 upcoming, 1 past) and retired workshop slug.')
 }
 
 main()

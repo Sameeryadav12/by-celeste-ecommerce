@@ -8,26 +8,24 @@ import { getProducts } from '../features/catalog/catalogApi'
 import type { CatalogProduct } from '../features/catalog/catalogTypes'
 import { ProductCard } from '../features/catalog/components/ProductCard'
 import { ProductCardSkeleton } from '../features/catalog/components/ProductCardSkeleton'
-
-const NATIVE_INGREDIENTS = [
-  {
-    name: 'Kakadu Plum',
-    line: 'A native superfruit, prized for brightening and antioxidant support.',
-  },
-  {
-    name: 'Desert Lime',
-    line: 'Australian desert citrus — fresh, renewing energy for tired skin.',
-  },
-  {
-    name: 'Banksia',
-    line: 'Wildflower botanicals that echo open bushland and calm formulation.',
-  },
-] as const
+import { BrandIcon } from '../components/icons/BrandIcon'
+import { Reveal } from '../components/animation/Reveal'
+import {
+  getPublicMarketingContent,
+  getPublicTestimonials,
+  getPublicThemeSettings,
+  type MarketingContent,
+  type PublicTestimonial,
+  type ThemeSettings,
+} from '../features/content/contentApi'
 
 export function HomePage() {
   const [upcomingEvents, setUpcomingEvents] = useState<EventItem[]>([])
   const [featuredProducts, setFeaturedProducts] = useState<CatalogProduct[]>([])
   const [featuredLoading, setFeaturedLoading] = useState(true)
+  const [testimonials, setTestimonials] = useState<PublicTestimonial[]>([])
+  const [marketing, setMarketing] = useState<MarketingContent | null>(null)
+  const [theme, setTheme] = useState<ThemeSettings | null>(null)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -68,29 +66,64 @@ export function HomePage() {
     return () => controller.abort()
   }, [])
 
+  useEffect(() => {
+    let cancelled = false
+    Promise.all([getPublicTestimonials(), getPublicMarketingContent(), getPublicThemeSettings()])
+      .then(([ts, mc, themeData]) => {
+        if (cancelled) return
+        setTestimonials(ts)
+        setMarketing(mc)
+        setTheme(themeData)
+      })
+      .catch(() => {
+        if (cancelled) return
+        setTestimonials([])
+        setMarketing(null)
+        setTheme(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const testimonialPreview = (testimonials.length > 0 ? testimonials : []).slice(0, 4)
+
   return (
     <>
       <Seo
-        title="Natural skincare by Celeste"
-        description="By Celeste is a calm Australian skincare brand with gentle essentials, pop-up events, and honest ingredient information."
+        title="Natural skincare by By Celeste"
+        description="By Celeste is a calm Australian skincare brand with gentle essentials, events, and honest ingredient information."
       />
       <section className="space-y-24 sm:space-y-28">
         {/* 1 — Hero */}
-        <div className="space-y-6 sm:space-y-8">
-          <h1 className="text-4xl font-semibold tracking-tight text-neutral-900 sm:text-5xl lg:text-[3.25rem] lg:leading-tight">
-            Calm, considered skincare by Celeste
+        <Reveal className="space-y-6 sm:space-y-8">
+          <h1
+            className="text-4xl font-semibold tracking-tight text-neutral-900 sm:text-5xl lg:text-[3.25rem] lg:leading-tight"
+            style={
+              theme?.homepageHeroEmphasis
+                ? { color: theme?.primaryBrandColor || undefined }
+                : undefined
+            }
+          >
+            {marketing?.homepageHeroHeading ?? 'Calm, considered skincare by By Celeste'}
           </h1>
-          <p className="text-lg font-medium tracking-wide text-neutral-800 sm:text-xl">
-            Traditional, Natural, Exceptional Skincare
+          <p className="text-xl font-semibold uppercase tracking-[0.16em] text-neutral-900 sm:text-2xl">
+            {marketing?.homepageTagline ?? 'Traditional, Natural Exceptional Skincare'}
           </p>
           <p className="max-w-2xl text-base leading-relaxed text-neutral-500 sm:text-[1.05rem]">
-            Small-batch skincare rooted in regional Victoria — honest formulas and the warmth of
-            pop-ups and workshops. A quiet alternative to loud, mass-market beauty.
+            {marketing?.homepageSubtext ??
+              'Small-batch skincare rooted in regional Victoria — honest formulas and the warmth of local events. A quiet alternative to loud, mass-market beauty.'}
           </p>
           <div className="flex flex-wrap gap-3 pt-2">
             <Link
               to="/shop"
-              className="rounded-md bg-neutral-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-neutral-800"
+              className={[
+                'rounded-md px-5 py-2.5 text-sm font-medium shadow-sm transition',
+                theme?.buttonStyleEmphasis === 'soft'
+                  ? 'bg-neutral-200 text-neutral-900 hover:bg-neutral-300'
+                  : 'bg-neutral-900 text-white hover:bg-neutral-800',
+              ].join(' ')}
+              style={theme?.buttonStyleEmphasis === 'soft' ? { borderColor: theme?.secondaryBrandColor } : undefined}
             >
               Browse the shop
             </Link>
@@ -101,13 +134,13 @@ export function HomePage() {
               Explore upcoming events
             </Link>
           </div>
-        </div>
+        </Reveal>
 
         {/* 2 — Featured products */}
-        <div className="space-y-8">
+        <Reveal className="space-y-8">
           <div>
             <h2 className="text-2xl font-semibold tracking-tight text-neutral-900 sm:text-3xl">
-              Featured products
+              {marketing?.featuredProductsHeading ?? 'Featured products'}
             </h2>
             <p className="mt-2 max-w-xl text-sm leading-relaxed text-neutral-500">
               A curated selection from the shop — same quality and detail on every product page.
@@ -141,36 +174,47 @@ export function HomePage() {
               View full shop →
             </Link>
           </div>
-        </div>
+        </Reveal>
 
-        {/* 3 — Australian native ingredients */}
-        <div className="rounded-2xl border border-neutral-200/90 bg-white px-6 py-10 shadow-sm sm:px-10 sm:py-12">
+        {/* 3 — Our Ingredients */}
+        <Reveal className="rounded-2xl border border-neutral-200/90 bg-white px-6 py-10 shadow-sm sm:px-10 sm:py-12">
           <h2 className="text-center text-2xl font-semibold tracking-tight text-neutral-900 sm:text-3xl">
-            Australian native ingredients
+            {marketing?.ingredientsSectionHeading ?? 'Our Ingredients'}
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-center text-sm leading-relaxed text-neutral-500">
-            We build formulas around botanicals you can recognise — never noisy, always purposeful.
+            {marketing?.ingredientsSectionText ??
+              'We formulate with thoughtfully selected ingredients that support calm, healthy skin.'}
           </p>
-          <ul className="mx-auto mt-10 grid max-w-4xl gap-8 sm:grid-cols-3 sm:gap-6">
-            {NATIVE_INGREDIENTS.map((item) => (
-              <li key={item.name} className="text-center sm:text-left">
-                <p className="text-sm font-semibold tracking-tight text-neutral-900">{item.name}</p>
-                <p className="mt-2 text-sm leading-relaxed text-neutral-500">{item.line}</p>
+          <ul className="mx-auto mt-10 grid max-w-4xl gap-4 sm:grid-cols-3">
+            {([
+              { label: 'Plant oils', icon: 'plant-oils' },
+              { label: 'Fruits', icon: 'fruits' },
+              { label: 'Vegetables', icon: 'vegetables' },
+              { label: 'Essential Oils', icon: 'essential-oils' },
+              { label: 'Natives', icon: 'natives' },
+              { label: 'Botanicals', icon: 'botanicals' },
+            ] as const).map((item) => (
+              <li
+                key={item.label}
+                className="flex flex-col items-center gap-2.5 rounded-xl border border-neutral-200/80 bg-neutral-50 px-4 py-5"
+              >
+                <BrandIcon name={item.icon} className="h-7 w-7 text-neutral-500" alt="" />
+                <span className="text-sm font-medium text-neutral-800">{item.label}</span>
               </li>
             ))}
           </ul>
-        </div>
+        </Reveal>
 
         {/* 4 — Events */}
         {upcomingEvents.length > 0 ? (
-          <div className="space-y-8">
+          <Reveal className="space-y-8">
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
               <div>
                 <h2 className="text-2xl font-semibold tracking-tight text-neutral-900 sm:text-3xl">
                   Upcoming events
                 </h2>
                 <p className="mt-2 max-w-xl text-sm leading-relaxed text-neutral-500">
-                  Workshops and pop-ups — experience the brand beyond the screen.
+                  Calm brand events where customers can experience By Celeste in person.
                 </p>
               </div>
               <Link
@@ -185,8 +229,42 @@ export function HomePage() {
                 <EventCard key={event.id} event={event} />
               ))}
             </div>
-          </div>
+          </Reveal>
         ) : null}
+
+        <Reveal className="space-y-8">
+          <div className="space-y-2">
+            <h2 className="text-2xl font-semibold tracking-tight text-neutral-900 sm:text-3xl">
+              {marketing?.testimonialsSectionHeading ?? 'What Our Customers Say'}
+            </h2>
+            <p className="max-w-xl text-sm leading-relaxed text-neutral-500">
+              {marketing?.testimonialsSectionSubheading ??
+                'A few recent words from customers who use By Celeste every day.'}
+            </p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            {testimonialPreview.map((item) => (
+              <article
+                key={item.id}
+                className="transform-gpu rounded-2xl border border-neutral-200/70 bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.05)] transition-all duration-200 ease-in-out hover:-translate-y-0.5 hover:shadow-lg"
+              >
+                <BrandIcon name="quote" className="h-4 w-4 opacity-25" alt="" />
+                <p className="mt-2 text-sm leading-7 text-neutral-700">{item.text}</p>
+                <p className="mt-4 border-t border-neutral-100 pt-3 text-sm font-semibold text-neutral-900">
+                  {item.customerName}
+                </p>
+              </article>
+            ))}
+          </div>
+          <div>
+            <Link
+              to="/testimonials"
+              className="rounded-md bg-neutral-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-neutral-800"
+            >
+              View all testimonials
+            </Link>
+          </div>
+        </Reveal>
 
         {/* Compact links — wholesale / about (minimal clutter) */}
         <div className="flex flex-wrap gap-3 border-t border-neutral-200 pt-10 text-sm text-neutral-500">
@@ -203,7 +281,7 @@ export function HomePage() {
             ·
           </span>
           <Link
-            to="/wholesale"
+            to="/wholesale/apply"
             className="font-medium text-neutral-800 underline-offset-4 hover:text-neutral-900 hover:underline"
           >
             Wholesale partners

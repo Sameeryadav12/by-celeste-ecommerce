@@ -94,6 +94,8 @@ export function AdminIngredientsPage() {
   }
 
   async function handleDelete(id: string) {
+    const confirmed = window.confirm('Delete this ingredient? This cannot be undone.')
+    if (!confirmed) return
     setSaving(true)
     setError(null)
     try {
@@ -111,8 +113,8 @@ export function AdminIngredientsPage() {
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <h2 className="text-xl font-semibold tracking-tight text-neutral-900">Ingredients</h2>
-        <p className="text-sm text-neutral-600">Create, edit, and remove ingredients.</p>
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Ingredients</h1>
+        <p className="text-sm text-slate-500">Create, edit, and maintain ingredient records.</p>
       </div>
 
       {error ? (

@@ -1,6 +1,7 @@
 import { prisma } from '../config/prisma'
 import { ApiError } from '../utils/apiError'
 import { LOYALTY_EARN_RULE_SUMMARY } from './loyalty.service'
+import { getSafeUserById as getSafeUserByIdFromAuth } from './auth.service'
 
 function moneyString(d: { toString(): string }) {
   return d.toString()
@@ -16,6 +17,11 @@ export async function listOrdersForUser(userId: string) {
       status: true,
       paymentStatus: true,
       totalAmount: true,
+      _count: {
+        select: {
+          items: true,
+        },
+      },
     },
   })
 
@@ -25,6 +31,7 @@ export async function listOrdersForUser(userId: string) {
     status: o.status,
     paymentStatus: o.paymentStatus,
     totalAmount: moneyString(o.totalAmount),
+    itemCount: o._count.items,
   }))
 }
 
@@ -132,4 +139,8 @@ export async function getLoyaltyDashboardForUser(userId: string) {
       createdAt: t.createdAt.toISOString(),
     })),
   }
+}
+
+export async function getSafeUserById(userId: string) {
+  return getSafeUserByIdFromAuth(userId)
 }

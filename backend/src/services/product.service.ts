@@ -128,6 +128,67 @@ export async function listProductsPublic(query: ListProductsQuery, viewer: Prici
   }
 }
 
+export async function listProductsAdmin(query: ListProductsQuery) {
+  const page = Math.max(1, query.page ?? 1)
+  const limit = Math.min(50, Math.max(1, query.limit ?? 20))
+  const activeOnly = query.activeOnly !== false
+
+  const where: Prisma.ProductWhereInput = {}
+
+  if (activeOnly) {
+    where.isActive = true
+  }
+
+  if (query.featured === true) {
+    where.isFeatured = true
+  }
+
+  if (query.category?.trim()) {
+    const c = query.category.trim()
+    where.categories = {
+      some: {
+        OR: [{ slug: c }, { id: c }],
+        ...(activeOnly ? { isActive: true } : {}),
+      },
+    }
+  }
+
+  if (query.search?.trim()) {
+    where.name = { contains: query.search.trim(), mode: 'insensitive' }
+  }
+
+  const orderBy = orderByFromSort(query.sort)
+
+  const [rows, total] = await prisma.$transaction([
+    prisma.product.findMany({
+      where,
+      orderBy,
+      skip: (page - 1) * limit,
+      take: limit,
+      include: {
+        categories: {
+          select: { id: true, name: true, slug: true, description: true, isActive: true },
+          orderBy: { name: 'asc' },
+        },
+      },
+    }),
+    prisma.product.count({ where }),
+  ])
+
+  const products = rows.map((p) => serializeProductForAdmin(p, { includeRelations: true }))
+  const totalPages = Math.ceil(total / limit) || 1
+
+  return {
+    products,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages,
+    },
+  }
+}
+
 export async function getProductBySlugPublic(slug: string, viewer: PricingViewer) {
   const product = await prisma.product.findFirst({
     where: { slug, isActive: true },

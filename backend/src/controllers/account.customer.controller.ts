@@ -3,6 +3,7 @@ import { asyncHandler } from '../utils/asyncHandler'
 import { ApiError } from '../utils/apiError'
 import { paramString } from '../utils/routeParams'
 import {
+  getSafeUserById,
   getLoyaltyDashboardForUser,
   getOrderDetailForUser,
   listOrdersForUser,
@@ -14,6 +15,17 @@ export const getMyOrders = asyncHandler(async (req: Request, res: Response) => {
   }
   const orders = await listOrdersForUser(req.user.id)
   res.json({ success: true, data: { orders } })
+})
+
+export const getMyAccount = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) {
+    throw new ApiError({ statusCode: 401, code: 'UNAUTHENTICATED', message: 'Please sign in.' })
+  }
+  const user = await getSafeUserById(req.user.id)
+  if (!user) {
+    throw new ApiError({ statusCode: 404, code: 'USER_NOT_FOUND', message: 'Account not found.' })
+  }
+  res.json({ success: true, data: { user } })
 })
 
 export const getMyOrderById = asyncHandler(async (req: Request, res: Response) => {

@@ -199,3 +199,6 @@ export function WholesalePage() {
     </>
   )
 }
+
+// Keep the router import explicit and intention-revealing.
+export const WholesaleApplyPage = WholesalePage

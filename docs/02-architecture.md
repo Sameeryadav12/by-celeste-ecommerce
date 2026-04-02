@@ -76,6 +76,18 @@ When Jane makes a change (products, categories, ingredients, events, or orders),
 
 This keeps day-to-day business control separate from the customer-facing store experience.
 
+## Admin portal foundation (Admin Rebuild Step 1)
+
+The admin area has been **rebuilt with its own dedicated layout**, fully separate from the customer-facing storefront.
+
+- The admin portal lives at `/admin` and uses a **sidebar + header + content panel** layout instead of the public storefront's header and footer.
+- Only users with the `ADMIN` role can access it — unauthenticated users are redirected to login, and non-admin users are redirected to the homepage.
+- The sidebar organises admin tools into groups: **Catalogue** (Products, Categories, Ingredients), **Sales** (Orders, Customers), **Community** (Wholesale, Testimonials, Events), **Content** (Marketing), and **Configuration** (Theme / Appearance, Settings).
+- Existing admin pages (Products, Categories, Ingredients, Events, Orders) continue to work inside the new layout.
+- New placeholder pages have been created for Customers, Wholesale, Testimonials, Marketing, Theme / Appearance, and Settings — these describe the future controls that will be built in later steps.
+
+See `docs/20-admin-portal-foundation.md` for the full breakdown of sections and technical details.
+
 ## SEO foundation (Step 12)
 
 Pages now set their own **page titles** and **meta descriptions** so each URL has unique, useful information.

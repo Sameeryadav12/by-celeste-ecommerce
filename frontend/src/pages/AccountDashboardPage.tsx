@@ -77,8 +77,11 @@ export function AccountDashboardPage() {
       setLoading(true)
       setError(null)
       try {
-        await refreshUser()
-        const [ordersRes, loyaltyRes] = await Promise.all([fetchMyOrders(), fetchMyLoyalty()])
+        const [, ordersRes, loyaltyRes] = await Promise.all([
+          refreshUser(),
+          fetchMyOrders(),
+          fetchMyLoyalty(),
+        ])
         if (!cancelled) {
           setOrders(ordersRes.orders)
           setLoyalty(loyaltyRes)
@@ -99,7 +102,8 @@ export function AccountDashboardPage() {
     return () => {
       cancelled = true
     }
-  }, [refreshUser])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   async function handleLogout() {
     await logout()

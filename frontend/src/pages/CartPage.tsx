@@ -1,65 +1,36 @@
-import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Card } from '../components/ui/Card'
+import { useEffect, useState } from 'react'
 import { Button } from '../components/ui/Button'
 import { useCart } from '../features/cart/CartContext'
 import { CartSummaryCard } from '../features/cart/components/CartSummaryCard'
 import { QuantityControl } from '../features/cart/components/QuantityControl'
 import { formatAud } from '../features/cart/money'
 import { SHIPPING_CONFIG, calculateShipping } from '../features/cart/shippingRules'
-import {
-  formatShippingToPostcodeLine,
-  isValidAuPostcode,
-  qualifiesForFreeShipping,
-} from '../features/cart/cartFreight'
 import { Seo } from '../components/seo/Seo'
 import { SmartImage } from '../components/media/SmartImage'
+import { getPublicBusinessSettings, type BusinessSettings } from '../features/content/contentApi'
 
 export function CartPage() {
+  const [business, setBusiness] = useState<BusinessSettings | null>(null)
   const { items, summary, incrementItem, decrementItem, removeItem, setItemQuantity, clearCart } =
     useCart()
 
-  const [postcode, setPostcode] = useState('')
-  const [appliedPostcode, setAppliedPostcode] = useState<string | null>(null)
-  const [freightError, setFreightError] = useState<string | null>(null)
+  const shippingAmount = calculateShipping(summary.subtotal)
+  const total = summary.subtotal + shippingAmount
 
-  const prevSubtotal = useRef(summary.subtotal)
   useEffect(() => {
-    const prev = prevSubtotal.current
-    const now = summary.subtotal
-    const wasBelow = prev < SHIPPING_CONFIG.freeShippingThreshold
-    const nowBelow = now < SHIPPING_CONFIG.freeShippingThreshold
-    if (wasBelow !== nowBelow) {
-      setAppliedPostcode(null)
-      setFreightError(null)
+    let cancelled = false
+    getPublicBusinessSettings()
+      .then((data) => {
+        if (!cancelled) setBusiness(data)
+      })
+      .catch(() => {
+        if (!cancelled) setBusiness(null)
+      })
+    return () => {
+      cancelled = true
     }
-    prevSubtotal.current = now
-  }, [summary.subtotal])
-
-  const freeShipping = qualifiesForFreeShipping(summary.subtotal)
-  const shippingResolved = freeShipping || appliedPostcode !== null
-  const shippingAmount = shippingResolved ? calculateShipping(summary.subtotal) : 0
-  const total = shippingResolved ? summary.subtotal + shippingAmount : summary.subtotal
-
-  const successLine = freeShipping
-    ? `Free shipping on orders ${formatAud(SHIPPING_CONFIG.freeShippingThreshold)} and over.`
-    : appliedPostcode
-      ? `${formatShippingToPostcodeLine(appliedPostcode, summary.subtotal)} (flat rate, Australia-wide demo estimate).`
-      : null
-
-  function handleCalculateShipping() {
-    setFreightError(null)
-    if (freeShipping) {
-      setAppliedPostcode(null)
-      return
-    }
-    if (!isValidAuPostcode(postcode)) {
-      setFreightError('Enter a valid Australian postcode (4 digits).')
-      setAppliedPostcode(null)
-      return
-    }
-    setAppliedPostcode(postcode.trim())
-  }
+  }, [])
 
   if (items.length === 0) {
     return (
@@ -68,22 +39,20 @@ export function CartPage() {
           title="Cart | By Celeste"
           description="Your shopping cart on By Celeste. Add products to see totals and continue to checkout."
         />
-        <div className="space-y-3">
-          <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">Cart</h1>
-          <p className="max-w-2xl text-sm leading-6 text-neutral-700">
-            Your cart is currently empty. Explore the shop to add products.
-          </p>
+        <div className="space-y-2">
+          <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">Your cart</h1>
+          <p className="text-sm text-neutral-500">Your cart is empty.</p>
         </div>
-        <Card>
-          <p className="text-sm text-neutral-700">
-            Add products to see item totals, shipping estimate, and checkout summary.
+        <div className="rounded-2xl border border-neutral-200/80 bg-white px-6 py-10 text-center shadow-sm">
+          <p className="text-sm text-neutral-600">
+            Looks like you haven&apos;t added anything yet.
           </p>
-          <div className="mt-4">
+          <div className="mt-5">
             <Link to="/shop">
-              <Button type="button">Back to Shop</Button>
+              <Button type="button">Browse products</Button>
             </Link>
           </div>
-        </Card>
+        </div>
       </section>
     )
   }
@@ -94,55 +63,101 @@ export function CartPage() {
         title="Cart | By Celeste"
         description="Review your cart items on By Celeste. Update quantities, see totals, and proceed to secure checkout."
       />
-      <div className="space-y-3">
-        <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">Cart</h1>
-        <p className="max-w-2xl text-sm leading-6 text-neutral-700">
-          Review your items, estimate shipping with your postcode, then continue to checkout when
-          you&apos;re ready.
-        </p>
+
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">Your cart</h1>
+          <p className="text-sm text-neutral-500">
+            {summary.itemCount} {summary.itemCount === 1 ? 'item' : 'items'}
+          </p>
+        </div>
+        <Link
+          to="/shop"
+          className="text-sm font-medium text-neutral-600 underline decoration-neutral-300 underline-offset-4 transition hover:text-neutral-900 hover:decoration-neutral-700"
+        >
+          Continue shopping
+        </Link>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[2fr,1fr]">
-        <Card>
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-neutral-900">Your items</h2>
-            <Button type="button" variant="ghost" onClick={clearCart}>
-              Clear cart
-            </Button>
+      <div className="grid gap-6 lg:grid-cols-[1fr,360px]">
+        {/* ── Item list ── */}
+        <div className="divide-y divide-neutral-100 rounded-2xl border border-neutral-200/80 bg-white shadow-sm">
+          <div className="flex items-center justify-between px-5 py-3.5">
+            <h2 className="text-sm font-semibold text-neutral-900">Items</h2>
+            <button
+              type="button"
+              onClick={clearCart}
+              className="text-xs font-medium text-neutral-400 transition hover:text-red-600"
+            >
+              Clear all
+            </button>
           </div>
 
-          <div className="space-y-4">
-            {items.map((item) => {
-              const lineTotal = item.price * item.quantity
-              return (
-                <div
-                  key={item.productId}
-                  className="grid gap-3 border-b border-neutral-200 pb-4 last:border-b-0 last:pb-0 sm:grid-cols-[96px,1fr]"
-                >
-                  <SmartImage
-                    src={item.imageUrl}
-                    alt={item.name}
-                    wrapperClassName="relative h-24 w-24 rounded-lg"
-                    imgClassName="h-full w-full object-cover"
-                    loading="lazy"
-                  />
-                  <div className="space-y-2">
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div>
-                        <p className="text-sm font-semibold text-neutral-900">{item.name}</p>
-                        <p className="text-xs text-neutral-600">{formatAud(item.price)} each</p>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={() => removeItem(item.productId)}
-                        className="px-2 py-1 text-xs text-red-700 hover:bg-red-50 hover:text-red-800"
+          {items.map((item) => {
+            const lineTotal = item.price * item.quantity
+
+            return (
+              <div key={item.productId} className="px-5 py-5">
+                <div className="flex gap-4">
+                  {/* Image */}
+                  <Link
+                    to={`/shop/${item.slug}`}
+                    className="shrink-0 overflow-hidden rounded-xl ring-1 ring-neutral-200/60 transition hover:ring-neutral-300"
+                  >
+                    <SmartImage
+                      src={item.imageUrl}
+                      alt={item.name}
+                      wrapperClassName="relative h-20 w-20 sm:h-[92px] sm:w-[92px]"
+                      imgClassName="h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                  </Link>
+
+                  {/* Content + controls */}
+                  <div className="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:justify-between sm:gap-4">
+                    {/* Left: name, detail, actions */}
+                    <div className="min-w-0 flex-1">
+                      <Link
+                        to={`/shop/${item.slug}`}
+                        className="text-sm font-semibold leading-snug text-neutral-900 hover:underline"
                       >
-                        Remove
-                      </Button>
+                        {item.name}
+                      </Link>
+
+                      <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                        {item.categoryName ? (
+                          <span className="text-xs text-neutral-500">{item.categoryName}</span>
+                        ) : null}
+                        {item.categoryName ? (
+                          <span className="text-neutral-200" aria-hidden>&middot;</span>
+                        ) : null}
+                        <span className="text-xs text-neutral-500">{formatAud(item.price)} each</span>
+                      </div>
+
+                      <div className="mt-2.5 flex items-center gap-2.5">
+                        <Link
+                          to={`/shop/${item.slug}`}
+                          className="text-[11px] font-medium text-neutral-500 underline decoration-neutral-300 underline-offset-2 transition hover:text-neutral-800 hover:decoration-neutral-500"
+                        >
+                          View product
+                        </Link>
+                        <span className="text-neutral-200" aria-hidden>&middot;</span>
+                        <button
+                          type="button"
+                          onClick={() => removeItem(item.productId)}
+                          className="inline-flex items-center gap-1 text-[11px] font-medium text-red-400 transition hover:text-red-600"
+                        >
+                          <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3" aria-hidden>
+                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z" />
+                            <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1 0-2H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118Z" />
+                          </svg>
+                          Remove
+                        </button>
+                      </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center justify-between gap-3">
+                    {/* Right: quantity + line total */}
+                    <div className="flex shrink-0 items-center gap-4 sm:flex-col sm:items-end sm:gap-1.5">
                       <QuantityControl
                         quantity={item.quantity}
                         max={item.stockQuantity > 0 ? item.stockQuantity : 1}
@@ -150,77 +165,25 @@ export function CartPage() {
                         onIncrease={() => incrementItem(item.productId)}
                         onSet={(value) => setItemQuantity(item.productId, value)}
                       />
-                      <p className="text-sm font-medium text-neutral-900">
-                        Subtotal: {formatAud(lineTotal)}
+                      <p className="text-sm font-semibold text-neutral-900">
+                        {formatAud(lineTotal)}
                       </p>
                     </div>
                   </div>
                 </div>
-              )
-            })}
-          </div>
-        </Card>
-
-        <div className="space-y-4">
-          <Card>
-            <h3 className="text-sm font-semibold text-neutral-900">Freight calculator</h3>
-            <p className="mt-1 text-xs leading-5 text-neutral-600">
-              Australian orders: flat {formatAud(SHIPPING_CONFIG.standardFee)} shipping on orders
-              under {formatAud(SHIPPING_CONFIG.freeShippingThreshold)}. Free shipping when your
-              cart reaches {formatAud(SHIPPING_CONFIG.freeShippingThreshold)} or more (demo
-              estimate).
-            </p>
-
-            {freeShipping ? (
-              <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50/80 px-3 py-3 text-sm text-emerald-900">
-                {successLine}
               </div>
-            ) : (
-              <>
-                <p className="mt-3 text-xs font-medium text-neutral-800">
-                  Enter your postcode to see shipping and your order total before checkout.
-                </p>
-                <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end">
-                  <div className="flex-1">
-                    <label htmlFor="cart-postcode" className="mb-1 block text-xs text-neutral-600">
-                      Postcode (4 digits)
-                    </label>
-                    <input
-                      id="cart-postcode"
-                      type="text"
-                      inputMode="numeric"
-                      autoComplete="postal-code"
-                      maxLength={4}
-                      placeholder="e.g. 3000"
-                      value={postcode}
-                      onChange={(e) => {
-                        setPostcode(e.target.value.replace(/\D/g, '').slice(0, 4))
-                        setFreightError(null)
-                      }}
-                      className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2.5 text-sm text-neutral-900 outline-none transition focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900"
-                    />
-                  </div>
-                  <Button type="button" onClick={handleCalculateShipping} className="sm:shrink-0">
-                    Calculate shipping
-                  </Button>
-                </div>
-                {freightError ? (
-                  <p className="mt-3 text-sm text-red-700" role="alert">
-                    {freightError}
-                  </p>
-                ) : null}
-                {appliedPostcode && successLine ? (
-                  <p className="mt-4 text-sm font-medium text-neutral-900">{successLine}</p>
-                ) : null}
-              </>
-            )}
-          </Card>
+            )
+          })}
+        </div>
+
+        {/* ── Sidebar ── */}
+        <div className="space-y-4 lg:sticky lg:top-6 lg:self-start">
           <CartSummaryCard
             subtotal={summary.subtotal}
             shipping={shippingAmount}
             total={total}
-            shippingResolved={shippingResolved}
-            shippingSubLabel={shippingResolved ? successLine : null}
+            shippingSubLabel={`${business?.shippingMethodLabel || 'Flat rate shipping'} via ${business?.shippingCarrierWording || SHIPPING_CONFIG.carrierLabel}`}
+            checkoutSupportNote={`Secure checkout powered by Square · ${business?.shippingExplanatoryNote || 'Flat rate shipping via Australia Post'}`}
           />
         </div>
       </div>

@@ -6,6 +6,7 @@ import { EventCard } from '../features/events/components/EventCard'
 import { EventCardSkeleton } from '../features/events/components/EventCardSkeleton'
 import { getEvents, type GetEventsQuery } from '../features/events/eventsApi'
 import type { EventItem } from '../features/events/eventsTypes'
+import { Reveal } from '../components/animation/Reveal'
 
 function buildQuery(overrides: GetEventsQuery): GetEventsQuery {
   return overrides
@@ -61,14 +62,14 @@ export function EventsPage() {
     <>
       <Seo
         title="Events | By Celeste"
-        description="Discover By Celeste pop-ups, workshops, and community moments. Explore upcoming events across Australia."
+        description="Discover By Celeste pop-ups and community moments. Explore upcoming events across Australia."
       />
       <section className="space-y-6">
       <div className="space-y-3">
         <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">Events</h1>
         <p className="max-w-2xl text-sm leading-6 text-neutral-700">
-          Discover By Celeste pop-ups, workshops, and community moments. Upcoming events are
-          listed here first so customers can plan ahead.
+          Discover By Celeste pop-ups and community moments. Upcoming events are listed here first
+          so customers can plan ahead.
         </p>
       </div>
 
@@ -94,23 +95,25 @@ export function EventsPage() {
       ) : null}
 
       {loading ? (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <EventCardSkeleton />
-          <EventCardSkeleton />
-          <EventCardSkeleton />
-        </div>
+        <Reveal>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <EventCardSkeleton />
+            <EventCardSkeleton />
+            <EventCardSkeleton />
+          </div>
+        </Reveal>
       ) : (
         <>
           {featured ? (
-            <div className="space-y-2">
+            <Reveal className="space-y-2">
               <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500">
                 Featured upcoming event
               </h2>
               <EventCard event={featured} />
-            </div>
+            </Reveal>
           ) : null}
 
-          <div className="space-y-2">
+          <Reveal className="space-y-2">
             <h2 className="text-lg font-semibold tracking-tight text-neutral-900">Upcoming events</h2>
             {nonFeaturedEvents.length === 0 ? (
               <CatalogEmptyState message="No upcoming events match your search right now." />
@@ -121,7 +124,7 @@ export function EventsPage() {
                 ))}
               </div>
             )}
-          </div>
+          </Reveal>
         </>
       )}
       </section>

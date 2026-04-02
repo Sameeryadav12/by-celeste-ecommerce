@@ -31,8 +31,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
 
   const refreshUser = useCallback(async () => {
+    setStatus((prev) => (prev === 'idle' ? 'loading' : prev))
     try {
-      setStatus('loading')
       const result = await fetchCurrentUser()
       setUser(result.user)
       setStatus('authenticated')

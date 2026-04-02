@@ -1,92 +1,37 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Button } from '../../components/ui/Button'
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { Card } from '../../components/ui/Card'
 import {
-  createAdminProduct,
-  deactivateAdminProduct,
-  getAdminProduct,
   listAllCategories,
   listAdminProducts,
-  listIngredients,
   updateAdminProduct,
-  type AdminProductDetail,
 } from '../../features/admin/adminApi'
-
-type ProductFormState = {
-  id?: string
-  name: string
-  slug: string
-  shortDescription: string
-  description: string
-  howToUse: string
-  price: string
-  wholesalePrice: string
-  compareAtPrice: string
-  imageUrl: string
-  isFeatured: boolean
-  isActive: boolean
-  stockQuantity: string
-  categoryIds: string[]
-  ingredientIds: string[]
-}
-
-function initialForm(): ProductFormState {
-  return {
-    name: '',
-    slug: '',
-    shortDescription: '',
-    description: '',
-    howToUse: '',
-    price: '',
-    wholesalePrice: '',
-    compareAtPrice: '',
-    imageUrl: '',
-    isFeatured: false,
-    isActive: true,
-    stockQuantity: '0',
-    categoryIds: [],
-    ingredientIds: [],
-  }
-}
-
-function toggleInArray(ids: string[], id: string) {
-  if (ids.includes(id)) return ids.filter((x) => x !== id)
-  return [...ids, id]
-}
+import { Button } from '../../components/ui/Button'
+import { AdminStatusBadge } from './components/AdminStatusBadge'
 
 export function AdminProductsPage() {
+  const location = useLocation()
   const [products, setProducts] = useState<Awaited<ReturnType<typeof listAdminProducts>>['products']>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [message, setMessage] = useState<string | null>(null)
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null)
 
   const [search, setSearch] = useState('')
-  const [showInactive, setShowInactive] = useState(true)
-
-  const [categories, setCategories] = useState<Array<{ id: string; name: string; isActive: boolean }>>([])
-  const [ingredients, setIngredients] = useState<Array<{ id: string; name: string }>>([])
-
-  const [form, setForm] = useState<ProductFormState>(initialForm())
-  const [saving, setSaving] = useState(false)
-
-  const mode = form.id ? 'edit' : 'create'
-
-  const selectedCategoryCount = useMemo(() => form.categoryIds.length, [form.categoryIds.length])
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
+  const [categoryFilter, setCategoryFilter] = useState('all')
+  const [categoryOptions, setCategoryOptions] = useState<Array<{ id: string; name: string; isActive: boolean }>>([])
 
   useEffect(() => {
     let cancelled = false
-
-    async function loadLists() {
-      const [cats, ings] = await Promise.all([listAllCategories(true), listIngredients()])
+    async function loadCategories() {
+      const cats = await listAllCategories(true)
       if (cancelled) return
-
-      setCategories(cats)
-      setIngredients(ings)
+      setCategoryOptions(cats)
     }
-
-    void loadLists().catch((e) => {
-      if (!cancelled) setError(e instanceof Error ? e.message : 'Could not load lists.')
+    void loadCategories().catch((e) => {
+      if (!cancelled) setError('Could not load category list.')
     })
-
     return () => {
       cancelled = true
     }
@@ -98,13 +43,14 @@ export function AdminProductsPage() {
     try {
       const res = await listAdminProducts({
         page: 1,
-        limit: 20,
+        limit: 50,
         search: search.trim() || undefined,
-        activeOnly: showInactive ? false : true,
+        category: categoryFilter === 'all' ? undefined : categoryFilter,
+        activeOnly: statusFilter === 'all' ? false : statusFilter === 'active',
       })
       setProducts(res.products)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not load products.')
+      setError('Could not load products.')
     } finally {
       setLoading(false)
     }
@@ -113,340 +59,226 @@ export function AdminProductsPage() {
   useEffect(() => {
     void loadProducts()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, showInactive])
+  }, [search, statusFilter, categoryFilter])
 
-  async function handleEdit(productId: string) {
+  async function handleToggleActive(productId: string, current: boolean) {
+    setActionLoadingId(productId)
     setError(null)
+    setMessage(null)
     try {
-      const product: AdminProductDetail = await getAdminProduct(productId)
-      setForm({
-        id: product.id,
-        name: product.name,
-        slug: product.slug,
-        shortDescription: product.shortDescription,
-        description: product.description,
-        howToUse: product.howToUse,
-        price: product.price,
-        wholesalePrice: product.wholesalePrice ?? '',
-        compareAtPrice: product.compareAtPrice ?? '',
-        imageUrl: product.imageUrl,
-        isFeatured: product.isFeatured,
-        isActive: product.isActive,
-        stockQuantity: String(product.stockQuantity),
-        categoryIds: product.categories.map((c) => c.id),
-        ingredientIds: product.ingredients.map((i) => i.id),
-      })
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not load product details.')
-    }
-  }
-
-  function resetForm() {
-    setForm(initialForm())
-    setError(null)
-  }
-
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault()
-    setSaving(true)
-    setError(null)
-
-    try {
-      const payload = {
-        name: form.name.trim(),
-        slug: form.slug.trim() || undefined,
-        shortDescription: form.shortDescription.trim(),
-        description: form.description.trim(),
-        howToUse: form.howToUse.trim(),
-        price: Number(form.price),
-        wholesalePrice: form.wholesalePrice.trim() ? Number(form.wholesalePrice) : undefined,
-        compareAtPrice: form.compareAtPrice.trim() ? Number(form.compareAtPrice) : undefined,
-        imageUrl: form.imageUrl.trim(),
-        isActive: form.isActive,
-        isFeatured: form.isFeatured,
-        stockQuantity: Number(form.stockQuantity),
-        categoryIds: form.categoryIds,
-        ingredientIds: form.ingredientIds,
-      }
-
-      if (form.id) {
-        await updateAdminProduct(form.id, payload)
-      } else {
-        await createAdminProduct(payload)
-      }
-
-      resetForm()
+      await updateAdminProduct(productId, { isActive: !current })
+      setMessage(current ? 'Product hidden from storefront.' : 'Product made visible on storefront.')
       await loadProducts()
-    } catch (e2) {
-      setError(e2 instanceof Error ? e2.message : 'Could not save product.')
+    } catch (e) {
+      setError('Could not update product visibility. Please try again.')
     } finally {
-      setSaving(false)
+      setActionLoadingId(null)
     }
   }
 
-  async function handleDeactivate(productId: string) {
+  async function handleToggleFeatured(productId: string, current: boolean) {
+    setActionLoadingId(productId)
     setError(null)
+    setMessage(null)
     try {
-      await deactivateAdminProduct(productId)
-      if (form.id === productId) resetForm()
+      await updateAdminProduct(productId, { isFeatured: !current })
+      setMessage(current ? 'Product removed from featured list.' : 'Product added to featured list.')
       await loadProducts()
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not deactivate product.')
+      setError('Could not update featured status. Please try again.')
+    } finally {
+      setActionLoadingId(null)
     }
   }
+
+  const flash = typeof (location.state as { flash?: string } | null)?.flash === 'string'
+    ? (location.state as { flash?: string }).flash
+    : null
+
+  const showingFilters = useMemo(() => {
+    return search.trim() || statusFilter !== 'all' || categoryFilter !== 'all'
+  }, [search, statusFilter, categoryFilter])
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-1">
-        <h2 className="text-xl font-semibold tracking-tight text-neutral-900">Products</h2>
-        <p className="text-sm text-neutral-600">Create and update catalog products (retail + optional wholesale price).</p>
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Products</h1>
+          <p className="text-sm text-slate-500">
+            Manage your catalogue, pricing, stock, and storefront visibility.
+          </p>
+        </div>
+        <Link
+          to="/admin/products/new"
+          className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
+        >
+          Add new product
+        </Link>
       </div>
 
-      {error ? (
-        <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
+      {flash ? (
+        <div className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          {flash}
+        </div>
+      ) : null}
+      {message ? (
+        <div className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          {message}
         </div>
       ) : null}
 
-      <Card>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-neutral-800">
-                {mode === 'edit' ? `Editing: ${form.name || 'product'}` : 'Create a new product'}
-              </p>
-              {mode === 'edit' ? <p className="text-xs text-neutral-500">ID: {form.id}</p> : null}
-            </div>
-            <div className="flex gap-2">
-              {mode === 'edit' ? (
-                <Button type="button" variant="ghost" onClick={resetForm}>
-                  Cancel
-                </Button>
-              ) : null}
-              <Button type="submit" disabled={saving}>
-                {saving ? 'Saving…' : mode === 'edit' ? 'Save changes' : 'Create product'}
-              </Button>
-            </div>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="space-y-1 text-sm">
-              <span className="block font-medium text-neutral-800">Name</span>
-              <input
-                required
-                value={form.name}
-                onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
-                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-neutral-900"
-              />
-            </label>
-            <label className="space-y-1 text-sm">
-              <span className="block font-medium text-neutral-800">Slug (optional)</span>
-              <input
-                value={form.slug}
-                onChange={(e) => setForm((p) => ({ ...p, slug: e.target.value }))}
-                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-neutral-900"
-              />
-            </label>
-
-            <label className="space-y-1 text-sm sm:col-span-2">
-              <span className="block font-medium text-neutral-800">Short description</span>
-              <input
-                required
-                value={form.shortDescription}
-                onChange={(e) => setForm((p) => ({ ...p, shortDescription: e.target.value }))}
-                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-neutral-900"
-              />
-            </label>
-
-            <label className="space-y-1 text-sm sm:col-span-2">
-              <span className="block font-medium text-neutral-800">Description</span>
-              <textarea
-                required
-                rows={4}
-                value={form.description}
-                onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
-                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-neutral-900"
-              />
-            </label>
-
-            <label className="space-y-1 text-sm sm:col-span-2">
-              <span className="block font-medium text-neutral-800">How to use</span>
-              <textarea
-                required
-                rows={3}
-                value={form.howToUse}
-                onChange={(e) => setForm((p) => ({ ...p, howToUse: e.target.value }))}
-                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-neutral-900"
-              />
-            </label>
-
-            <label className="space-y-1 text-sm">
-              <span className="block font-medium text-neutral-800">Retail price (AUD)</span>
-              <input
-                required
-                value={form.price}
-                onChange={(e) => setForm((p) => ({ ...p, price: e.target.value }))}
-                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-neutral-900"
-              />
-            </label>
-            <label className="space-y-1 text-sm">
-              <span className="block font-medium text-neutral-800">Wholesale price (optional)</span>
-              <input
-                value={form.wholesalePrice}
-                onChange={(e) => setForm((p) => ({ ...p, wholesalePrice: e.target.value }))}
-                placeholder="Leave blank for none"
-                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-neutral-900"
-              />
-            </label>
-
-            <label className="space-y-1 text-sm">
-              <span className="block font-medium text-neutral-800">Compare-at price (optional)</span>
-              <input
-                value={form.compareAtPrice}
-                onChange={(e) => setForm((p) => ({ ...p, compareAtPrice: e.target.value }))}
-                placeholder="Leave blank if none"
-                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-neutral-900"
-              />
-            </label>
-
-            <label className="space-y-1 text-sm">
-              <span className="block font-medium text-neutral-800">Stock quantity</span>
-              <input
-                required
-                value={form.stockQuantity}
-                onChange={(e) => setForm((p) => ({ ...p, stockQuantity: e.target.value }))}
-                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-neutral-900"
-              />
-            </label>
-
-            <label className="space-y-1 text-sm sm:col-span-2">
-              <span className="block font-medium text-neutral-800">Image URL (required)</span>
-              <input
-                required
-                value={form.imageUrl}
-                onChange={(e) => setForm((p) => ({ ...p, imageUrl: e.target.value }))}
-                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-neutral-900"
-              />
-            </label>
-
-            <label className="flex items-center gap-2 text-sm sm:col-span-1">
-              <input
-                type="checkbox"
-                checked={form.isActive}
-                onChange={(e) => setForm((p) => ({ ...p, isActive: e.target.checked }))}
-              />
-              Active (visible to customers)
-            </label>
-            <label className="flex items-center gap-2 text-sm sm:col-span-1">
-              <input
-                type="checkbox"
-                checked={form.isFeatured}
-                onChange={(e) => setForm((p) => ({ ...p, isFeatured: e.target.checked }))}
-              />
-              Featured
-            </label>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-neutral-800">
-                Categories ({selectedCategoryCount} selected)
-              </p>
-              <div className="max-h-44 overflow-auto rounded-md border border-neutral-200 bg-white p-2">
-                {categories.map((c) => (
-                  <label key={c.id} className="flex items-center gap-2 py-1 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={form.categoryIds.includes(c.id)}
-                      onChange={() =>
-                        setForm((p) => ({ ...p, categoryIds: toggleInArray(p.categoryIds, c.id) }))
-                      }
-                    />
-                    <span className="truncate">{c.name}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-neutral-800">
-                Ingredients ({form.ingredientIds.length} selected)
-              </p>
-              <div className="max-h-44 overflow-auto rounded-md border border-neutral-200 bg-white p-2">
-                {ingredients.map((i) => (
-                  <label key={i.id} className="flex items-center gap-2 py-1 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={form.ingredientIds.includes(i.id)}
-                      onChange={() =>
-                        setForm((p) => ({ ...p, ingredientIds: toggleInArray(p.ingredientIds, i.id) }))
-                      }
-                    />
-                    <span className="truncate">{i.name}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          </div>
-        </form>
-      </Card>
+      {error ? (
+        <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+      ) : null}
 
       <Card>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
-            <h3 className="text-base font-semibold text-neutral-900">Existing products</h3>
-            <p className="text-sm text-neutral-600">Click a product to edit or deactivate it.</p>
+            <h2 className="text-base font-semibold text-slate-900">Product list</h2>
+            <p className="text-sm text-slate-500">Search and filter products, then edit or manage visibility.</p>
           </div>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <div className="grid w-full gap-2 sm:w-auto sm:grid-cols-3">
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by name"
-              className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-neutral-900 sm:w-64"
+              placeholder="Search by product name"
+              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-slate-900 sm:w-64"
             />
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={showInactive}
-                onChange={(e) => setShowInactive(e.target.checked)}
-              />
-              Include inactive
-            </label>
-            <Button type="button" variant="ghost" onClick={resetForm}>
-              New product
-            </Button>
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-slate-900"
+            >
+              <option value="all">All categories</option>
+              {categoryOptions.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+              className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-slate-900"
+            >
+              <option value="all">All statuses</option>
+              <option value="active">Active only</option>
+              <option value="inactive">Inactive only</option>
+            </select>
           </div>
         </div>
 
+        {showingFilters ? (
+          <p className="mt-3 text-xs text-slate-500">Filters are applied to this list.</p>
+        ) : null}
+
         {loading ? (
-          <div className="mt-4 space-y-2 text-sm text-neutral-600">Loading products…</div>
+          <div className="mt-4 text-sm text-slate-500">Loading products...</div>
         ) : products.length === 0 ? (
-          <div className="mt-4 text-sm text-neutral-600">No products found.</div>
+          <div className="mt-8 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center">
+            <p className="text-base font-medium text-slate-700">No products found</p>
+            <p className="mt-1 text-sm text-slate-500">
+              Add your first product or adjust filters to see more results.
+            </p>
+            <Link
+              to="/admin/products/new"
+              className="mt-4 inline-flex rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
+            >
+              Add new product
+            </Link>
+          </div>
         ) : (
-          <ul className="mt-4 divide-y divide-neutral-100">
-            {products.map((p) => (
-              <li key={p.id} className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="space-y-1">
-                  <p className="font-medium text-neutral-900">{p.name}</p>
-                  <p className="text-xs text-neutral-500">{p.slug}</p>
-                  <p className="text-sm text-neutral-700">
-                    Retail price: <span className="font-semibold">{p.price}</span>
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button type="button" variant="ghost" className="!px-3 !py-1.5 text-xs" onClick={() => handleEdit(p.id)}>
-                    Edit
-                  </Button>
-                  <Button type="button" variant="ghost" className="!px-3 !py-1.5 text-xs" onClick={() => handleDeactivate(p.id)}>
-                    Deactivate
-                  </Button>
-                </div>
-              </li>
-            ))}
-          </ul>
+          <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200">
+            <table className="min-w-full divide-y divide-slate-200 text-left">
+              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                <tr>
+                  <th className="px-4 py-3 font-medium">Product</th>
+                  <th className="px-4 py-3 font-medium">Category</th>
+                  <th className="px-4 py-3 font-medium">Retail</th>
+                  <th className="px-4 py-3 font-medium">Wholesale</th>
+                  <th className="px-4 py-3 font-medium">Stock</th>
+                  <th className="px-4 py-3 font-medium">Status</th>
+                  <th className="px-4 py-3 font-medium">Featured</th>
+                  <th className="px-4 py-3 font-medium">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 bg-white text-sm text-slate-700">
+                {products.map((p) => (
+                  <tr key={p.id}>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={p.imageUrl}
+                          alt={p.name}
+                          className="h-12 w-12 rounded-md border border-slate-200 object-cover"
+                        />
+                        <div className="min-w-0">
+                          <p className="truncate font-medium text-slate-900">{p.name}</p>
+                          <p className="truncate text-xs text-slate-500">{p.slug}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-xs text-slate-600">
+                      {p.categories?.length
+                        ? p.categories.slice(0, 2).map((c) => c.name).join(', ')
+                        : 'Uncategorised'}
+                      {p.categories && p.categories.length > 2 ? ' +more' : ''}
+                    </td>
+                    <td className="px-4 py-3 font-medium text-slate-900">{formatAud(p.price)}</td>
+                    <td className="px-4 py-3">{p.wholesalePrice ? formatAud(p.wholesalePrice) : '—'}</td>
+                    <td className="px-4 py-3">{p.stockQuantity}</td>
+                    <td className="px-4 py-3">
+                      <AdminStatusBadge status={p.isActive ? 'ACTIVE' : 'INACTIVE'} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <AdminStatusBadge status={p.isFeatured ? 'FEATURED' : 'STANDARD'} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap gap-2">
+                        <Link
+                          to={`/admin/products/${p.id}/edit`}
+                          className="rounded-md border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
+                        >
+                          Edit
+                        </Link>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          className="!px-2.5 !py-1.5 text-xs"
+                          disabled={actionLoadingId === p.id}
+                          onClick={() => handleToggleActive(p.id, p.isActive)}
+                        >
+                          {p.isActive ? 'Hide' : 'Activate'}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          className="!px-2.5 !py-1.5 text-xs"
+                          disabled={actionLoadingId === p.id}
+                          onClick={() => handleToggleFeatured(p.id, p.isFeatured)}
+                        >
+                          {p.isFeatured ? 'Unfeature' : 'Feature'}
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </Card>
     </div>
   )
+}
+
+function formatAud(value: string) {
+  const n = Number(value)
+  if (!Number.isFinite(n)) return value
+  return new Intl.NumberFormat('en-AU', {
+    style: 'currency',
+    currency: 'AUD',
+    minimumFractionDigits: 2,
+  }).format(n)
 }
 

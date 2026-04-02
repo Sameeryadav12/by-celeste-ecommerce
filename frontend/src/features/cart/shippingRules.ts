@@ -1,15 +1,11 @@
-/**
- * Step 6 demo shipping rules (AUD).
- * Replace with real carrier/service rules in a later step.
- */
+/** Flat-rate shipping (AUD), no discounts. */
 export const SHIPPING_CONFIG = {
-  standardFee: 9.95,
-  freeShippingThreshold: 120,
+  standardFee: 12,
+  carrierLabel: 'Australia Post',
 }
 
 export function calculateShipping(subtotal: number): number {
   if (subtotal <= 0) return 0
-  if (subtotal >= SHIPPING_CONFIG.freeShippingThreshold) return 0
   return SHIPPING_CONFIG.standardFee
 }
 

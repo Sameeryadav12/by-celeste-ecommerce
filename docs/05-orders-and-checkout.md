@@ -12,17 +12,14 @@ This document explains, in plain English, how shopping, checkout, and payments w
 - Customers can remove items or clear the cart entirely.  
 - Cart data is saved locally in the browser, so refresh does not lose the cart.
 
-## Freight calculator on the cart (polish / client alignment)
+## Shipping on cart and checkout (client alignment)
 
-The cart includes a **freight calculator** so shoppers see **shipping and a full total before checkout**:
+Shipping is now simple and fixed:
 
-- **Australian postcodes only:** exactly **4 digits**. Invalid input shows a clear message (for example: enter a valid Australian postcode).
-- **Calculate shipping** applies the demo rules and updates the **order summary** (shipping row + grand total).
-- **Rules (AUD, demo):** subtotal **under $120** → **$9.95** shipping; subtotal **$120 or more** → **free shipping**. When the cart already qualifies for free shipping, the page states that clearly—**no postcode is required**.
-- **Checkout gate:** Until shipping is resolved (free-shipping tier **or** valid postcode + calculate), the summary shows **—** for shipping/total and **Continue to checkout** stays disabled—so the flow matches “show shipping cost before checkout.”
-- If the subtotal **crosses** the free-shipping threshold (e.g. after quantity changes), any previously entered postcode is **cleared** so the customer is not shown a misleading “shipping to 3000” line when delivery is now free.
-
-No extra packages are required for this; it is standard React state plus shared shipping helpers (`SHIPPING_CONFIG` / `calculateShipping`) aligned with the backend preview rules.
+- **Flat rate:** **$12 AUD** per order.
+- **Carrier:** **Australia Post**.
+- **No discounts:** no free-shipping threshold and no quantity-based reductions.
+- Cart and checkout both use the same shared shipping rules as backend checkout totals.
 
 ## What the checkout page does
 
@@ -52,12 +49,20 @@ The cart preview on the customer’s device is helpful, but it is **not authorit
 
 ## How shipping is calculated
 
-Shipping uses the same simple **AUD rules** as Step 6 (aligned between frontend preview and backend):
+Shipping uses one rule in both frontend and backend:
 
-- Below the free-shipping threshold: a **standard flat fee**.  
-- At or above the threshold: **free shipping**.
+- **$12 AUD flat rate** per order when subtotal is above 0.
+- No free-shipping tiers.
 
-This is intentionally simple for coursework and demos. Later it can be replaced by a carrier integration (for example Australia Post or Sendle) **without changing the idea** that shipping belongs on the server.
+This is intentionally simple for coursework and demos. Later it can be replaced by richer carrier logic **without changing the idea** that shipping belongs on the server.
+
+## Testimonials Feature
+
+The storefront now includes a dedicated **Testimonials** page (`/testimonials`) using curated customer quotes.
+
+- It gives first-time shoppers social proof before checkout.
+- A preview appears on the **Home** page with a “View all testimonials” button.
+- The full page keeps a clean premium card layout aligned with the By Celeste visual style.
 
 ## How Square hosted checkout works (simple terms)
 

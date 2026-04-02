@@ -23,7 +23,7 @@ import {
   createProduct,
   deactivateProduct,
   getAdminProductById,
-  listProductsPublic,
+  listProductsAdmin,
   updateProduct,
 } from '../services/product.service'
 import { paramString } from '../utils/routeParams'
@@ -179,17 +179,14 @@ export const adminListProducts = asyncHandler(async (req: Request, res: Response
     ? (sortRaw as 'name_asc' | 'name_desc' | 'price_asc' | 'price_desc')
     : undefined
 
-  const result = await listProductsPublic(
-    {
-      page,
-      limit,
-      category: typeof q.category === 'string' ? q.category : undefined,
-      featured: q.featured === 'true' || q.featured === '1' ? true : undefined,
-      search: typeof q.search === 'string' ? q.search : undefined,
-      sort,
-      activeOnly: q.activeOnly === 'false' || q.activeOnly === '0' ? false : true,
-    },
-    null,
-  )
+  const result = await listProductsAdmin({
+    page,
+    limit,
+    category: typeof q.category === 'string' ? q.category : undefined,
+    featured: q.featured === 'true' || q.featured === '1' ? true : undefined,
+    search: typeof q.search === 'string' ? q.search : undefined,
+    sort,
+    activeOnly: q.activeOnly === 'false' || q.activeOnly === '0' ? false : true,
+  })
   res.status(200).json({ success: true, data: result })
 })

@@ -10,7 +10,17 @@ import { AddToCartButton } from '../features/cart/components/AddToCartButton'
 import { Seo } from '../components/seo/Seo'
 import { SmartImage } from '../components/media/SmartImage'
 import { productNativeBadges } from '../features/catalog/nativeIngredientHighlights'
-import { briefProductOverview, howToUseSteps } from '../features/catalog/productDetailFormat'
+import { howToUseSteps } from '../features/catalog/productDetailFormat'
+
+function productDescriptionParagraphs(description: string): string[] {
+  const trimmed = description.trim()
+  if (!trimmed) return []
+  const blocks = trimmed
+    .split(/\n\n+/)
+    .map((b) => b.trim())
+    .filter(Boolean)
+  return blocks.length > 0 ? blocks : [trimmed]
+}
 
 export function ProductDetailPage() {
   const { user } = useAuth()
@@ -106,7 +116,7 @@ export function ProductDetailPage() {
   const inStock = product.stockQuantity > 0
   const nativeBadgesTitle = productNativeBadges(product, 2)
   const nativeHighlightLabels = productNativeBadges(product, 6)
-  const overviewText = briefProductOverview(product.description, 2)
+  const descriptionParagraphs = productDescriptionParagraphs(product.description)
   const useSteps = howToUseSteps(product.howToUse)
 
   const url = typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : undefined
@@ -204,6 +214,8 @@ export function ProductDetailPage() {
               price: product.price,
               compareAtPrice: product.compareAtPrice,
               stockQuantity: product.stockQuantity,
+              categoryName: product.categories[0]?.name,
+              shortDescription: product.shortDescription,
             }}
             className="w-full sm:w-auto"
           />
@@ -221,10 +233,16 @@ export function ProductDetailPage() {
         </div>
       </div>
 
-      {overviewText ? (
+      {descriptionParagraphs.length > 0 ? (
         <Card className="border-neutral-200/90 shadow-sm">
           <h2 className="text-lg font-semibold tracking-tight text-neutral-900 sm:text-xl">Overview</h2>
-          <p className="mt-3 text-sm leading-relaxed text-neutral-500 sm:text-base">{overviewText}</p>
+          <div className="mt-3 space-y-4 text-sm leading-relaxed text-neutral-600 sm:text-base">
+            {descriptionParagraphs.map((paragraph, idx) => (
+              <p key={idx} className="whitespace-pre-line">
+                {paragraph}
+              </p>
+            ))}
+          </div>
         </Card>
       ) : null}
 

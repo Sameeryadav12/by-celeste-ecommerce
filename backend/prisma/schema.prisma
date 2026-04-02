@@ -244,7 +244,7 @@ model Product {
   @@index([name])
 }
 
-/// Public-facing brand events: pop-ups, workshops, and seasonal moments.
+/// Public-facing brand events: pop-ups, community events, and seasonal moments.
 model Event {
   id               String   @id @default(cuid())
   title            String

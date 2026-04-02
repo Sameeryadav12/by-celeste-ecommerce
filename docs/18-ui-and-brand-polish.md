@@ -29,7 +29,7 @@ This note is for **Jane** in plain English. It summarises a focused polish pass 
 ### 3. About page
 
 - More **personal founder / Victoria / small-batch** story, without exaggerated claims.
-- **Studio address** on the site: **10 Mortimer Tce, Leneva VIC 3691** (centralised in `frontend/src/config/businessAddress.ts`; shown in the footer **Contact** block and on **About**).
+- **Location** on the site: **Leneva Victoria, Australia** (centralised in `frontend/src/config/businessAddress.ts`; shown in the footer **Contact** block and on **About**). No street address or postcode is displayed, per client request for a clean, premium look.
 
 ### 4. Events (light touch)
 

@@ -112,8 +112,8 @@ export function AdminCategoriesPage() {
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <h2 className="text-xl font-semibold tracking-tight text-neutral-900">Categories</h2>
-        <p className="text-sm text-neutral-600">Create, edit, and deactivate categories.</p>
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Categories</h1>
+        <p className="text-sm text-slate-500">Create, edit, and manage category visibility.</p>
       </div>
 
       {error ? (

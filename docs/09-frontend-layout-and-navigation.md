@@ -14,7 +14,7 @@ As of Step 3, the storefront has a clear set of pages:
 - **Cart** – a placeholder for items and order totals.  
 - **Checkout** – a placeholder for shipping, summary, and future secure payments with Square.  
 - **About** – a high-level story and values overview for the brand.  
-- **Events** – a future home for workshops and in-person events.  
+- **Events** – a future home for pop-ups and in-person events.  
 - **Wholesale** – a starting point for stockists and partners.  
 - **Login / Signup** – customer authentication pages from earlier steps.  
 - **Account** – a simple signed-in account area, protected so only logged-in customers can see it.
@@ -26,7 +26,7 @@ These pages are mostly placeholders today, but the structure is now in place for
 The header:
 
 - Shows the **By Celeste** brand at the top of every page: **client logo** from `frontend/public/images/branding/` when provided (`logo.svg` / `logo.png`), otherwise the **text wordmark**.  
-- Provides one simple navigation bar to Home, Shop, About, Events, Wholesale, and Cart.  
+- Provides one simple navigation bar to Home, Shop, About, Events, Testimonials, Wholesale, and Cart.  
 - Adjusts the account area based on whether the customer is logged in:
   - Logged out: shows **Login** and **Signup**.  
   - Logged in: shows **Account** and **Logout**.  
@@ -38,7 +38,7 @@ The footer:
 
 - Offers a short **brand/about** summary in plain language.  
 - Lists **quick links** as placeholders for shop, events, and wholesale areas.  
-- Includes **contact details** in the footer: studio address **10 Mortimer Tce, Leneva VIC 3691, Australia** (same values are centralised in `frontend/src/config/businessAddress.ts`).  
+- Includes **contact details** in the footer: location **Leneva Victoria, Australia** (centralised in `frontend/src/config/businessAddress.ts`). No street-level address is shown, per client preference for a clean, premium presentation.  
 - Shows a clear copyright line so the site feels complete and professional.
 
 ## How this helps future development and client usability

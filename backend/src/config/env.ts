@@ -24,7 +24,7 @@ export const env = {
    */
   FRONTEND_ORIGIN:
     process.env.FRONTEND_ORIGIN?.trim() ||
-    (process.env.NODE_ENV === 'production' ? undefined : 'http://localhost:5173'),
+    (process.env.NODE_ENV === 'production' ? undefined : 'http://localhost:5174'),
 
   DATABASE_URL: getEnv('DATABASE_URL'),
 
@@ -60,10 +60,10 @@ export const env = {
 
   /**
    * Where Square redirects the buyer after payment (no query string needed; orderId is appended server-side).
-   * In development, defaults to http://localhost:5173/checkout/success when omitted.
+   * In development, defaults to http://localhost:5174/checkout/success when omitted.
    */
   CHECKOUT_SUCCESS_REDIRECT_URL:
     process.env.CHECKOUT_SUCCESS_REDIRECT_URL?.trim() ||
-    (process.env.NODE_ENV === 'production' ? undefined : 'http://localhost:5173/checkout/success'),
+    (process.env.NODE_ENV === 'production' ? undefined : 'http://localhost:5174/checkout/success'),
 }
 

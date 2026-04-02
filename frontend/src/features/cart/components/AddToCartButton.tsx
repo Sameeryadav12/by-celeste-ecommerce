@@ -11,6 +11,8 @@ type CartProductInput = {
   price: number
   compareAtPrice: number | null
   stockQuantity: number
+  categoryName?: string
+  shortDescription?: string
 }
 
 const SUCCESS_TOAST_MS = 2500
@@ -19,9 +21,11 @@ const BUTTON_ADDED_MS = 2000
 export function AddToCartButton({
   product,
   className,
+  quantity,
 }: {
   product: CartProductInput
   className?: string
+  quantity?: number
 }) {
   const { addItem } = useCart()
   const [showSuccessToast, setShowSuccessToast] = useState(false)
@@ -49,7 +53,7 @@ export function AddToCartButton({
     setShowSuccessToast(false)
     setButtonAdded(false)
 
-    const result = addItem(product)
+    const result = addItem({ ...product, quantity })
 
     if (result.added) {
       setShowSuccessToast(true)
@@ -68,7 +72,13 @@ export function AddToCartButton({
         type="button"
         onClick={handleAdd}
         disabled={outOfStock}
-        className={className}
+        className={[
+          className,
+          'transform-gpu transition-all duration-200 ease-in-out',
+          buttonAdded ? 'scale-[1.02]' : '',
+        ]
+          .filter(Boolean)
+          .join(' ')}
         variant="primary"
         aria-live="polite"
       >

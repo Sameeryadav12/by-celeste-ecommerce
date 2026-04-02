@@ -1,4 +1,5 @@
 import { apiFetch } from '../../lib/api'
+import type { AuthUser } from '../../auth/authTypes'
 
 export type AccountOrderSummary = {
   id: string
@@ -6,6 +7,7 @@ export type AccountOrderSummary = {
   status: string
   paymentStatus: string
   totalAmount: string
+  itemCount: number
 }
 
 export type AccountOrderDetail = {
@@ -60,6 +62,10 @@ export type LoyaltyDashboard = {
 
 export async function fetchMyOrders() {
   return apiFetch<{ orders: AccountOrderSummary[] }>('/api/account/orders')
+}
+
+export async function fetchMyAccount() {
+  return apiFetch<{ user: AuthUser }>('/api/account/me')
 }
 
 export async function fetchMyOrder(orderId: string) {

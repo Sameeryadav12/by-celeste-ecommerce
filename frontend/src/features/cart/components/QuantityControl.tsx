@@ -19,9 +19,16 @@ export function QuantityControl({
   const atMax = max != null ? quantity >= max : false
 
   return (
-    <div className="inline-flex items-center gap-1 rounded-md border border-neutral-300 bg-white p-1">
-      <Button type="button" variant="ghost" onClick={onDecrease} disabled={atMin} className="px-2 py-1">
-        -
+    <div className="inline-flex items-center rounded-lg border border-neutral-200 bg-neutral-50/50">
+      <Button
+        type="button"
+        variant="ghost"
+        onClick={onDecrease}
+        disabled={atMin}
+        className="h-8 w-8 p-0 text-base"
+        aria-label="Decrease quantity"
+      >
+        −
       </Button>
       <input
         type="number"
@@ -33,18 +40,19 @@ export function QuantityControl({
           if (!Number.isFinite(next)) return
           onSet(next)
         }}
-        className="w-14 rounded border border-neutral-200 px-2 py-1 text-center text-sm text-neutral-900 outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900"
+        className="h-8 w-10 border-x border-neutral-200 bg-white text-center text-sm font-medium text-neutral-900 outline-none focus:border-neutral-400 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        aria-label="Quantity"
       />
       <Button
         type="button"
         variant="ghost"
         onClick={onIncrease}
         disabled={atMax}
-        className="px-2 py-1"
+        className="h-8 w-8 p-0 text-base"
+        aria-label="Increase quantity"
       >
         +
       </Button>
     </div>
   )
 }
-

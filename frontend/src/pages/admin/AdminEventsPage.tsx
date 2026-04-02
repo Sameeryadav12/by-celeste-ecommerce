@@ -8,6 +8,7 @@ import {
   updateAdminEvent,
   unpublishAdminEvent,
 } from '../../features/admin/adminApi'
+import { AdminStatusBadge } from './components/AdminStatusBadge'
 
 type EventForm = {
   id?: string
@@ -66,6 +67,7 @@ export function AdminEventsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [message, setMessage] = useState<string | null>(null)
 
   const [form, setForm] = useState<EventForm>(initialForm())
 
@@ -82,7 +84,7 @@ export function AdminEventsPage() {
       const data = await listAdminEvents({ includeUnpublished: true, limit: 50 })
       setEvents(data.events as AdminEventItem[])
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not load events.')
+      setError('Could not load events.')
     } finally {
       setLoading(false)
     }
@@ -124,7 +126,15 @@ export function AdminEventsPage() {
     e.preventDefault()
     setSaving(true)
     setError(null)
+    setMessage(null)
     try {
+      const start = new Date(form.startDateTimeLocal)
+      const end = new Date(form.endDateTimeLocal)
+      if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end <= start) {
+        setError('End date/time must be after the start date/time.')
+        setSaving(false)
+        return
+      }
       const payload = {
         title: form.title.trim(),
         slug: form.slug.trim() || undefined,
@@ -146,14 +156,16 @@ export function AdminEventsPage() {
 
       if (form.id) {
         await updateAdminEvent(form.id, payload)
+        setMessage('Event updated successfully.')
       } else {
         await createAdminEvent(payload)
+        setMessage('Event created successfully.')
       }
 
       resetForm()
       await loadEvents()
     } catch (e2) {
-      setError(e2 instanceof Error ? e2.message : 'Could not save event.')
+      setError('Could not save event. Please check the form and try again.')
     } finally {
       setSaving(false)
     }
@@ -162,12 +174,14 @@ export function AdminEventsPage() {
   async function handleUnpublish(id: string) {
     setSaving(true)
     setError(null)
+    setMessage(null)
     try {
       await unpublishAdminEvent(id)
+      setMessage('Event unpublished.')
       if (form.id === id) resetForm()
       await loadEvents()
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not unpublish event.')
+      setError('Could not update event publishing status.')
     } finally {
       setSaving(false)
     }
@@ -176,11 +190,28 @@ export function AdminEventsPage() {
   async function handleQuickPublish(id: string) {
     setSaving(true)
     setError(null)
+    setMessage(null)
     try {
       await updateAdminEvent(id, { isPublished: true })
+      setMessage('Event published.')
       await loadEvents()
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not publish event.')
+      setError('Could not update event publishing status.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function handleQuickFeature(id: string, isFeatured: boolean) {
+    setSaving(true)
+    setError(null)
+    setMessage(null)
+    try {
+      await updateAdminEvent(id, { isFeatured: !isFeatured })
+      setMessage(isFeatured ? 'Event removed from featured list.' : 'Event added to featured list.')
+      await loadEvents()
+    } catch (e) {
+      setError('Could not update featured status.')
     } finally {
       setSaving(false)
     }
@@ -189,9 +220,14 @@ export function AdminEventsPage() {
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <h2 className="text-xl font-semibold tracking-tight text-neutral-900">Events</h2>
-        <p className="text-sm text-neutral-600">Create, edit, publish/unpublish, and feature events.</p>
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Events</h1>
+        <p className="text-sm text-slate-500">Create, edit, publish/unpublish, and feature events.</p>
       </div>
+      {message ? (
+        <div className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          {message}
+        </div>
+      ) : null}
 
       {error ? (
         <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
@@ -397,9 +433,12 @@ export function AdminEventsPage() {
                   <div className="space-y-1">
                     <p className="font-medium text-neutral-900">{ev.title}</p>
                     <p className="text-xs text-neutral-500">
-                      {new Date(ev.startDateTime).toLocaleString()} · {ev.isPublished ? 'Published' : 'Unpublished'}
+                      {new Date(ev.startDateTime).toLocaleString()} · {ev.locationName}
                     </p>
-                    {ev.isFeatured ? <p className="text-xs text-neutral-600">Featured</p> : null}
+                    <div className="flex gap-2">
+                      <AdminStatusBadge status={ev.isPublished ? 'PUBLISHED' : 'UNPUBLISHED'} />
+                      {ev.isFeatured ? <AdminStatusBadge status="FEATURED" /> : null}
+                    </div>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <Button type="button" variant="ghost" className="!px-3 !py-1.5 text-xs" onClick={() => onEdit(ev)}>
@@ -424,6 +463,14 @@ export function AdminEventsPage() {
                         Publish
                       </Button>
                     )}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="!px-3 !py-1.5 text-xs"
+                      onClick={() => handleQuickFeature(ev.id, ev.isFeatured)}
+                    >
+                      {ev.isFeatured ? 'Unfeature' : 'Feature'}
+                    </Button>
                   </div>
                 </div>
               </li>

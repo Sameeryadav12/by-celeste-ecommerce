@@ -9,6 +9,7 @@ import { CatalogEmptyState } from '../features/catalog/components/CatalogEmptySt
 import { ProductCard } from '../features/catalog/components/ProductCard'
 import { ProductCardSkeleton } from '../features/catalog/components/ProductCardSkeleton'
 import type { CatalogCategory, CatalogProductsResult, ProductSort } from '../features/catalog/catalogTypes'
+import { Reveal } from '../components/animation/Reveal'
 
 const PAGE_SIZE = 9
 
@@ -291,20 +292,24 @@ export function ShopPage() {
       ) : null}
 
       {productsLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: PAGE_SIZE }).map((_, index) => (
-            <ProductCardSkeleton key={index} />
-          ))}
-        </div>
+        <Reveal>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: PAGE_SIZE }).map((_, index) => (
+              <ProductCardSkeleton key={index} />
+            ))}
+          </div>
+        </Reveal>
       ) : products.length === 0 ? (
         <CatalogEmptyState message="No products matched your filters. Try another category or search term." />
       ) : (
         <>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          <Reveal>
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {products.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          </Reveal>
 
           <div className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm shadow-sm">
             <span className="text-neutral-700">
