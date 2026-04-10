@@ -14,12 +14,13 @@ export function AdminProductEditPage() {
 
   useEffect(() => {
     if (!id) return
+    const productId = id
     let cancelled = false
     async function load() {
       setLoading(true)
       setLoadError(null)
       try {
-        const detail = await getAdminProduct(id)
+        const detail = await getAdminProduct(productId)
         if (!cancelled) setProduct(detail)
       } catch (e) {
         if (!cancelled) setLoadError(e instanceof Error ? e.message : 'Could not load product.')

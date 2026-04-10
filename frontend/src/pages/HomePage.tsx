@@ -87,6 +87,7 @@ export function HomePage() {
   }, [])
 
   const testimonialPreview = (testimonials.length > 0 ? testimonials : []).slice(0, 4)
+  const tagline = marketing?.homepageTagline ?? 'Traditional, Natural Exceptional Skincare'
 
   return (
     <>
@@ -95,10 +96,19 @@ export function HomePage() {
         description="By Celeste is a calm Australian skincare brand with gentle essentials, events, and honest ingredient information."
       />
       <section className="space-y-24 sm:space-y-28">
-        {/* 1 — Hero */}
-        <Reveal className="space-y-6 sm:space-y-8">
+        {/* 1 — Hero: text branding only; visual mark lives in the header */}
+        <Reveal className="max-w-3xl">
+          <div className="space-y-2.5 sm:space-y-3">
+            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.28em] text-neutral-500 sm:text-xs sm:tracking-[0.24em]">
+              By Celeste
+            </p>
+            <p className="text-[0.8125rem] font-semibold uppercase leading-relaxed tracking-[0.14em] text-neutral-600 sm:text-sm sm:tracking-[0.12em]">
+              {tagline}
+            </p>
+          </div>
+
           <h1
-            className="text-4xl font-semibold tracking-tight text-neutral-900 sm:text-5xl lg:text-[3.25rem] lg:leading-tight"
+            className="mt-10 text-4xl font-semibold tracking-tight text-neutral-900 sm:mt-12 sm:text-5xl lg:mt-14 lg:text-[3.25rem] lg:leading-[1.15]"
             style={
               theme?.homepageHeroEmphasis
                 ? { color: theme?.primaryBrandColor || undefined }
@@ -107,14 +117,11 @@ export function HomePage() {
           >
             {marketing?.homepageHeroHeading ?? 'Calm, considered skincare by By Celeste'}
           </h1>
-          <p className="text-xl font-semibold uppercase tracking-[0.16em] text-neutral-900 sm:text-2xl">
-            {marketing?.homepageTagline ?? 'Traditional, Natural Exceptional Skincare'}
-          </p>
-          <p className="max-w-2xl text-base leading-relaxed text-neutral-500 sm:text-[1.05rem]">
+          <p className="mt-5 max-w-2xl text-base leading-[1.65] text-neutral-500 sm:mt-6 sm:text-[1.0625rem] sm:leading-relaxed">
             {marketing?.homepageSubtext ??
               'Small-batch skincare rooted in regional Victoria — honest formulas and the warmth of local events. A quiet alternative to loud, mass-market beauty.'}
           </p>
-          <div className="flex flex-wrap gap-3 pt-2">
+          <div className="mt-8 flex flex-wrap gap-3 sm:mt-10">
             <Link
               to="/shop"
               className={[

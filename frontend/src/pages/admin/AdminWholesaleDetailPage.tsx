@@ -19,12 +19,13 @@ export function AdminWholesaleDetailPage() {
 
   useEffect(() => {
     if (!id) return
+    const wholesalerId = id
     let cancelled = false
     async function load() {
       setLoading(true)
       setError(null)
       try {
-        const data = await getAdminWholesaler(id)
+        const data = await getAdminWholesaler(wholesalerId)
         if (!cancelled) setWholesaler(data)
       } catch (e) {
         if (!cancelled) setError('Could not load wholesale account.')

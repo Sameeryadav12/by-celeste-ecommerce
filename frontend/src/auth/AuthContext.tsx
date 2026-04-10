@@ -13,13 +13,13 @@ import { fetchCurrentUser, login as apiLogin, logout as apiLogout, signup as api
 type AuthContextValue = {
   status: AuthStatus
   user: AuthUser | null
-  login: (input: { email: string; password: string }) => Promise<void>
+  login: (input: { email: string; password: string }) => Promise<AuthUser>
   signup: (input: {
     firstName: string
     lastName: string
     email: string
     password: string
-  }) => Promise<void>
+  }) => Promise<AuthUser>
   logout: () => Promise<void>
   refreshUser: () => Promise<void>
 }
@@ -51,6 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const result = await apiLogin(input)
       setUser(result.user)
       setStatus('authenticated')
+      return result.user
     },
     [],
   )
@@ -65,6 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const result = await apiSignup(input)
       setUser(result.user)
       setStatus('authenticated')
+      return result.user
     },
     [],
   )

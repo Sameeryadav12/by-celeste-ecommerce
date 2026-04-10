@@ -29,7 +29,7 @@ export function AdminProductsPage() {
       if (cancelled) return
       setCategoryOptions(cats)
     }
-    void loadCategories().catch((e) => {
+    void loadCategories().catch(() => {
       if (!cancelled) setError('Could not load category list.')
     })
     return () => {

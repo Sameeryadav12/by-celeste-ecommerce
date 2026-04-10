@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import { defaultHomePathForUser, resolvePostLoginPath } from '../auth/postLoginRedirect'
 
 type FieldErrors = {
   email?: string
@@ -19,15 +20,26 @@ export function LoginPage() {
   const [formError, setFormError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  if (user && status === 'authenticated') {
-    navigate(user.role === 'ADMIN' ? '/admin' : '/account', { replace: true })
-  }
+  useEffect(() => {
+    if (status !== 'authenticated' || !user) return
+    navigate(defaultHomePathForUser(user), { replace: true })
+  }, [status, user, navigate])
 
   if (status === 'loading' || status === 'idle') {
     return (
       <section className="flex min-h-[60vh] items-center justify-center px-4">
         <p className="text-sm text-neutral-600" aria-busy="true">
           Checking your session…
+        </p>
+      </section>
+    )
+  }
+
+  if (status === 'authenticated' && user) {
+    return (
+      <section className="flex min-h-[60vh] items-center justify-center px-4">
+        <p className="text-sm text-neutral-600" aria-busy="true">
+          Redirecting…
         </p>
       </section>
     )
@@ -62,8 +74,8 @@ export function LoginPage() {
 
     setIsSubmitting(true)
     try {
-      await login({ email, password })
-      const redirectTo = location.state?.from || '/account'
+      const signedIn = await login({ email, password })
+      const redirectTo = resolvePostLoginPath(signedIn, location.state?.from)
       navigate(redirectTo, { replace: true })
     } catch (error) {
       const message =

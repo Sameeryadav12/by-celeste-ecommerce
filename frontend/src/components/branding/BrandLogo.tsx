@@ -1,16 +1,15 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { BRANDING_LOGO_SRC_CHAIN } from '../../config/brandingLogos'
 
 /**
- * Header: larger for stronger brand presence.
- * Footer: still substantial for brand consistency.
- * object-contain + max-width prevents navbar overflow.
+ * Header: primary visual mark. Footer: strong supporting mark (still smaller than header on lg).
+ * object-contain + max-width keeps aspect ratio and avoids overflow.
  */
 const variantClasses = {
   header:
-    'h-10 max-h-10 w-auto max-w-[min(12.5rem,52vw)] shrink-0 object-contain object-left sm:h-12 sm:max-h-12 sm:max-w-[15rem] lg:h-14 lg:max-h-14 lg:max-w-[18rem]',
+    'h-[52px] max-h-[52px] w-auto max-w-[min(20rem,78vw)] shrink-0 object-contain object-left sm:h-[58px] sm:max-h-[58px] sm:max-w-[22rem] md:h-[72px] md:max-h-[72px] md:max-w-[26rem] lg:h-[80px] lg:max-h-[80px] lg:max-w-[30rem]',
   footer:
-    'h-8 max-h-8 w-auto max-w-[11rem] shrink-0 object-contain object-left sm:h-9 sm:max-h-9 sm:max-w-[12.5rem]',
+    'h-14 max-h-14 w-auto max-w-[min(19rem,88vw)] shrink-0 object-contain object-left sm:h-16 sm:max-h-16 sm:max-w-[21rem] md:h-[4.25rem] md:max-h-[4.25rem] md:max-w-[23rem] lg:h-[4.75rem] lg:max-h-[4.75rem] lg:max-w-[25rem]',
 } as const
 
 type BrandLogoProps = {
@@ -34,14 +33,18 @@ export function BrandLogo({
 
   const sourceChain = srcOverride ? [srcOverride, ...BRANDING_LOGO_SRC_CHAIN] : BRANDING_LOGO_SRC_CHAIN
 
+  useEffect(() => {
+    setIndex(0)
+  }, [srcOverride])
+
   if (index >= sourceChain.length) {
     if (!showTextFallback) return null
+    const fallbackSize =
+      variant === 'footer'
+        ? 'text-xl tracking-tight sm:text-2xl md:text-3xl lg:text-[2.125rem]'
+        : 'text-2xl tracking-tight sm:text-3xl md:text-4xl lg:text-[2.75rem]'
     return (
-      <span
-        className={`font-semibold tracking-tight text-neutral-900 ${variant === 'footer' ? 'text-sm' : 'text-base'} ${className}`}
-      >
-        By Celeste
-      </span>
+      <span className={`font-semibold text-neutral-900 ${fallbackSize} ${className}`}>By Celeste</span>
     )
   }
 
@@ -51,8 +54,8 @@ export function BrandLogo({
     <img
       src={src}
       alt="By Celeste Logo"
-      width={200}
-      height={48}
+      width={320}
+      height={80}
       decoding="async"
       loading={variant === 'header' ? 'eager' : 'lazy'}
       fetchPriority={variant === 'header' ? 'high' : 'auto'}

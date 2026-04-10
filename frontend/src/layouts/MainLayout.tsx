@@ -43,10 +43,10 @@ function NavItem({
       onClick={onClick}
       className={({ isActive }) =>
         [
-          'rounded-md px-3 py-2 text-sm font-medium transition-colors',
+          'rounded-md px-2.5 py-1.5 text-xs transition-colors sm:px-3 sm:py-2 sm:text-[0.8125rem]',
           isActive
-            ? 'bg-neutral-900 text-white'
-            : 'text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900',
+            ? 'bg-neutral-900 font-semibold text-white'
+            : 'font-normal text-neutral-500 hover:bg-neutral-50 hover:text-neutral-900',
         ].join(' ')
       }
       end={end}
@@ -57,10 +57,10 @@ function NavItem({
 }
 
 const cartNavBase =
-  'rounded-md px-3 py-2 text-sm font-medium transition-colors duration-300 ease-out'
-const cartNavDefault = 'text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900'
+  'rounded-md px-2.5 py-1.5 text-xs font-normal transition-colors duration-300 ease-out sm:px-3 sm:py-2 sm:text-[0.8125rem]'
+const cartNavDefault = 'text-neutral-500 hover:bg-neutral-50 hover:text-neutral-900'
 const cartNavFlash =
-  'bg-emerald-50/95 text-emerald-950 ring-1 ring-emerald-200/80 shadow-sm'
+  'bg-emerald-50/95 font-medium text-emerald-950 ring-1 ring-emerald-200/80 shadow-sm'
 
 export function MainLayout() {
   const { user, status, logout } = useAuth()
@@ -124,16 +124,16 @@ export function MainLayout() {
     >
       <header className="border-b border-neutral-200 bg-white/80 backdrop-blur-sm">
         <Container>
-          <div className="flex items-center justify-between py-4">
+          <div className="flex items-center justify-between gap-4 py-4 sm:py-5 md:gap-8 lg:gap-10">
             <Link
               to="/"
-              className="flex min-h-0 min-w-0 shrink-0 items-center py-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2"
+              className="flex min-h-0 min-w-0 shrink-0 items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2 md:mr-4 lg:mr-6"
             >
               <BrandLogo variant="header" srcOverride={theme?.headerLogoPath || undefined} />
             </Link>
 
-            <div className="flex items-center gap-4">
-              <nav className="hidden items-center gap-2 md:flex">
+            <div className="flex min-w-0 flex-1 items-center justify-end gap-2 sm:gap-3 md:gap-4">
+              <nav className="hidden min-w-0 items-center gap-1 lg:gap-1.5 xl:gap-2 md:flex md:pl-2">
                 {primaryNavItems.map((item) => (
                   <NavItem
                     key={item.to}
@@ -144,7 +144,7 @@ export function MainLayout() {
                 ))}
               </nav>
 
-              <div className="hidden items-center gap-2 md:flex">
+              <div className="hidden shrink-0 items-center gap-1.5 md:flex lg:gap-2">
                 <NavLink
                   to="/cart"
                   className={[cartNavBase, cartFlash ? cartNavFlash : cartNavDefault].join(' ')}
@@ -153,17 +153,17 @@ export function MainLayout() {
                 </NavLink>
 
                 {isLoadingAuth ? (
-                  <div className="h-9 w-24 animate-pulse rounded-md bg-neutral-200" />
+                  <div className="h-8 w-24 animate-pulse rounded-md bg-neutral-200 sm:h-9" />
                 ) : user ? (
                   <>
                     <NavLink
                       to="/account"
                       className={({ isActive }) =>
                         [
-                          'rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                          'rounded-md px-2.5 py-1.5 text-xs transition-colors sm:px-3 sm:py-2 sm:text-[0.8125rem]',
                           isActive
-                            ? 'bg-neutral-900 text-white'
-                            : 'border border-neutral-200/80 bg-neutral-50/90 text-neutral-900 shadow-sm hover:bg-neutral-100',
+                            ? 'bg-neutral-900 font-semibold text-white'
+                            : 'border border-neutral-200/70 bg-white/80 font-normal text-neutral-600 shadow-sm hover:bg-neutral-50 hover:text-neutral-900',
                         ].join(' ')
                       }
                     >
@@ -172,7 +172,7 @@ export function MainLayout() {
                     {user.role === 'ADMIN' ? (
                       <NavLink
                         to="/admin"
-                        className="rounded-md px-2.5 py-1.5 text-xs font-medium text-neutral-600 ring-1 ring-neutral-200/80 transition hover:bg-neutral-100 hover:text-neutral-900"
+                        className="rounded-md px-2 py-1.5 text-[0.6875rem] font-medium text-neutral-500 ring-1 ring-neutral-200/80 transition hover:bg-neutral-50 hover:text-neutral-800"
                       >
                         Admin
                       </NavLink>
@@ -180,7 +180,7 @@ export function MainLayout() {
                     <button
                       type="button"
                       onClick={handleLogout}
-                      className="rounded-md px-2 py-1 text-xs font-normal text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-800"
+                      className="rounded-md px-2 py-1 text-[0.6875rem] font-normal text-neutral-400 transition hover:bg-neutral-50 hover:text-neutral-700"
                     >
                       Logout
                     </button>
@@ -189,14 +189,14 @@ export function MainLayout() {
                   <>
                     <NavLink
                       to="/login"
-                      className="rounded-md px-3 py-2 text-sm font-medium text-neutral-500 transition hover:text-neutral-900"
+                      className="rounded-md px-2.5 py-1.5 text-xs font-normal text-neutral-500 transition hover:bg-neutral-50 hover:text-neutral-900 sm:px-3 sm:py-2 sm:text-[0.8125rem]"
                     >
                       Login
                     </NavLink>
                     <Button
                       type="button"
                       variant="primary"
-                      className="px-4 py-2 text-sm shadow-sm"
+                      className="px-3 py-1.5 text-xs shadow-sm sm:px-4 sm:py-2 sm:text-sm"
                       onClick={() => {
                         navigate('/signup')
                       }}
@@ -256,10 +256,10 @@ export function MainLayout() {
                         onClick={() => setMobileOpen(false)}
                         className={({ isActive }) =>
                           [
-                            'block rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                            'block rounded-md px-3 py-2 text-sm transition-colors',
                             isActive
-                              ? 'bg-neutral-900 text-white'
-                              : 'border border-neutral-200/80 bg-neutral-50/90 text-neutral-900 shadow-sm hover:bg-neutral-100',
+                              ? 'bg-neutral-900 font-semibold text-white'
+                              : 'border border-neutral-200/80 bg-neutral-50/90 font-normal text-neutral-800 shadow-sm hover:bg-neutral-100',
                           ].join(' ')
                         }
                       >
@@ -287,7 +287,7 @@ export function MainLayout() {
                       <NavLink
                         to="/login"
                         onClick={() => setMobileOpen(false)}
-                        className="block rounded-md px-3 py-2 text-sm font-medium text-neutral-500 hover:text-neutral-900"
+                        className="block rounded-md px-3 py-2 text-sm font-normal text-neutral-500 hover:text-neutral-900"
                       >
                         Login
                       </NavLink>
@@ -311,7 +311,7 @@ export function MainLayout() {
         </Container>
       </header>
 
-      <main className="pb-10 pt-6 sm:pb-12 sm:pt-8">
+      <main className="pb-10 pt-8 sm:pb-12 sm:pt-10">
         <Container>
           <Outlet />
         </Container>
@@ -321,19 +321,21 @@ export function MainLayout() {
         <TrustBadgeRow heading={theme?.trustBadgeHeading || undefined} />
       ) : null}
 
-      <footer className="border-t border-neutral-200 bg-white/80 py-10 text-sm text-neutral-700">
+      <footer className="border-t border-neutral-200 bg-white/80 py-12 text-sm text-neutral-700 sm:py-14">
         <Container>
-          <div className="grid gap-8 md:grid-cols-3">
-            <div className="space-y-3">
-              <div className="flex items-center">
+          <div className="grid items-start gap-10 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)] md:gap-12 lg:gap-14">
+            <div className="flex max-w-md flex-col md:max-w-none md:pr-4 lg:pr-8">
+              <div className="flex items-start">
                 <BrandLogo variant="footer" srcOverride={theme?.footerLogoPath || undefined} />
               </div>
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-neutral-800">
+              <p className="mt-6 max-w-sm text-[0.75rem] font-semibold uppercase leading-relaxed tracking-[0.13em] text-neutral-700 sm:mt-7 sm:text-xs sm:tracking-[0.12em] lg:mt-8">
                 {marketing?.homepageTagline || 'Traditional, Natural Exceptional Skincare'}
               </p>
             </div>
-            <div className="space-y-3">
-              <div className="text-sm font-semibold text-neutral-900">Quick links</div>
+            <div className="space-y-3 pt-0.5 md:pt-1">
+              <div className="text-xs font-semibold uppercase tracking-[0.1em] text-neutral-500">
+                Quick links
+              </div>
               <ul className="space-y-2 text-xs text-neutral-600">
                 <li>
                   <Link to="/shop" className="hover:text-neutral-900">
@@ -362,8 +364,8 @@ export function MainLayout() {
                 </li>
               </ul>
             </div>
-            <div className="space-y-3">
-              <div className="text-sm font-semibold text-neutral-900">Contact</div>
+            <div className="space-y-3 pt-0.5 md:pt-1">
+              <div className="text-xs font-semibold uppercase tracking-[0.1em] text-neutral-500">Contact</div>
               <address className="text-xs leading-5 text-neutral-600 not-italic">
                 <span className="block font-medium text-neutral-800">
                   {business?.businessDisplayName || 'By Celeste'}

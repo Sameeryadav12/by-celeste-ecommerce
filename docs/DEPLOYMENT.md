@@ -25,6 +25,8 @@ Use this when moving from local development to **Vercel (frontend)** and **Rende
 > If `DATABASE_URL` is missing at build time, Prisma generate can fail before TypeScript runs. The repo now uses a safe build-time fallback in `backend/prisma.config.ts`, but you should still set real `DATABASE_URL` on Render for runtime and migrations.
 >
 > `start:render` runs migrations plus idempotent `seedCatalog` and `seedEvents`, useful on free plans where Render Shell is unavailable.
+>
+> It also runs `seedDemoDeployment.js`, which **does nothing** unless `SEED_DEMO_USERS=true`. Set that only for **review / class demos** so the API creates/refreshes demo logins on boot; leave unset for real production.
 
 **Environment variables** (mirror `backend/.env.example`):
 
@@ -39,8 +41,20 @@ Use this when moving from local development to **Vercel (frontend)** and **Rende
 | `AUTH_COOKIE_SAMESITE` | `lax` if same-site; `none` if cross-subdomain + `Secure` |
 | `CHECKOUT_SUCCESS_REDIRECT_URL` | `https://<vercel-app>/checkout/success` |
 | Square vars | As required for sandbox or production |
+| `SEED_DEMO_USERS` | Optional. Set to `true` on demo hosts only; ensures demo admin + wholesale users (see below). |
 
 **CORS:** `FRONTEND_ORIGIN` must match the browser origin calling the API or requests will be blocked.
+
+### Demo logins (local or `SEED_DEMO_USERS=true` on Render)
+
+Run locally: `cd backend && npm run seed:demo-admin` (idempotent).
+
+| Account | Role | Portal |
+|---------|------|--------|
+| `admin@byceleste.com` / `Admin123!` | ADMIN | `/admin` |
+| `wholesale@byceleste.com` / `Wholesale123!` | WHOLESALE (approved) | `/wholesale` |
+
+Override emails/passwords with `DEMO_ADMIN_*` and `DEMO_WHOLESALE_*` env vars (see `backend/.env.example`). Retail customers use **Sign up** on the storefront; they cannot access `/admin` or full wholesale pricing until approved.
 
 ## 4. Frontend (Vercel)
 
@@ -63,6 +77,7 @@ Do **not** rely on `localhost` in production builds.
 - [ ] `GET https://<api>/health`
 - [ ] Shop loads products from API (network tab: correct base URL, CORS OK).
 - [ ] Sign up / login (cookies: `Secure`, `SameSite` as expected).
+- [ ] `/` storefront, `/admin` (admin only), `/wholesale` (approved wholesale only); normal customer redirected away from admin.
 - [ ] Checkout happy path (sandbox) and success redirect URL.
 
 ## 7. Monorepo note

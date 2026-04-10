@@ -22,12 +22,13 @@ export function AdminOrderDetailPage() {
 
   useEffect(() => {
     if (!id) return
+    const orderId = id
     let cancelled = false
     async function load() {
       setLoading(true)
       setError(null)
       try {
-        const data = await getAdminOrder(id)
+        const data = await getAdminOrder(orderId)
         if (cancelled) return
         setOrder(data)
         setStatusDraft(data.status)

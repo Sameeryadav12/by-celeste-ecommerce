@@ -42,12 +42,13 @@ export function WholesaleOrderDetailPage() {
       setLoading(false)
       return
     }
+    const orderId = id
     let cancelled = false
     async function load() {
       setLoading(true)
       setError(null)
       try {
-        const res = await fetchMyOrder(id)
+        const res = await fetchMyOrder(orderId)
         if (!cancelled) setOrder(res.order)
       } catch (e) {
         if (!cancelled) {
