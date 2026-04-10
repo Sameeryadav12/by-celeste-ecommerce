@@ -13,6 +13,8 @@ export function LoginPage() {
   const { status, user, login } = useAuth()
   const navigate = useNavigate()
   const location = useLocation() as { state?: { from?: string } }
+  const adminReturnPath =
+    typeof location.state?.from === 'string' && location.state.from.startsWith('/admin')
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -92,10 +94,20 @@ export function LoginPage() {
     <section className="flex min-h-[60vh] items-center justify-center">
       <div className="w-full max-w-md rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
         <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">Sign in</h1>
-        <p className="mt-2 text-sm text-neutral-600">
-          Welcome back. Enter your details to continue to By Celeste. When you shop signed in,
-          completed orders can earn loyalty points—see your account after purchase.
-        </p>
+        {adminReturnPath ? (
+          <div className="mt-3 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-sm text-neutral-700">
+            <p className="font-medium text-neutral-900">Admin dashboard</p>
+            <p className="mt-1 leading-relaxed">
+              This area is protected. Sign in with an <strong>administrator</strong> account. After a
+              successful sign-in you will be returned to the admin portal.
+            </p>
+          </div>
+        ) : (
+          <p className="mt-2 text-sm text-neutral-600">
+            Welcome back. Enter your details to continue to By Celeste. When you shop signed in,
+            completed orders can earn loyalty points—see your account after purchase.
+          </p>
+        )}
 
         {formError ? (
           <div className="mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">

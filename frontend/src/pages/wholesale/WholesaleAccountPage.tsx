@@ -36,6 +36,40 @@ function formatDate(iso: string | null) {
   }
 }
 
+function partnerBadge(user: AuthUser | null) {
+  if (!user) return null
+  if (user.role === 'WHOLESALE' && user.wholesaleApprovalStatus === 'APPROVED') {
+    return (
+      <span className="inline-flex rounded-full bg-neutral-900 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wide text-white">
+        Approved wholesale partner
+      </span>
+    )
+  }
+  if (user.role === 'WHOLESALE' && user.wholesaleApprovalStatus === 'PENDING') {
+    return (
+      <span className="inline-flex rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wide text-amber-950 ring-1 ring-amber-200">
+        Application pending
+      </span>
+    )
+  }
+  if (user.role === 'WHOLESALE' && user.wholesaleApprovalStatus === 'REJECTED') {
+    return (
+      <span className="inline-flex rounded-full bg-rose-100 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wide text-rose-950 ring-1 ring-rose-200">
+        Application not approved
+      </span>
+    )
+  }
+  return null
+}
+
+function accountTypeLabel(user: AuthUser | null) {
+  if (!user) return '—'
+  if (user.role === 'CUSTOMER') return 'Retail customer'
+  if (user.role === 'ADMIN') return 'Administrator'
+  if (user.role === 'WHOLESALE') return 'Wholesale applicant / partner'
+  return user.role
+}
+
 export function WholesaleAccountPage() {
   const { user: authUser } = useAuth()
   const [account, setAccount] = useState<AuthUser | null>(authUser)
@@ -92,9 +126,7 @@ export function WholesaleAccountPage() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">Wholesale Account</h1>
-            <span className="inline-flex rounded-full bg-neutral-900 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wide text-white">
-              Wholesale Partner
-            </span>
+            {partnerBadge(user)}
           </div>
           <p className="max-w-2xl text-sm leading-6 text-neutral-700">
             Review your account details, business information, and wholesale approval status.
@@ -124,7 +156,7 @@ export function WholesaleAccountPage() {
                 </div>
                 <div>
                   <dt className="text-xs font-medium uppercase tracking-wide text-neutral-500">Account type</dt>
-                  <dd className="mt-1 text-sm text-neutral-900">Wholesale User</dd>
+                  <dd className="mt-1 text-sm text-neutral-900">{accountTypeLabel(user)}</dd>
                 </div>
                 <div>
                   <dt className="text-xs font-medium uppercase tracking-wide text-neutral-500">Contact</dt>

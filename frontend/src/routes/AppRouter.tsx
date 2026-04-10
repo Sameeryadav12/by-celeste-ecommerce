@@ -47,8 +47,61 @@ import { WholesaleOrderDetailPage } from '../pages/wholesale/WholesaleOrderDetai
 import { WholesaleBulkOrdersPage } from '../pages/wholesale/WholesaleBulkOrdersPage'
 import { WholesaleSupportPage } from '../pages/wholesale/WholesaleSupportPage'
 
+/**
+ * Route order matters: `/admin` and `/wholesale` must be registered *before* the storefront
+ * `MainLayout` branch. Otherwise `path: '*'` under MainLayout matches `/admin` and shows 404.
+ */
 const router = createBrowserRouter([
-  /* ─── Public storefront (MainLayout) ─── */
+  /* ─── Admin portal (before storefront catch-all `*`) ─── */
+  {
+    element: <AdminProtectedRoute />,
+    children: [
+      {
+        path: '/admin',
+        element: <AdminLayout />,
+        children: [
+          { index: true, element: <AdminDashboardPage /> },
+          { path: 'products', element: <AdminProductsPage /> },
+          { path: 'products/new', element: <AdminProductNewPage /> },
+          { path: 'products/:id/edit', element: <AdminProductEditPage /> },
+          { path: 'categories', element: <AdminCategoriesPage /> },
+          { path: 'ingredients', element: <AdminIngredientsPage /> },
+          { path: 'orders', element: <AdminOrdersPage /> },
+          { path: 'orders/:id', element: <AdminOrderDetailPage /> },
+          { path: 'customers', element: <AdminCustomersPage /> },
+          { path: 'wholesale', element: <AdminWholesalePage /> },
+          { path: 'wholesale/:id', element: <AdminWholesaleDetailPage /> },
+          { path: 'testimonials', element: <AdminTestimonialsPage /> },
+          { path: 'events', element: <AdminEventsPage /> },
+          { path: 'marketing', element: <AdminMarketingPage /> },
+          { path: 'theme', element: <AdminThemePage /> },
+          { path: 'settings', element: <AdminSettingsPage /> },
+        ],
+      },
+    ],
+  },
+
+  /* ─── Wholesale portal (before storefront `*`; `/wholesale/apply` stays on MainLayout below) ─── */
+  {
+    element: <WholesaleProtectedRoute />,
+    children: [
+      {
+        path: '/wholesale',
+        element: <WholesaleLayout />,
+        children: [
+          { index: true, element: <WholesaleDashboardPage /> },
+          { path: 'shop', element: <WholesaleShopPage /> },
+          { path: 'orders', element: <WholesaleOrdersPage /> },
+          { path: 'orders/:id', element: <WholesaleOrderDetailPage /> },
+          { path: 'account', element: <WholesaleAccountPage /> },
+          { path: 'bulk-orders', element: <WholesaleBulkOrdersPage /> },
+          { path: 'support', element: <WholesaleSupportPage /> },
+        ],
+      },
+    ],
+  },
+
+  /* ─── Public storefront (MainLayout) — includes `*` last ─── */
   {
     element: <MainLayout />,
     children: [
@@ -80,55 +133,6 @@ const router = createBrowserRouter([
       { path: '/events', element: <EventsPage /> },
       { path: '/events/:slug', element: <EventDetailPage /> },
       { path: '*', element: <NotFoundPage /> },
-    ],
-  },
-
-  /* ─── Wholesale portal (own layout, separate from storefront/admin) ─── */
-  {
-    element: <WholesaleProtectedRoute />,
-    children: [
-      {
-        path: '/wholesale',
-        element: <WholesaleLayout />,
-        children: [
-          { index: true, element: <WholesaleDashboardPage /> },
-          { path: 'shop', element: <WholesaleShopPage /> },
-          { path: 'orders', element: <WholesaleOrdersPage /> },
-          { path: 'orders/:id', element: <WholesaleOrderDetailPage /> },
-          { path: 'account', element: <WholesaleAccountPage /> },
-          { path: 'bulk-orders', element: <WholesaleBulkOrdersPage /> },
-          { path: 'support', element: <WholesaleSupportPage /> },
-        ],
-      },
-    ],
-  },
-
-  /* ─── Admin portal (own layout, separate from storefront) ─── */
-  {
-    element: <AdminProtectedRoute />,
-    children: [
-      {
-        path: '/admin',
-        element: <AdminLayout />,
-        children: [
-          { index: true, element: <AdminDashboardPage /> },
-          { path: 'products', element: <AdminProductsPage /> },
-          { path: 'products/new', element: <AdminProductNewPage /> },
-          { path: 'products/:id/edit', element: <AdminProductEditPage /> },
-          { path: 'categories', element: <AdminCategoriesPage /> },
-          { path: 'ingredients', element: <AdminIngredientsPage /> },
-          { path: 'orders', element: <AdminOrdersPage /> },
-          { path: 'orders/:id', element: <AdminOrderDetailPage /> },
-          { path: 'customers', element: <AdminCustomersPage /> },
-          { path: 'wholesale', element: <AdminWholesalePage /> },
-          { path: 'wholesale/:id', element: <AdminWholesaleDetailPage /> },
-          { path: 'testimonials', element: <AdminTestimonialsPage /> },
-          { path: 'events', element: <AdminEventsPage /> },
-          { path: 'marketing', element: <AdminMarketingPage /> },
-          { path: 'theme', element: <AdminThemePage /> },
-          { path: 'settings', element: <AdminSettingsPage /> },
-        ],
-      },
     ],
   },
 ])

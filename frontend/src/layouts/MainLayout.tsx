@@ -17,15 +17,6 @@ import {
   type ThemeSettings,
 } from '../features/content/contentApi'
 
-const primaryNavItems = [
-  { to: '/', label: 'Home', end: true },
-  { to: '/shop', label: 'Shop' },
-  { to: '/about', label: 'About' },
-  { to: '/events', label: 'Events' },
-  { to: '/testimonials', label: 'Testimonials' },
-  { to: '/wholesale', label: 'Wholesale' },
-]
-
 function NavItem({
   to,
   label,
@@ -113,6 +104,20 @@ export function MainLayout() {
   }
 
   const isLoadingAuth = status === 'idle' || status === 'loading'
+
+  const wholesaleNavTo =
+    user?.role === 'WHOLESALE' && user.wholesaleApprovalStatus === 'APPROVED'
+      ? '/wholesale'
+      : '/wholesale/apply'
+
+  const primaryNavItems = [
+    { to: '/', label: 'Home', end: true },
+    { to: '/shop', label: 'Shop' },
+    { to: '/about', label: 'About' },
+    { to: '/events', label: 'Events' },
+    { to: '/testimonials', label: 'Testimonials' },
+    { to: wholesaleNavTo, label: 'Wholesale' },
+  ]
 
   return (
     <div
