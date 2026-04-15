@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { getProductBySlug } from '../features/catalog/catalogApi'
 import { CatalogEmptyState } from '../features/catalog/components/CatalogEmptyState'
@@ -30,6 +31,7 @@ export function ProductDetailPage() {
   const [loading, setLoading] = useState(Boolean(slug))
   const [notFound, setNotFound] = useState(!slug)
   const [error, setError] = useState<string | null>(null)
+  const [fetchRetryKey, setFetchRetryKey] = useState(0)
 
   useEffect(() => {
     if (!slug) {
@@ -60,7 +62,7 @@ export function ProductDetailPage() {
       })
 
     return () => controller.abort()
-  }, [slug, user?.id, user?.wholesaleApprovalStatus])
+  }, [slug, user?.id, user?.wholesaleApprovalStatus, fetchRetryKey])
 
   if (notFound) {
     const title = 'Product not found | By Celeste'
@@ -71,13 +73,17 @@ export function ProductDetailPage() {
           description="This product may be inactive or the link may be incorrect."
         />
         <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">Product not found</h1>
-        <CatalogEmptyState message="We couldn't find that product. It may be inactive or the link may be incorrect." />
-        <Link
-          to="/shop"
-          className="inline-flex rounded-md px-3 py-2 text-sm font-medium text-neutral-900 ring-1 ring-neutral-300 hover:bg-neutral-100"
-        >
-          Back to Shop
-        </Link>
+        <CatalogEmptyState
+          message="We couldn't find that product. It may be inactive or the link may be incorrect."
+          actions={
+            <Link
+              to="/shop"
+              className="inline-flex items-center justify-center rounded-md bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-neutral-800"
+            >
+              Back to shop
+            </Link>
+          }
+        />
       </section>
     )
   }
@@ -106,9 +112,26 @@ export function ProductDetailPage() {
       <section className="space-y-4">
         <Seo title={title} description="Something went wrong while loading this product." />
         <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">Unable to load product</h1>
-        <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error ?? 'Something went wrong while loading this product.'}
+        <div className="flex flex-col gap-3 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 sm:flex-row sm:items-center sm:justify-between">
+          <p className="min-w-0">{error ?? 'Something went wrong while loading this product.'}</p>
+          <Button
+            type="button"
+            variant="primary"
+            className="shrink-0 sm:scale-100"
+            onClick={() => {
+              setError(null)
+              setFetchRetryKey((k) => k + 1)
+            }}
+          >
+            Retry
+          </Button>
         </div>
+        <Link
+          to="/shop"
+          className="inline-flex text-sm font-medium text-neutral-700 underline decoration-neutral-300 underline-offset-2 hover:text-neutral-900"
+        >
+          Back to shop
+        </Link>
       </section>
     )
   }

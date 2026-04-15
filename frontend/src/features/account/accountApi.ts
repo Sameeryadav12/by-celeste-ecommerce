@@ -75,3 +75,24 @@ export async function fetchMyOrder(orderId: string) {
 export async function fetchMyLoyalty() {
   return apiFetch<LoyaltyDashboard>('/api/account/loyalty')
 }
+
+export type PatchAccountBody = {
+  firstName: string
+  lastName: string
+  email: string
+  contactEmail?: string
+  businessName?: string
+  abn?: string
+}
+
+export async function patchMyAccount(body: PatchAccountBody) {
+  return apiFetch<{ user: AuthUser }>('/api/account/me', { method: 'PATCH', body })
+}
+
+export async function patchMyPassword(body: {
+  currentPassword: string
+  newPassword: string
+  confirmPassword: string
+}) {
+  return apiFetch<{ message: string }>('/api/account/password', { method: 'PATCH', body })
+}

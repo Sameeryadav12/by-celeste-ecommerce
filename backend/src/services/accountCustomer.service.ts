@@ -1,7 +1,13 @@
+import type { Role } from '@prisma/client'
 import { prisma } from '../config/prisma'
 import { ApiError } from '../utils/apiError'
+import { hashPassword, verifyPassword } from '../utils/password'
 import { LOYALTY_EARN_RULE_SUMMARY } from './loyalty.service'
-import { getSafeUserById as getSafeUserByIdFromAuth } from './auth.service'
+import {
+  getSafeUserById as getSafeUserByIdFromAuth,
+  type SafeUser,
+} from './auth.service'
+import { accountPasswordPatchSchema, accountProfilePatchSchema } from './accountProfile.validation'
 
 function moneyString(d: { toString(): string }) {
   return d.toString()
@@ -143,4 +149,140 @@ export async function getLoyaltyDashboardForUser(userId: string) {
 
 export async function getSafeUserById(userId: string) {
   return getSafeUserByIdFromAuth(userId)
+}
+
+export async function updateAccountProfile(
+  userId: string,
+  role: Role,
+  body: unknown,
+): Promise<{ user: SafeUser; emailChanged: boolean }> {
+  if (role === 'ADMIN') {
+    throw new ApiError({
+      statusCode: 403,
+      code: 'FORBIDDEN',
+      message: 'Admin profiles cannot be edited here.',
+    })
+  }
+
+  const before = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { email: true },
+  })
+  if (!before) {
+    throw new ApiError({ statusCode: 404, code: 'USER_NOT_FOUND', message: 'Account not found.' })
+  }
+
+  const parsed = accountProfilePatchSchema.safeParse(body)
+  if (!parsed.success) {
+    throw new ApiError({
+      statusCode: 400,
+      code: 'VALIDATION_ERROR',
+      message: 'Please check your profile fields.',
+      details: parsed.error.flatten(),
+    })
+  }
+
+  const data = parsed.data
+
+  if (role === 'WHOLESALE') {
+    const bn = data.businessName?.trim()
+    if (!bn || bn.length < 2) {
+      throw new ApiError({
+        statusCode: 400,
+        code: 'BUSINESS_NAME_REQUIRED',
+        message: 'Business name is required for wholesale accounts.',
+      })
+    }
+  }
+
+  const emailTaken = await prisma.user.findFirst({
+    where: { email: data.email, NOT: { id: userId } },
+    select: { id: true },
+  })
+  if (emailTaken) {
+    throw new ApiError({
+      statusCode: 409,
+      code: 'EMAIL_ALREADY_IN_USE',
+      message: 'That login email is already in use.',
+    })
+  }
+
+  if (data.contactEmail) {
+    const clash = await prisma.user.findFirst({
+      where: {
+        email: data.contactEmail,
+        NOT: { id: userId },
+      },
+      select: { id: true },
+    })
+    if (clash) {
+      throw new ApiError({
+        statusCode: 409,
+        code: 'CONTACT_EMAIL_IN_USE',
+        message: 'That contact email matches another account login.',
+      })
+    }
+  }
+
+  await prisma.user.update({
+    where: { id: userId },
+    data:
+      role === 'WHOLESALE'
+        ? {
+            firstName: data.firstName,
+            lastName: data.lastName,
+            email: data.email,
+            contactEmail: data.contactEmail ?? null,
+            businessName: data.businessName!.trim(),
+            abn: data.abn?.trim() ? data.abn.trim() : null,
+          }
+        : {
+            firstName: data.firstName,
+            lastName: data.lastName,
+            email: data.email,
+            contactEmail: data.contactEmail ?? null,
+          },
+  })
+
+  const user = await getSafeUserByIdFromAuth(userId)
+  if (!user) {
+    throw new ApiError({ statusCode: 404, code: 'USER_NOT_FOUND', message: 'Account not found.' })
+  }
+
+  return { user, emailChanged: before.email !== data.email }
+}
+
+export async function updateAccountPassword(userId: string, body: unknown) {
+  const parsed = accountPasswordPatchSchema.safeParse(body)
+  if (!parsed.success) {
+    throw new ApiError({
+      statusCode: 400,
+      code: 'VALIDATION_ERROR',
+      message: 'Please check your password fields.',
+      details: parsed.error.flatten(),
+    })
+  }
+
+  const user = await prisma.user.findUnique({ where: { id: userId } })
+  if (!user) {
+    throw new ApiError({ statusCode: 404, code: 'USER_NOT_FOUND', message: 'Account not found.' })
+  }
+
+  const ok = await verifyPassword(parsed.data.currentPassword, user.passwordHash)
+  if (!ok) {
+    throw new ApiError({
+      statusCode: 401,
+      code: 'INVALID_PASSWORD',
+      message: 'Current password is incorrect.',
+    })
+  }
+
+  const passwordHash = await hashPassword(parsed.data.newPassword)
+  await prisma.user.update({
+    where: { id: userId },
+    data: { passwordHash },
+    select: { id: true },
+  })
+
+  return { ok: true as const }
 }

@@ -7,6 +7,8 @@ export type AuthUser = {
   firstName: string
   lastName: string
   email: string
+  /** Optional inbox for orders or business contact; login stays `email`. */
+  contactEmail?: string | null
   role: Role
   isActive: boolean
   /** Cached loyalty balance; refreshed from /api/auth/me and account loyalty endpoint. */

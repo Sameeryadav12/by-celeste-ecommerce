@@ -12,7 +12,7 @@ import { slugify } from '../utils/slug'
  * Run: npm run seed:catalog
  * (Requires migrations applied and DATABASE_URL set.)
  */
-async function main() {
+export async function runSeedCatalog() {
   const REQUIRED_PRODUCT_SLUGS = [
     'kakadu-plum-radiance-facial-oil',
     'desert-lime-cream-cleanser',
@@ -455,12 +455,19 @@ async function main() {
   )
 }
 
-main()
-  .then(async () => {
-    await prisma.$disconnect()
-  })
-  .catch(async (err) => {
-    console.error(err)
-    await prisma.$disconnect()
-    process.exit(1)
-  })
+function isSeedCatalogCli() {
+  const entry = (process.argv[1] ?? '').replace(/\\/g, '/')
+  return /(^|\/)seedCatalog\.(ts|js|mjs|cjs)$/.test(entry)
+}
+
+if (isSeedCatalogCli()) {
+  runSeedCatalog()
+    .then(async () => {
+      await prisma.$disconnect()
+    })
+    .catch(async (err) => {
+      console.error(err)
+      await prisma.$disconnect()
+      process.exit(1)
+    })
+}

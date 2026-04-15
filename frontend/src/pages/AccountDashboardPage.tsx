@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
-import type { Role } from '../auth/authTypes'
 import {
   fetchMyLoyalty,
   fetchMyOrders,
@@ -11,6 +10,8 @@ import {
 import { OrderStatusBadge } from '../features/account/components/OrderStatusBadge'
 import { PaymentStatusBadge } from '../features/account/components/PaymentStatusBadge'
 import { AccountOrdersSkeleton } from '../features/account/components/AccountOrdersSkeleton'
+import { AccountPortalSummary } from '../features/account/components/AccountPortalSummary'
+import { AccountProfileEditor } from '../features/account/components/AccountProfileEditor'
 import { formatAud } from '../features/cart/money'
 
 function formatOrderDate(iso: string) {
@@ -21,17 +22,6 @@ function formatOrderDate(iso: string) {
     }).format(new Date(iso))
   } catch {
     return iso
-  }
-}
-
-function roleLabel(role: Role): string {
-  switch (role) {
-    case 'WHOLESALE':
-      return 'Wholesale'
-    case 'ADMIN':
-      return 'Admin'
-    default:
-      return 'Customer'
   }
 }
 
@@ -189,35 +179,50 @@ export function AccountDashboardPage() {
         </div>
       ) : null}
 
-      {/* —— Summary cards —— */}
+      {/* —— Profile portal + summary cards —— */}
       <section aria-labelledby="account-summary-heading" className="space-y-4">
         <h2 id="account-summary-heading" className="sr-only">
           Account summary
         </h2>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 lg:items-stretch">
-          {/* Profile */}
-          <div className={cardShell}>
-            <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-400">
-              Profile
-            </h3>
-            <p className="mt-1 text-sm font-medium text-neutral-900">Your details</p>
-            <dl className="mt-5 flex flex-1 flex-col gap-4">
-              <div className="grid grid-cols-1 gap-1 border-b border-neutral-100 pb-4 sm:grid-cols-[7rem_1fr] sm:gap-4">
-                <dt className="text-xs font-medium text-neutral-400">Name</dt>
-                <dd className="text-sm font-medium text-neutral-900">
-                  {user.firstName} {user.lastName}
-                </dd>
-              </div>
-              <div className="grid grid-cols-1 gap-1 border-b border-neutral-100 pb-4 sm:grid-cols-[7rem_1fr] sm:gap-4">
-                <dt className="text-xs font-medium text-neutral-400">Email</dt>
-                <dd className="break-all text-sm font-medium text-neutral-900">{user.email}</dd>
-              </div>
-              <div className="grid grid-cols-1 gap-1 sm:grid-cols-[7rem_1fr] sm:gap-4">
-                <dt className="text-xs font-medium text-neutral-400">Account type</dt>
-                <dd className="text-sm font-medium text-neutral-900">{roleLabel(user.role)}</dd>
-              </div>
-            </dl>
+        {user.role !== 'ADMIN' ? (
+          <div className="grid gap-3 sm:gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(248px,288px)] lg:items-start">
+            <AccountProfileEditor
+              variant={user.role === 'WHOLESALE' ? 'wholesale' : 'customer'}
+              layout="portal"
+            />
+            <AccountPortalSummary
+              mode={user.role === 'WHOLESALE' ? 'wholesale-approval' : 'customer-summary'}
+              user={user}
+              loading={loading}
+              orderCount={orderCount}
+              loyaltyBalance={displayBalance}
+            />
           </div>
+        ) : null}
+        <div
+          className={`grid gap-4 ${user.role === 'ADMIN' ? 'md:grid-cols-2 lg:grid-cols-3 lg:items-stretch' : 'md:grid-cols-2'}`}
+        >
+          {/* Profile (admin read-only) */}
+          {user.role === 'ADMIN' ? (
+            <div className={cardShell}>
+              <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-400">
+                Profile
+              </h3>
+              <p className="mt-1 text-sm font-medium text-neutral-900">Your details</p>
+              <dl className="mt-5 flex flex-1 flex-col gap-4">
+                <div className="grid grid-cols-1 gap-1 border-b border-neutral-100 pb-4 sm:grid-cols-[7rem_1fr] sm:gap-4">
+                  <dt className="text-xs font-medium text-neutral-400">Name</dt>
+                  <dd className="text-sm font-medium text-neutral-900">
+                    {user.firstName} {user.lastName}
+                  </dd>
+                </div>
+                <div className="grid grid-cols-1 gap-1 sm:grid-cols-[7rem_1fr] sm:gap-4">
+                  <dt className="text-xs font-medium text-neutral-400">Email</dt>
+                  <dd className="break-all text-sm font-medium text-neutral-900">{user.email}</dd>
+                </div>
+              </dl>
+            </div>
+          ) : null}
 
           {/* Loyalty */}
           <div
@@ -277,7 +282,11 @@ export function AccountDashboardPage() {
           </div>
 
           {/* Order summary */}
-          <div className={`${cardShell} md:col-span-2 lg:col-span-1`}>
+          <div
+            className={
+              user.role === 'ADMIN' ? `${cardShell} md:col-span-2 lg:col-span-1` : cardShell
+            }
+          >
             <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-400">
               Orders
             </h3>
@@ -324,54 +333,6 @@ export function AccountDashboardPage() {
           </div>
         </div>
       </section>
-
-      {/* Wholesale */}
-      {user.role === 'WHOLESALE' ? (
-        <section className="rounded-2xl border border-neutral-200/70 bg-neutral-50/50 p-5 shadow-sm sm:p-6">
-          <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-neutral-500">
-            Wholesale
-          </h2>
-          <p className="mt-2 text-lg font-medium text-neutral-900">Your business access</p>
-          <dl className="mt-5 grid gap-4 sm:grid-cols-2">
-            <div className="rounded-xl border border-neutral-200/60 bg-white/80 px-4 py-3">
-              <dt className="text-xs font-medium text-neutral-400">Business</dt>
-              <dd className="mt-1 text-sm font-medium text-neutral-900">{user.businessName ?? '—'}</dd>
-            </div>
-            <div className="rounded-xl border border-neutral-200/60 bg-white/80 px-4 py-3">
-              <dt className="text-xs font-medium text-neutral-400">Approval status</dt>
-              <dd className="mt-1 text-sm font-semibold tracking-wide text-neutral-900">
-                {user.wholesaleApprovalStatus === 'APPROVED'
-                  ? 'Approved'
-                  : user.wholesaleApprovalStatus === 'PENDING'
-                    ? 'Pending review'
-                    : user.wholesaleApprovalStatus === 'REJECTED'
-                      ? 'Not approved'
-                      : user.wholesaleApprovalStatus === 'NONE'
-                        ? '—'
-                        : user.wholesaleApprovalStatus}
-              </dd>
-            </div>
-          </dl>
-          {user.wholesaleApprovalStatus === 'APPROVED' ? (
-            <p className="mt-4 text-sm leading-relaxed text-emerald-900">
-              Your account is approved. Where wholesale prices are set, you&apos;ll see them on product
-              pages and at checkout — totals are always confirmed on our server.
-            </p>
-          ) : null}
-          {user.wholesaleApprovalStatus === 'PENDING' ? (
-            <p className="mt-4 text-sm leading-relaxed text-neutral-700">
-              Your application is <span className="font-medium text-neutral-900">under review</span>.
-              Until then, you&apos;ll see the same retail prices as other visitors.
-            </p>
-          ) : null}
-          {user.wholesaleApprovalStatus === 'REJECTED' ? (
-            <p className="mt-4 text-sm leading-relaxed text-amber-900">
-              This wholesale application wasn&apos;t approved. You can still shop at retail prices, or
-              reach out if you think we should take another look.
-            </p>
-          ) : null}
-        </section>
-      ) : null}
 
       {/* Recent orders */}
       <section

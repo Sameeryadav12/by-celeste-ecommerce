@@ -297,3 +297,9 @@ export async function writeContentDb(db: ContentDb) {
   await ensureDbFile()
   await fs.writeFile(CONTENT_FILE, JSON.stringify(db, null, 2), 'utf-8')
 }
+
+/** Overwrites `data/content/content.json` with bundled demo defaults (local dev only). */
+export async function resetLocalContentFileToDefaults(): Promise<void> {
+  await fs.mkdir(CONTENT_DIR, { recursive: true })
+  await fs.writeFile(CONTENT_FILE, JSON.stringify(defaultDb(), null, 2), 'utf-8')
+}

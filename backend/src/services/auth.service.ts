@@ -9,6 +9,7 @@ export type SafeUser = Pick<
   | 'firstName'
   | 'lastName'
   | 'email'
+  | 'contactEmail'
   | 'role'
   | 'isActive'
   | 'loyaltyPointsBalance'

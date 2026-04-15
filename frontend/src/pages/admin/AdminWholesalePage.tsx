@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
+import { AdminTableSkeleton } from '../../features/admin/components/AdminTableSkeleton'
 import {
   listAdminWholesalers,
   moderateAdminWholesaler,
@@ -99,7 +100,17 @@ export function AdminWholesalePage() {
         </div>
       ) : null}
       {error ? (
-        <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+        <div className="flex flex-col gap-3 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 sm:flex-row sm:items-center sm:justify-between">
+          <p className="min-w-0">{error}</p>
+          <Button
+            type="button"
+            variant="primary"
+            className="shrink-0 sm:scale-100"
+            onClick={() => void loadWholesalers()}
+          >
+            Retry
+          </Button>
+        </div>
       ) : null}
 
       <Card>
@@ -132,11 +143,17 @@ export function AdminWholesalePage() {
         {hasFilters ? <p className="mt-3 text-xs text-slate-500">Filters are applied to this list.</p> : null}
 
         {loading ? (
-          <div className="mt-4 text-sm text-slate-500">Loading wholesale accounts...</div>
+          <AdminTableSkeleton rows={7} columns={5} />
         ) : rows.length === 0 ? (
           <div className="mt-8 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center">
-            <p className="text-base font-medium text-slate-700">No wholesale applications yet</p>
-            <p className="mt-1 text-sm text-slate-500">Try a different search or status filter.</p>
+            <p className="text-base font-medium text-slate-700">No wholesale records match</p>
+            <p className="mt-1 text-sm text-slate-500">Try another search or status filter.</p>
+            <Link
+              to="/wholesale/apply"
+              className="mt-5 inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50"
+            >
+              Open public apply page
+            </Link>
           </div>
         ) : (
           <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200">

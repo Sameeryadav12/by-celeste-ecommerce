@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
+import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
+import { AdminTableSkeleton } from '../../features/admin/components/AdminTableSkeleton'
 import {
   listAdminOrders,
   type AdminOrderListRow,
@@ -55,7 +57,17 @@ export function AdminOrdersPage() {
       </div>
 
       {error ? (
-        <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+        <div className="flex flex-col gap-3 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 sm:flex-row sm:items-center sm:justify-between">
+          <p className="min-w-0">{error}</p>
+          <Button
+            type="button"
+            variant="primary"
+            className="shrink-0 sm:scale-100"
+            onClick={() => void loadOrders()}
+          >
+            Retry
+          </Button>
+        </div>
       ) : null}
 
       <Card>
@@ -101,11 +113,19 @@ export function AdminOrdersPage() {
         {hasFilters ? <p className="mt-3 text-xs text-slate-500">Filters are applied to this list.</p> : null}
 
         {loading ? (
-          <div className="mt-4 text-sm text-slate-500">Loading orders...</div>
+          <AdminTableSkeleton rows={7} columns={7} />
         ) : orders.length === 0 ? (
           <div className="mt-8 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center">
-            <p className="text-base font-medium text-slate-700">No orders yet</p>
-            <p className="mt-1 text-sm text-slate-500">Try a different search or filter.</p>
+            <p className="text-base font-medium text-slate-700">No orders match</p>
+            <p className="mt-1 text-sm text-slate-500">Adjust filters or check back after customers check out.</p>
+            <div className="mt-5 flex flex-wrap justify-center gap-2">
+              <Link
+                to="/shop"
+                className="inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800"
+              >
+                View storefront
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200">

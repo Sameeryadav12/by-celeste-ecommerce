@@ -1,11 +1,36 @@
 import 'dotenv/config'
 import { prisma } from '../config/prisma'
 
+function demoDayWindow(
+  base: Date,
+  daysFromToday: number,
+  startHour: number,
+  startMinute: number,
+  endHour: number,
+  endMinute: number,
+) {
+  const start = new Date(base)
+  start.setDate(start.getDate() + daysFromToday)
+  start.setHours(startHour, startMinute, 0, 0)
+  const end = new Date(base)
+  end.setDate(end.getDate() + daysFromToday)
+  end.setHours(endHour, endMinute, 0, 0)
+  return { start, end }
+}
+
 /**
  * Idempotent demo events seed for By Celeste.
  * Run: npm run seed:events
+ *
+ * Dates are anchored to the day the seed runs so upcoming/past demos stay valid.
  */
-async function main() {
+export async function runSeedEvents() {
+  const base = new Date()
+  const fitzroy = demoDayWindow(base, 14, 10, 0, 15, 0)
+  const winter = demoDayWindow(base, 45, 18, 30, 20, 0)
+  const spring = demoDayWindow(base, 90, 18, 0, 20, 30)
+  const recapPast = demoDayWindow(base, -40, 9, 0, 14, 0)
+
   await prisma.event.upsert({
     where: { slug: 'fitzroy-autumn-popup' },
     create: {
@@ -20,8 +45,8 @@ async function main() {
       state: 'VIC',
       postcode: '3065',
       country: 'Australia',
-      startDateTime: new Date('2026-04-18T10:00:00+10:00'),
-      endDateTime: new Date('2026-04-18T15:00:00+10:00'),
+      startDateTime: fitzroy.start,
+      endDateTime: fitzroy.end,
       imageUrl:
         'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1400&q=80',
       isPublished: true,
@@ -39,8 +64,8 @@ async function main() {
       state: 'VIC',
       postcode: '3065',
       country: 'Australia',
-      startDateTime: new Date('2026-04-18T10:00:00+10:00'),
-      endDateTime: new Date('2026-04-18T15:00:00+10:00'),
+      startDateTime: fitzroy.start,
+      endDateTime: fitzroy.end,
       imageUrl:
         'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1400&q=80',
       isPublished: true,
@@ -62,8 +87,8 @@ async function main() {
       state: 'VIC',
       postcode: '3056',
       country: 'Australia',
-      startDateTime: new Date('2026-06-04T18:30:00+10:00'),
-      endDateTime: new Date('2026-06-04T20:00:00+10:00'),
+      startDateTime: winter.start,
+      endDateTime: winter.end,
       imageUrl:
         'https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&w=1400&q=80',
       isPublished: true,
@@ -81,8 +106,8 @@ async function main() {
       state: 'VIC',
       postcode: '3056',
       country: 'Australia',
-      startDateTime: new Date('2026-06-04T18:30:00+10:00'),
-      endDateTime: new Date('2026-06-04T20:00:00+10:00'),
+      startDateTime: winter.start,
+      endDateTime: winter.end,
       imageUrl:
         'https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&w=1400&q=80',
       isPublished: true,
@@ -104,8 +129,8 @@ async function main() {
       state: 'VIC',
       postcode: '3066',
       country: 'Australia',
-      startDateTime: new Date('2026-09-10T18:00:00+10:00'),
-      endDateTime: new Date('2026-09-10T20:30:00+10:00'),
+      startDateTime: spring.start,
+      endDateTime: spring.end,
       imageUrl:
         'https://images.unsplash.com/photo-1464890100898-a385f744067f?auto=format&fit=crop&w=1400&q=80',
       isPublished: true,
@@ -123,8 +148,8 @@ async function main() {
       state: 'VIC',
       postcode: '3066',
       country: 'Australia',
-      startDateTime: new Date('2026-09-10T18:00:00+10:00'),
-      endDateTime: new Date('2026-09-10T20:30:00+10:00'),
+      startDateTime: spring.start,
+      endDateTime: spring.end,
       imageUrl:
         'https://images.unsplash.com/photo-1464890100898-a385f744067f?auto=format&fit=crop&w=1400&q=80',
       isPublished: true,
@@ -146,8 +171,8 @@ async function main() {
       state: 'VIC',
       postcode: '3182',
       country: 'Australia',
-      startDateTime: new Date('2025-12-14T09:00:00+11:00'),
-      endDateTime: new Date('2025-12-14T14:00:00+11:00'),
+      startDateTime: recapPast.start,
+      endDateTime: recapPast.end,
       imageUrl: null,
       isPublished: true,
       isFeatured: false,
@@ -164,8 +189,8 @@ async function main() {
       state: 'VIC',
       postcode: '3182',
       country: 'Australia',
-      startDateTime: new Date('2025-12-14T09:00:00+11:00'),
-      endDateTime: new Date('2025-12-14T14:00:00+11:00'),
+      startDateTime: recapPast.start,
+      endDateTime: recapPast.end,
       imageUrl: null,
       isPublished: true,
       isFeatured: false,
@@ -178,15 +203,24 @@ async function main() {
     data: { isPublished: false, isFeatured: false },
   })
 
-  console.log('[seedEvents] Upserted 4 events (3 upcoming, 1 past) and retired workshop slug.')
+  console.log(
+    '[seedEvents] Upserted 4 events (3 upcoming from today+14/+45/+90 days, 1 past at today-40) and retired workshop slug.',
+  )
 }
 
-main()
-  .then(async () => {
-    await prisma.$disconnect()
-  })
-  .catch(async (err) => {
-    console.error(err)
-    await prisma.$disconnect()
-    process.exit(1)
-  })
+function isSeedEventsCli() {
+  const entry = (process.argv[1] ?? '').replace(/\\/g, '/')
+  return /(^|\/)seedEvents\.(ts|js|mjs|cjs)$/.test(entry)
+}
+
+if (isSeedEventsCli()) {
+  runSeedEvents()
+    .then(async () => {
+      await prisma.$disconnect()
+    })
+    .catch(async (err) => {
+      console.error(err)
+      await prisma.$disconnect()
+      process.exit(1)
+    })
+}

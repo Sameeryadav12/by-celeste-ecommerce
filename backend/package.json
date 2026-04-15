@@ -21,6 +21,7 @@
     "seed:demo-deployment": "tsx src/scripts/seedDemoDeployment.ts",
     "seed:catalog": "tsx src/scripts/seedCatalog.ts",
     "seed:events": "tsx src/scripts/seedEvents.ts",
+    "seed:local": "tsx src/scripts/seedLocalDemo.ts",
     "seed:catalog:prod": "node dist/scripts/seedCatalog.js",
     "seed:events:prod": "node dist/scripts/seedEvents.js"
   },

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
+import { Button } from '../components/ui/Button'
 import { Seo } from '../components/seo/Seo'
 import { CatalogEmptyState } from '../features/catalog/components/CatalogEmptyState'
 import { EventCard } from '../features/events/components/EventCard'
@@ -20,6 +21,7 @@ export function EventsPage() {
 
   const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
+  const [eventsRetryKey, setEventsRetryKey] = useState(0)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -46,7 +48,7 @@ export function EventsPage() {
       })
 
     return () => controller.abort()
-  }, [search])
+  }, [search, eventsRetryKey])
 
   const nonFeaturedEvents = useMemo(() => {
     if (!featured) return events
@@ -89,8 +91,19 @@ export function EventsPage() {
       </form>
 
       {error ? (
-        <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
+        <div className="flex flex-col gap-3 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 sm:flex-row sm:items-center sm:justify-between">
+          <p className="min-w-0">{error}</p>
+          <Button
+            type="button"
+            variant="primary"
+            className="shrink-0 sm:scale-100"
+            onClick={() => {
+              setError(null)
+              setEventsRetryKey((k) => k + 1)
+            }}
+          >
+            Retry
+          </Button>
         </div>
       ) : null}
 
@@ -116,7 +129,23 @@ export function EventsPage() {
           <Reveal className="space-y-2">
             <h2 className="text-lg font-semibold tracking-tight text-neutral-900">Upcoming events</h2>
             {nonFeaturedEvents.length === 0 ? (
-              <CatalogEmptyState message="No upcoming events match your search right now." />
+              <CatalogEmptyState
+                message="No upcoming events match your search right now."
+                actions={
+                  search ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearch('')
+                        setSearchInput('')
+                      }}
+                      className="inline-flex items-center justify-center rounded-md border border-neutral-300 bg-white px-4 py-2.5 text-sm font-medium text-neutral-900 shadow-sm transition hover:bg-neutral-50"
+                    >
+                      Clear search
+                    </button>
+                  ) : null
+                }
+              />
             ) : (
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {nonFeaturedEvents.map((event) => (

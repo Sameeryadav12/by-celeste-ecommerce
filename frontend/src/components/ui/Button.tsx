@@ -1,14 +1,16 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import { Spinner } from './Spinner'
 
 type Variant = 'primary' | 'ghost'
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: Variant
   children: ReactNode
+  loading?: boolean
 }
 
 const baseClasses =
-  'inline-flex items-center justify-center rounded-md px-4 py-2.5 text-sm font-medium transform-gpu transition-all duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-not-allowed disabled:opacity-70 hover:scale-[1.02] active:scale-[0.98] disabled:hover:scale-100 disabled:active:scale-100'
+  'inline-flex items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium transform-gpu transition-all duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-not-allowed disabled:opacity-70 hover:scale-[1.02] active:scale-[0.98] disabled:hover:scale-100 disabled:active:scale-100'
 
 const variantClasses: Record<Variant, string> = {
   primary: 'bg-neutral-900 text-white shadow-sm hover:bg-neutral-800 disabled:bg-neutral-400',
@@ -16,12 +18,16 @@ const variantClasses: Record<Variant, string> = {
     'border border-transparent text-neutral-900 hover:bg-neutral-100 disabled:text-neutral-400',
 }
 
-export function Button({ variant = 'primary', className, children, ...props }: ButtonProps) {
+export function Button({ variant = 'primary', className, children, loading, disabled, ...props }: ButtonProps) {
+  const busy = Boolean(loading)
   return (
     <button
       className={[baseClasses, variantClasses[variant], className].filter(Boolean).join(' ')}
+      disabled={disabled || busy}
+      aria-busy={busy || undefined}
       {...props}
     >
+      {busy ? <Spinner className="h-4 w-4 shrink-0" /> : null}
       {children}
     </button>
   )

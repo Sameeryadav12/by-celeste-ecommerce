@@ -7,6 +7,7 @@ import {
   updateAdminProduct,
 } from '../../features/admin/adminApi'
 import { Button } from '../../components/ui/Button'
+import { AdminTableSkeleton } from '../../features/admin/components/AdminTableSkeleton'
 import { AdminStatusBadge } from './components/AdminStatusBadge'
 
 export function AdminProductsPage() {
@@ -128,7 +129,17 @@ export function AdminProductsPage() {
       ) : null}
 
       {error ? (
-        <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+        <div className="flex flex-col gap-3 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 sm:flex-row sm:items-center sm:justify-between">
+          <p className="min-w-0">{error}</p>
+          <Button
+            type="button"
+            variant="primary"
+            className="shrink-0 sm:scale-100"
+            onClick={() => void loadProducts()}
+          >
+            Retry
+          </Button>
+        </div>
       ) : null}
 
       <Card>
@@ -173,7 +184,7 @@ export function AdminProductsPage() {
         ) : null}
 
         {loading ? (
-          <div className="mt-4 text-sm text-slate-500">Loading products...</div>
+          <AdminTableSkeleton rows={8} columns={8} />
         ) : products.length === 0 ? (
           <div className="mt-8 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center">
             <p className="text-base font-medium text-slate-700">No products found</p>

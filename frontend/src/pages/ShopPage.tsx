@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { Button } from '../components/ui/Button'
 import { Seo } from '../components/seo/Seo'
@@ -59,6 +59,7 @@ export function ShopPage() {
   const [catalog, setCatalog] = useState<CatalogProductsResult | null>(null)
   const [productsLoading, setProductsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [catalogRetryKey, setCatalogRetryKey] = useState(0)
 
   const selectedCategory = searchParams.get('category') ?? ''
   const selectedSort = (searchParams.get('sort') as ProductSort | null) ?? DEFAULT_SORT
@@ -122,6 +123,7 @@ export function ShopPage() {
     selectedSort,
     user?.id,
     user?.wholesaleApprovalStatus,
+    catalogRetryKey,
   ])
 
   const totalPages = catalog?.pagination.totalPages ?? 1
@@ -286,8 +288,19 @@ export function ShopPage() {
         </div>
 
       {error ? (
-        <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
+        <div className="flex flex-col gap-3 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 sm:flex-row sm:items-center sm:justify-between">
+          <p className="min-w-0">{error}</p>
+          <Button
+            type="button"
+            variant="primary"
+            className="shrink-0 sm:scale-100"
+            onClick={() => {
+              setError(null)
+              setCatalogRetryKey((k) => k + 1)
+            }}
+          >
+            Retry
+          </Button>
         </div>
       ) : null}
 
@@ -300,7 +313,24 @@ export function ShopPage() {
           </div>
         </Reveal>
       ) : products.length === 0 ? (
-        <CatalogEmptyState message="No products matched your filters. Try another category or search term." />
+        <CatalogEmptyState
+          message="No products matched your filters. Try another category or search term."
+          actions={
+            <>
+              {hasActiveFilters ? (
+                <Button type="button" variant="ghost" onClick={clearFilters}>
+                  Clear filters
+                </Button>
+              ) : null}
+              <Link
+                to="/shop"
+                className="inline-flex items-center justify-center rounded-md bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-neutral-800"
+              >
+                View all products
+              </Link>
+            </>
+          }
+        />
       ) : (
         <>
           <Reveal>
