@@ -170,3 +170,28 @@ See [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 ## License
 
 [MIT](./LICENSE) — adjust if your institution requires another license.
+---
+
+# Sprint 4 Progress
+
+During Sprint 4, the team focused on improving the functionality and usability of the By Celeste website. Important features such as Product Management, Order Management, Admin Login, and UI/UX improvements were completed during this sprint.
+
+The team also improved mobile responsiveness and added brand trust messaging to better match the client’s business identity.
+
+Client feedback from Sprint 4 was positive, and additional improvements will continue in Sprint 5.
+
+## Sprint 4 Main Deliverables
+- Product Management (CRUD)
+- Order Management
+- Admin Login and Authentication
+- UI/UX Improvements
+- Brand Trust Messaging
+- Event Management
+- Mobile Optimisation
+
+## Sprint 5 Planned Work
+- Checkout testing and fixes
+- Bug fixing
+- SEO improvements
+- Email notification system
+- Performance optimisation
