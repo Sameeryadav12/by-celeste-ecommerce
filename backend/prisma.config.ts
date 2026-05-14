@@ -1,5 +1,9 @@
-import 'dotenv/config'
+import dotenv from 'dotenv'
+import path from 'node:path'
 import { defineConfig } from 'prisma/config'
+
+// Prefer `backend/.env` over any inherited machine `DATABASE_URL` (Windows user env often breaks local dev).
+dotenv.config({ path: path.resolve(process.cwd(), '.env'), override: true })
 
 const buildTimeFallbackDatabaseUrl = 'postgresql://build:build@127.0.0.1:5432/build_placeholder?schema=public'
 

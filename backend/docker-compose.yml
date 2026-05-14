@@ -1,0 +1,20 @@
+# Local Postgres for Prisma — matches common dev URL on port 5433.
+# From backend/: docker compose up -d
+# Then in backend/.env set DATABASE_URL (see .env.example Docker block).
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: by-celeste-postgres
+    restart: unless-stopped
+    ports:
+      - '5433:5432'
+    environment:
+      POSTGRES_USER: byceleste
+      POSTGRES_PASSWORD: byceleste
+      POSTGRES_DB: by_celeste
+    volumes:
+      - by_celeste_pg_data:/var/lib/postgresql/data
+
+volumes:
+  by_celeste_pg_data:
