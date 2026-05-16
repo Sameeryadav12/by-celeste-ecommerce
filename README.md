@@ -172,7 +172,7 @@ See [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 [MIT](./LICENSE) — adjust if your institution requires another license.
 ---
 
-# Sprint 4 Progress
+# Sprint 4 
 
 During Sprint 4, the team focused on improving the functionality and usability of the By Celeste website. Important features such as Product Management, Order Management, Admin Login, and UI/UX improvements were completed during this sprint.
 
@@ -195,3 +195,142 @@ Client feedback from Sprint 4 was positive, and additional improvements will con
 - SEO improvements
 - Email notification system
 - Performance optimisation
+
+
+
+---
+
+## Sprint 5 Documentation – Final Release, Wholesale Enhancements and Handover
+
+Sprint 5 focuses on completing the final release of the By Celeste e-commerce website. This sprint includes Sprint 4 carry-forward work, wholesale system improvements, advanced customer-facing enhancements, final testing, client review, and handover preparation.
+
+### Sprint 5 Goal
+
+To complete the final release of the By Celeste website by carrying forward unfinished Sprint 4 work, finalising wholesale and advanced features, improving mobile usability, SEO and performance, completing system testing, collecting client feedback, and preparing the final handover package.
+
+### Previous Sprint Carry-Forward Work
+
+The team reviewed Sprint 4 outcomes and identified the following work to be carried forward into Sprint 5:
+
+- Replace demo products with real By Celeste product data
+- Complete checkout testing and fixes
+- Complete final bug fixing
+- Improve system stability before client handover
+
+These items were prioritised first because they directly affect the quality, reliability, and client-readiness of the final release.
+
+### Sprint 5 Product Backlog
+
+
+Replace demo products with real By Celeste data 
+Checkout testing and fixes
+Final bug fixing 
+Wholesale system finalisation 
+Wholesale dashboard and bulk order rules 
+Checkout freight and email confirmation finalisation
+Product image, ingredient and gallery finalisation 
+Customer reviews and brand trust enhancements 
+Contact page and customer enquiry finalisation 
+SEO, performance and mobile UX improvements 
+Admin analytics and events enhancement 
+Final system testing
+Client handover guide 
+
+### Sprint Planning Approach
+
+The Sprint 5 backlog was refined through team discussion and prioritised based on client value, remaining Sprint 4 work, final release quality, and handover needs. The Product Owner reviewed the original project proposal, Sprint 3 outcomes, Sprint 4 outcomes, and outstanding work before finalising the Sprint 5 scope with the team.
+
+### User Stories 
+
+#### Replace Demo Products with Real By Celeste Data
+
+**User Story:**  
+As a customer, I want to view real By Celeste product information so that I can trust the store and make informed purchase decisions.
+
+
+#### Checkout Testing and Fixes
+
+**User Story:**  
+As a customer, I want a reliable checkout process so that I can complete my purchase without errors.
+
+#### Final Bug Fixing
+
+**User Story:**  
+As a user, I want the website to work without major issues so that I have a smooth and reliable experience.
+
+
+#### Wholesale System Finalisation
+
+**User Story:**  
+As a business customer, I want to apply for a wholesale account and access wholesale pricing after approval so that I can order products at partner rates.
+
+
+#### Wholesale Dashboard and Bulk Order Rules
+
+**User Story:**  
+As a wholesale customer, I want a simple wholesale dashboard and bulk order rules so that I can manage wholesale ordering efficiently.
+
+
+
+#### Checkout Freight and Email Confirmation Finalisation
+
+**User Story:**  
+As a customer, I want to see freight costs and receive order confirmation so that I know the full cost and status of my order.
+
+
+#### Product Image, Ingredient and Gallery Finalisation
+
+**User Story:**  
+As a customer, I want to view clear product images, gallery content, and ingredient information so that I can better understand the products and the By Celeste brand.
+
+
+
+#### Customer Reviews and Brand Trust Enhancements
+
+**User Story:**  
+As a customer, I want to see reviews, feedback, and trust messaging so that I feel confident purchasing from By Celeste.
+
+
+#### Contact Page and Customer Enquiry Finalisation
+
+**User Story:**  
+As a customer, I want to contact By Celeste easily so that I can ask questions or request a callback.
+
+
+#### SEO, Performance and Mobile UX Improvements
+
+**User Story:**  
+As a customer and business owner, I want the website to load quickly, work smoothly on mobile, and be easier to find online so that the customer experience and business visibility improve.
+
+
+#### Admin Analytics and Events Enhancement
+
+**User Story:**  
+As the client/admin, I want to view basic store activity and manage events so that I can understand business performance and keep customers informed.
+
+
+#### Final System Testing
+
+**User Story:**  
+As the client, I want the system tested properly so that I can trust the website before handover.
+
+
+#### Client Handover Guide
+
+**User Story:**  
+As the client, I want clear handover documentation so that I can understand, use, and continue the website after the project ends.
+
+
+### Sprint 5 Future Recommendations
+
+The following features are recommended for future development if they are not fully completed within Sprint 5:
+
+- Wishlist or favourites
+- Customer order history dashboard
+- Loyalty rewards system
+- Skin quiz
+- Advanced product recommendation system
+- Live Australia Post or Sendle shipping integration
+- Full event booking system
+- Production payment configuration using the client’s live Square account
+- Advanced analytics dashboard
