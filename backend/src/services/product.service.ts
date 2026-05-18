@@ -58,18 +58,23 @@ async function assertIngredientIdsExist(ids: string[]) {
   }
 }
 
-function orderByFromSort(sort?: ListProductsQuery['sort']): Prisma.ProductOrderByWithRelationInput {
+function orderByFromSort(sort?: ListProductsQuery['sort']): Prisma.ProductOrderByWithRelationInput[] {
+  let secondary: Prisma.ProductOrderByWithRelationInput
   switch (sort) {
     case 'name_desc':
-      return { name: 'desc' }
+      secondary = { name: 'desc' }
+      break
     case 'price_asc':
-      return { price: 'asc' }
+      secondary = { price: 'asc' }
+      break
     case 'price_desc':
-      return { price: 'desc' }
+      secondary = { price: 'desc' }
+      break
     case 'name_asc':
     default:
-      return { name: 'asc' }
+      secondary = { name: 'asc' }
   }
+  return [{ shopSortOrder: 'asc' }, secondary]
 }
 
 export async function listProductsPublic(query: ListProductsQuery, viewer: PricingViewer) {

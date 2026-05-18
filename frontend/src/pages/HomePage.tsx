@@ -19,6 +19,22 @@ import {
   type ThemeSettings,
 } from '../features/content/contentApi'
 
+const DEFAULT_HERO_HEADING = 'Calm, considered skincare by By Celeste'
+
+/** Keep “By Celeste” on its own line when the heading ends with that phrase. */
+function HeroHeading({ text }: { text: string }) {
+  const match = text.match(/^(.+)\s+By Celeste$/i)
+  if (match) {
+    return (
+      <>
+        <span className="block">{match[1]}</span>
+        <span className="block">By Celeste</span>
+      </>
+    )
+  }
+  return <>{text}</>
+}
+
 export function HomePage() {
   const [upcomingEvents, setUpcomingEvents] = useState<EventItem[]>([])
   const [featuredProducts, setFeaturedProducts] = useState<CatalogProduct[]>([])
@@ -115,7 +131,9 @@ export function HomePage() {
                 : undefined
             }
           >
-            {marketing?.homepageHeroHeading ?? 'Calm, considered skincare by By Celeste'}
+            <HeroHeading
+              text={marketing?.homepageHeroHeading?.trim() || DEFAULT_HERO_HEADING}
+            />
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-[1.65] text-neutral-500 sm:mt-6 sm:text-[1.0625rem] sm:leading-relaxed">
             {marketing?.homepageSubtext ??

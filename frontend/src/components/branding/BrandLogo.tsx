@@ -1,15 +1,19 @@
 import { useCallback, useEffect, useState } from 'react'
 import { BRANDING_LOGO_SRC_CHAIN } from '../../config/brandingLogos'
 
-/**
- * Header: primary visual mark. Footer: strong supporting mark (still smaller than header on lg).
- * object-contain + max-width keeps aspect ratio and avoids overflow.
- */
+/** Opaque rasters: drop-shadow “outline” follows the full image rectangle, not the glyph. */
+function looksLikeOpaqueRasterLogo(src: string): boolean {
+  const pathOnly = src.split('?')[0]?.split('#')[0] ?? src
+  return /\.(jpe?g|bmp)$/i.test(pathOnly)
+}
+
+/** Shared mark sizing — header and footer use the same asset and scale for a consistent brand lockup. */
+const brandMarkSizeClasses =
+  'h-16 max-h-16 w-auto max-w-[min(22rem,82vw)] shrink-0 object-contain object-left sm:h-[4.5rem] sm:max-h-[4.5rem] sm:max-w-[26rem] md:h-20 md:max-h-20 md:max-w-[30rem] lg:h-24 lg:max-h-24 lg:max-w-[34rem]'
+
 const variantClasses = {
-  header:
-    'h-[52px] max-h-[52px] w-auto max-w-[min(20rem,78vw)] shrink-0 object-contain object-left sm:h-[58px] sm:max-h-[58px] sm:max-w-[22rem] md:h-[72px] md:max-h-[72px] md:max-w-[26rem] lg:h-[80px] lg:max-h-[80px] lg:max-w-[30rem]',
-  footer:
-    'h-14 max-h-14 w-auto max-w-[min(19rem,88vw)] shrink-0 object-contain object-left sm:h-16 sm:max-h-16 sm:max-w-[21rem] md:h-[4.25rem] md:max-h-[4.25rem] md:max-w-[23rem] lg:h-[4.75rem] lg:max-h-[4.75rem] lg:max-w-[25rem]',
+  header: brandMarkSizeClasses,
+  footer: brandMarkSizeClasses,
 } as const
 
 type BrandLogoProps = {
@@ -17,6 +21,8 @@ type BrandLogoProps = {
   showTextFallback?: boolean
   className?: string
   srcOverride?: string | null
+  /** Subtle CSS outline via drop-shadow (transparent PNG/SVG). Default true. */
+  outlined?: boolean
 }
 
 export function BrandLogo({
@@ -24,6 +30,7 @@ export function BrandLogo({
   showTextFallback = true,
   className = '',
   srcOverride = null,
+  outlined,
 }: BrandLogoProps) {
   const [index, setIndex] = useState(0)
 
@@ -39,28 +46,41 @@ export function BrandLogo({
 
   if (index >= sourceChain.length) {
     if (!showTextFallback) return null
-    const fallbackSize =
-      variant === 'footer'
-        ? 'text-xl tracking-tight sm:text-2xl md:text-3xl lg:text-[2.125rem]'
-        : 'text-2xl tracking-tight sm:text-3xl md:text-4xl lg:text-[2.75rem]'
+    const fallbackSize = 'text-2xl tracking-tight sm:text-3xl md:text-4xl lg:text-[2.75rem]'
+    const outlineText = outlined !== false ? 'brand-logo--outlined-text' : ''
     return (
-      <span className={`font-semibold text-neutral-900 ${fallbackSize} ${className}`}>By Celeste</span>
+      <span
+        className={`inline-flex font-semibold text-neutral-900 ${fallbackSize} ${outlineText} ${className}`.trim()}
+      >
+        By Celeste
+      </span>
     )
   }
 
   const src = sourceChain[index]
 
+  const useOutline = outlined !== false && !looksLikeOpaqueRasterLogo(src)
+  const outlineClass = 'brand-logo--outlined'
+
   return (
-    <img
-      src={src}
-      alt="By Celeste Logo"
-      width={320}
-      height={80}
-      decoding="async"
-      loading={variant === 'header' ? 'eager' : 'lazy'}
-      fetchPriority={variant === 'header' ? 'high' : 'auto'}
-      className={`${variantClasses[variant]} ${className}`}
-      onError={handleError}
-    />
+    <span
+      className={
+        useOutline
+          ? `${outlineClass} ${className}`.trim()
+          : `inline-flex leading-none ${className}`.trim()
+      }
+    >
+      <img
+        src={src}
+        alt="By Celeste Logo"
+        width={420}
+        height={105}
+        decoding="async"
+        loading={variant === 'header' ? 'eager' : 'lazy'}
+        fetchPriority={variant === 'header' ? 'high' : 'auto'}
+        className={variantClasses[variant]}
+        onError={handleError}
+      />
+    </span>
   )
 }

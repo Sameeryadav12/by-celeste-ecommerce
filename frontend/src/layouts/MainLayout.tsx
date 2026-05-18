@@ -6,6 +6,7 @@ import { Button } from '../components/ui/Button'
 import { useCart } from '../features/cart/CartContext'
 import { BUSINESS_LOCATION } from '../config/businessAddress'
 import { BrandLogo } from '../components/branding/BrandLogo'
+import { BrandLogoWatermark } from '../components/branding/BrandLogoWatermark'
 import { TrustBadgeRow } from '../components/trust/TrustBadgeRow'
 import { BrandIcon } from '../components/icons/BrandIcon'
 import {
@@ -37,7 +38,7 @@ function NavItem({
           'rounded-md px-2.5 py-1.5 text-xs transition-colors sm:px-3 sm:py-2 sm:text-[0.8125rem]',
           isActive
             ? 'bg-neutral-900 font-semibold text-white'
-            : 'font-normal text-neutral-500 hover:bg-neutral-50 hover:text-neutral-900',
+            : 'font-medium text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900',
         ].join(' ')
       }
       end={end}
@@ -49,7 +50,7 @@ function NavItem({
 
 const cartNavBase =
   'rounded-md px-2.5 py-1.5 text-xs font-normal transition-colors duration-300 ease-out sm:px-3 sm:py-2 sm:text-[0.8125rem]'
-const cartNavDefault = 'text-neutral-500 hover:bg-neutral-50 hover:text-neutral-900'
+const cartNavDefault = 'font-medium text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900'
 const cartNavFlash =
   'bg-emerald-50/95 font-medium text-emerald-950 ring-1 ring-emerald-200/80 shadow-sm'
 
@@ -119,15 +120,20 @@ export function MainLayout() {
     { to: wholesaleNavTo, label: 'Wholesale' },
   ]
 
+  const watermarkSrc = theme?.headerLogoPath || theme?.footerLogoPath || undefined
+
   return (
     <div
-      className="min-h-screen bg-neutral-50 text-neutral-900"
+      className="relative min-h-screen bg-neutral-50 text-neutral-900"
       style={{
         '--brand-primary': theme?.primaryBrandColor || '#171717',
         '--brand-secondary': theme?.secondaryBrandColor || '#64748b',
       } as CSSProperties}
     >
-      <header className="border-b border-neutral-200 bg-white/80 backdrop-blur-sm">
+      <BrandLogoWatermark srcOverride={watermarkSrc} />
+
+      <div className="relative z-10">
+      <header className="site-header sticky top-0 z-30 w-full border-b border-neutral-200/90 bg-white shadow-[0_2px_16px_rgba(0,0,0,0.08)]">
         <Container>
           <div className="flex items-center justify-between gap-4 py-4 sm:py-5 md:gap-8 lg:gap-10">
             <Link
@@ -168,24 +174,16 @@ export function MainLayout() {
                           'rounded-md px-2.5 py-1.5 text-xs transition-colors sm:px-3 sm:py-2 sm:text-[0.8125rem]',
                           isActive
                             ? 'bg-neutral-900 font-semibold text-white'
-                            : 'border border-neutral-200/70 bg-white/80 font-normal text-neutral-600 shadow-sm hover:bg-neutral-50 hover:text-neutral-900',
+                            : 'border border-neutral-300 bg-neutral-50 font-medium text-neutral-800 shadow-sm hover:bg-neutral-100 hover:text-neutral-900',
                         ].join(' ')
                       }
                     >
                       Account
                     </NavLink>
-                    {user.role === 'ADMIN' ? (
-                      <NavLink
-                        to="/admin"
-                        className="rounded-md px-2 py-1.5 text-[0.6875rem] font-medium text-neutral-500 ring-1 ring-neutral-200/80 transition hover:bg-neutral-50 hover:text-neutral-800"
-                      >
-                        Admin
-                      </NavLink>
-                    ) : null}
                     <button
                       type="button"
                       onClick={handleLogout}
-                      className="rounded-md px-2 py-1 text-[0.6875rem] font-normal text-neutral-400 transition hover:bg-neutral-50 hover:text-neutral-700"
+                      className="rounded-md px-2 py-1 text-[0.6875rem] font-medium text-neutral-600 transition hover:bg-neutral-100 hover:text-neutral-900"
                     >
                       Logout
                     </button>
@@ -194,7 +192,7 @@ export function MainLayout() {
                   <>
                     <NavLink
                       to="/login"
-                      className="rounded-md px-2.5 py-1.5 text-xs font-normal text-neutral-500 transition hover:bg-neutral-50 hover:text-neutral-900 sm:px-3 sm:py-2 sm:text-[0.8125rem]"
+                      className="rounded-md px-2.5 py-1.5 text-xs font-medium text-neutral-700 transition hover:bg-neutral-100 hover:text-neutral-900 sm:px-3 sm:py-2 sm:text-[0.8125rem]"
                     >
                       Login
                     </NavLink>
@@ -270,15 +268,6 @@ export function MainLayout() {
                       >
                         Account
                       </NavLink>
-                      {user.role === 'ADMIN' ? (
-                        <NavLink
-                          to="/admin"
-                          onClick={() => setMobileOpen(false)}
-                          className="block rounded-md px-3 py-2 text-xs font-medium text-neutral-600 ring-1 ring-neutral-200/80 hover:bg-neutral-100"
-                        >
-                          Admin portal
-                        </NavLink>
-                      ) : null}
                       <button
                         type="button"
                         onClick={handleLogout}
@@ -316,7 +305,7 @@ export function MainLayout() {
         </Container>
       </header>
 
-      <main className="pb-10 pt-8 sm:pb-12 sm:pt-10">
+      <main className="relative bg-transparent pb-10 pt-8 sm:pb-12 sm:pt-10">
         <Container>
           <Outlet />
         </Container>
@@ -326,13 +315,19 @@ export function MainLayout() {
         <TrustBadgeRow heading={theme?.trustBadgeHeading || undefined} />
       ) : null}
 
-      <footer className="border-t border-neutral-200 bg-white/80 py-12 text-sm text-neutral-700 sm:py-14">
+      <footer className="site-footer border-t border-neutral-200 bg-white py-12 text-sm text-neutral-700 sm:py-14">
         <Container>
           <div className="grid items-start gap-10 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)] md:gap-12 lg:gap-14">
             <div className="flex max-w-md flex-col md:max-w-none md:pr-4 lg:pr-8">
-              <div className="flex items-start">
-                <BrandLogo variant="footer" srcOverride={theme?.footerLogoPath || undefined} />
-              </div>
+              <Link
+                to="/"
+                className="inline-flex focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2"
+              >
+                <BrandLogo
+                  variant="footer"
+                  srcOverride={theme?.footerLogoPath || theme?.headerLogoPath || undefined}
+                />
+              </Link>
               <p className="mt-6 max-w-sm text-[0.75rem] font-semibold uppercase leading-relaxed tracking-[0.13em] text-neutral-700 sm:mt-7 sm:text-xs sm:tracking-[0.12em] lg:mt-8">
                 {marketing?.homepageTagline || 'Traditional, Natural Exceptional Skincare'}
               </p>
@@ -407,6 +402,7 @@ export function MainLayout() {
           </div>
         </Container>
       </footer>
+      </div>
     </div>
   )
 }

@@ -1,24 +1,17 @@
 # By Celeste — logo files
 
-## Primary file (client)
+## Resolution order (first file that loads wins)
 
-The live site uses the client asset:
+Paths are built in code with `encodeURIComponent`, so spaces in filenames are fine.
 
-- **`Celeste logo.jpg`** (URL: `/images/branding/Celeste%20logo.jpg`)
+1. **`Celeste logo.png`** — primary client mark (URL: `/images/branding/Celeste%20logo.png`)  
+2. **`logo-on-light-bg.png`** / **`logo-on-light-bg.svg`** — optional darker-on-light variant  
+3. **`logo.svg`**, **`logo.png`**, **`logo.webp`** — generic fallbacks  
+4. **`Celeste logo.jpg`** — last resort (JPEG is opaque; can show a slight “box” on white)
 
-Paths are built in code with `encodeURIComponent`, so spaces in the filename are fine.
+## Client JPEG (fallback only)
 
-## Optional alternates (same folder)
-
-If the mark is **too light** on the **white header**, add a darker variant and name it:
-
-- **`logo-on-light-bg.png`** or **`logo-on-light-bg.svg`**
-
-The app tries that **after** `Celeste logo.jpg` and before generic `logo.svg` / `logo.png`.
-
-## Generic fallbacks
-
-- `logo.svg`, `logo.png`, `logo.webp` — used if the client file is removed or renamed.
+- **`Celeste logo.jpg`** — used only when none of the files above load.
 
 ## Behaviour
 

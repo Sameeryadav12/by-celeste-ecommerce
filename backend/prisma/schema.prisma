@@ -234,6 +234,8 @@ model Product {
   isActive         Boolean  @default(true)
   isFeatured       Boolean  @default(false)
   stockQuantity    Int      @default(0)
+  /** Lower values appear first in shop lists; use high values to pin products to the end. */
+  shopSortOrder    Int      @default(0)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
@@ -244,6 +246,7 @@ model Product {
   @@index([isActive])
   @@index([isFeatured])
   @@index([name])
+  @@index([shopSortOrder])
 }
 
 /// Public-facing brand events: pop-ups, community events, and seasonal moments.

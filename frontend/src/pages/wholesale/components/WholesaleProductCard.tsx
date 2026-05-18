@@ -6,6 +6,7 @@ import type { CatalogProduct } from '../../../features/catalog/catalogTypes'
 import { ProductPrice } from '../../../features/catalog/components/ProductPrice'
 import { AddToCartButton } from '../../../features/cart/components/AddToCartButton'
 import { QuantityControl } from '../../../features/cart/components/QuantityControl'
+import { ProductCardDescription } from '../../../features/catalog/components/ProductCardDescription'
 
 function clampInt(value: number, min: number, max: number) {
   const next = Math.floor(value)
@@ -45,9 +46,7 @@ export function WholesaleProductCard({ product }: { product: CatalogProduct }) {
               {stockLabel}
             </span>
           </div>
-          <p className="line-clamp-2 text-sm leading-relaxed text-neutral-700">
-            {product.shortDescription}
-          </p>
+          <ProductCardDescription text={product.shortDescription} />
         </div>
 
         <div className="mt-auto flex flex-col gap-3 border-t border-neutral-100 pt-4">

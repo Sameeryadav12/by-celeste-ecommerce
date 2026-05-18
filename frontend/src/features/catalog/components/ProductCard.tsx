@@ -5,6 +5,7 @@ import { productNativeBadges } from '../nativeIngredientHighlights'
 import { ProductPrice } from './ProductPrice'
 import { AddToCartButton } from '../../cart/components/AddToCartButton'
 import { SmartImage } from '../../../components/media/SmartImage'
+import { ProductCardDescription } from './ProductCardDescription'
 
 export function ProductCard({ product }: { product: CatalogProduct }) {
   const nativeBadges = productNativeBadges(product, 2)
@@ -28,20 +29,20 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
         </div>
 
         <div className="min-h-0 flex-1 space-y-1">
-          <h2 className="text-base font-semibold text-neutral-900">{product.name}</h2>
-          {nativeBadges.length > 0 ? (
-            <div className="flex flex-wrap gap-1.5 pt-0.5">
-              {nativeBadges.map((label) => (
-                <span
-                  key={label}
-                  className="rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-neutral-600"
-                >
-                  {label}
-                </span>
-              ))}
-            </div>
-          ) : null}
-          <p className="line-clamp-2 text-sm leading-relaxed text-neutral-700">{product.shortDescription}</p>
+          <h2 className="line-clamp-2 min-h-[2.75rem] text-base font-semibold leading-snug text-neutral-900">
+            {product.name}
+          </h2>
+          <div className="min-h-[1.375rem] flex flex-wrap gap-1.5 pt-0.5">
+            {nativeBadges.map((label) => (
+              <span
+                key={label}
+                className="rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-neutral-600"
+              >
+                {label}
+              </span>
+            ))}
+          </div>
+          <ProductCardDescription text={product.shortDescription} />
         </div>
 
         <div className="mt-auto flex flex-col gap-4 border-t border-neutral-100 pt-4">

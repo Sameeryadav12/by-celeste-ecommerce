@@ -20,6 +20,8 @@
     "seed:demo-admin": "tsx src/scripts/seedDemoAdmin.ts",
     "seed:demo-deployment": "tsx src/scripts/seedDemoDeployment.ts",
     "docker:db": "docker compose up -d",
+    "catalog:reset": "tsx src/scripts/resetCatalog.ts",
+    "seed:client-catalog": "tsx src/scripts/seedClientCatalog.ts",
     "seed:catalog": "tsx src/scripts/seedCatalog.ts",
     "seed:events": "tsx src/scripts/seedEvents.ts",
     "seed:local": "tsx src/scripts/seedLocalDemo.ts",

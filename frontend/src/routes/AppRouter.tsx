@@ -1,4 +1,5 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, Outlet, RouterProvider } from 'react-router-dom'
+import { ScrollToTop } from '../components/navigation/ScrollToTop'
 import { MainLayout } from '../layouts/MainLayout'
 import { AccountLayout } from '../pages/AccountLayout'
 import { AccountDashboardPage } from '../pages/AccountDashboardPage'
@@ -51,7 +52,19 @@ import { WholesaleSupportPage } from '../pages/wholesale/WholesaleSupportPage'
  * Route order matters: `/admin` and `/wholesale` must be registered *before* the storefront
  * `MainLayout` branch. Otherwise `path: '*'` under MainLayout matches `/admin` and shows 404.
  */
+function RootLayout() {
+  return (
+    <>
+      <ScrollToTop />
+      <Outlet />
+    </>
+  )
+}
+
 const router = createBrowserRouter([
+  {
+    element: <RootLayout />,
+    children: [
   /* ─── Admin portal (before storefront catch-all `*`) ─── */
   {
     element: <AdminProtectedRoute />,
@@ -133,6 +146,8 @@ const router = createBrowserRouter([
       { path: '/events', element: <EventsPage /> },
       { path: '/events/:slug', element: <EventDetailPage /> },
       { path: '*', element: <NotFoundPage /> },
+    ],
+  },
     ],
   },
 ])

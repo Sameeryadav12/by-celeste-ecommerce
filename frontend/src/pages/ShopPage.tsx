@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { Button } from '../components/ui/Button'
@@ -8,6 +7,7 @@ import { getCategories, getProducts } from '../features/catalog/catalogApi'
 import { CatalogEmptyState } from '../features/catalog/components/CatalogEmptyState'
 import { ProductCard } from '../features/catalog/components/ProductCard'
 import { ProductCardSkeleton } from '../features/catalog/components/ProductCardSkeleton'
+import { ProductSearchField } from '../features/catalog/components/ProductSearchField'
 import type { CatalogCategory, CatalogProductsResult, ProductSort } from '../features/catalog/catalogTypes'
 import { Reveal } from '../components/animation/Reveal'
 
@@ -24,23 +24,6 @@ const DEFAULT_SORT: ProductSort = 'name_asc'
 
 const fieldClass =
   'h-9 w-full rounded-lg border border-neutral-200/90 bg-white px-3 text-sm text-neutral-900 shadow-sm outline-none transition placeholder:text-neutral-400 focus:border-neutral-400 focus:ring-1 focus:ring-neutral-200/80'
-
-function SearchSubmitIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      aria-hidden
-    >
-      <circle cx="11" cy="11" r="7" />
-      <path d="m20 20-3.5-3.5" />
-    </svg>
-  )
-}
 
 function parsePositiveInt(value: string | null, fallback: number): number {
   if (!value) return fallback
@@ -153,8 +136,7 @@ export function ShopPage() {
     setSearchParams(params)
   }
 
-  function submitSearch(event: FormEvent) {
-    event.preventDefault()
+  function applySearch() {
     updateFilters({ search: searchInput.trim() || null })
   }
 
@@ -190,26 +172,12 @@ export function ShopPage() {
         <div className="rounded-xl border border-neutral-200/80 bg-neutral-50/60 p-3 shadow-sm sm:p-3.5">
           {/* Row 1: search + category + sort — one toolbar */}
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-2">
-            <form
-              onSubmit={submitSearch}
-              className="flex min-w-0 flex-1 overflow-hidden rounded-lg border border-neutral-200/90 bg-white shadow-sm"
-            >
-              <input
-                value={searchInput}
-                onChange={(event) => setSearchInput(event.target.value)}
-                type="search"
-                placeholder="Search products"
-                className="min-w-0 flex-1 border-0 bg-transparent px-3 py-2 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 focus:ring-0"
-                aria-label="Search products by name"
-              />
-              <button
-                type="submit"
-                className="flex h-9 w-9 shrink-0 items-center justify-center border-l border-neutral-200/80 text-neutral-500 transition hover:bg-neutral-50 hover:text-neutral-900"
-                aria-label="Search"
-              >
-                <SearchSubmitIcon className="h-4 w-4" />
-              </button>
-            </form>
+            <ProductSearchField
+              value={searchInput}
+              onChange={setSearchInput}
+              onSubmit={applySearch}
+              category={selectedCategory || undefined}
+            />
 
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:flex md:min-w-0 md:flex-none md:flex-row md:gap-2">
               <select

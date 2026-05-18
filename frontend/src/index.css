@@ -1,5 +1,50 @@
 @import "tailwindcss";
 
+/* Transparent marks: alpha-aware halo + hairline outline (no layout shift). */
+.brand-logo--outlined {
+  display: inline-flex;
+  line-height: 0;
+  vertical-align: middle;
+  isolation: isolate;
+}
+
+.brand-logo--outlined img {
+  filter: drop-shadow(0 0 0.4px rgb(255 255 255 / 0.95))
+    drop-shadow(0 0 1px rgb(0 0 0 / 0.07)) drop-shadow(0.7px 0 0 rgb(0 0 0 / 0.08))
+    drop-shadow(-0.7px 0 0 rgb(0 0 0 / 0.08)) drop-shadow(0 0.7px 0 rgb(0 0 0 / 0.08))
+    drop-shadow(0 -0.7px 0 rgb(0 0 0 / 0.08));
+}
+
+/* Header + footer: same crisp separation on white (matches header look everywhere) */
+.site-header .brand-logo--outlined img,
+.site-footer .brand-logo--outlined img {
+  filter: drop-shadow(0 0 1px rgb(255 255 255 / 1)) drop-shadow(0 0 2px rgb(0 0 0 / 0.12))
+    drop-shadow(0 1px 3px rgb(0 0 0 / 0.1)) drop-shadow(1px 0 0 rgb(0 0 0 / 0.1))
+    drop-shadow(-1px 0 0 rgb(0 0 0 / 0.1));
+}
+
+/* Fixed page watermark — soft edges so content stays readable */
+.brand-watermark {
+  -webkit-mask-image: radial-gradient(
+    ellipse 72% 58% at 50% 42%,
+    rgb(0 0 0 / 0.9) 0%,
+    rgb(0 0 0 / 0.35) 55%,
+    transparent 100%
+  );
+  mask-image: radial-gradient(
+    ellipse 72% 58% at 50% 42%,
+    rgb(0 0 0 / 0.9) 0%,
+    rgb(0 0 0 / 0.35) 55%,
+    transparent 100%
+  );
+}
+
+.brand-logo--outlined-text {
+  -webkit-text-stroke: 0.45px rgb(255 255 255 / 0.55);
+  paint-order: stroke fill;
+  text-shadow: 0 0 1px rgb(255 255 255 / 0.45), 0 1px 2px rgb(0 0 0 / 0.08);
+}
+
 html,
 body {
   height: 100%;

@@ -166,7 +166,7 @@ export function AdminThemePage() {
               <input
                 value={form.headerLogoPath}
                 onChange={(e) => setForm((p) => ({ ...p, headerLogoPath: e.target.value }))}
-                placeholder="/images/branding/logo.png"
+                placeholder="/images/branding/Celeste%20logo.png"
                 className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-slate-900"
               />
             </label>
@@ -175,7 +175,7 @@ export function AdminThemePage() {
               <input
                 value={form.footerLogoPath}
                 onChange={(e) => setForm((p) => ({ ...p, footerLogoPath: e.target.value }))}
-                placeholder="/images/branding/footer-logo.png"
+                placeholder="/images/branding/Celeste%20logo.png"
                 className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-slate-900"
               />
             </label>

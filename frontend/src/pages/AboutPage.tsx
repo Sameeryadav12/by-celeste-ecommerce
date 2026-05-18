@@ -1,85 +1,91 @@
-import { Card } from '../components/ui/Card'
-import { Seo } from '../components/seo/Seo'
 import { Link } from 'react-router-dom'
-import { BUSINESS_LOCATION } from '../config/businessAddress'
+import { Seo } from '../components/seo/Seo'
+import { Card } from '../components/ui/Card'
+import { SmartImage } from '../components/media/SmartImage'
+import { Reveal } from '../components/animation/Reveal'
+
+const ABOUT_HERO_IMAGE = '/images/about/about-product-autumn.png'
 
 export function AboutPage() {
   return (
     <>
       <Seo
-        title="About By Celeste | Calm Australian skincare"
-        description="Meet Jane and the story behind By Celeste — handcrafted skincare in regional Victoria with Australian botanicals and cruelty-free care."
+        title="About us | By Celeste"
+        description="Established in Albury NSW in 2006, By Celeste crafts nourishing clay and body products by hand using ingredients from local orchards, vineyards and olive groves."
       />
-      <section className="space-y-10">
-        <div className="space-y-4">
-          <h1 className="text-2xl font-semibold tracking-tight text-neutral-900 sm:text-3xl">
-            About By Celeste
-          </h1>
-          <p className="max-w-2xl text-sm leading-7 text-neutral-700">
-            By Celeste is an Australian skincare brand built on patience, place, and respect for
-            skin. We believe calm routines and honest ingredients beat loud promises.
-          </p>
-        </div>
 
-        <Card className="max-w-3xl">
-          <h2 className="text-sm font-semibold text-neutral-900">Jane &amp; the beginning</h2>
-          <p className="mt-3 text-sm leading-7 text-neutral-700">
-            By Celeste grew from Jane&apos;s own search for skincare that felt gentle, considered,
-            and true to Australia — not another imported trend repackaged for our shelves. Working from
-            Leneva Victoria, she focuses on small batches, careful sourcing, and ingredients in formulas
-            that support the skin barrier without unnecessary drama.
-          </p>
-          <p className="mt-3 text-sm leading-7 text-neutral-700">
-            What started as kitchen-table experiments and local market tables has become a
-            boutique line for people who want something personal: native botanicals they can read
-            about, textures that feel spa-quiet, and a founder who still shows up at events to
-            listen to customers.
-          </p>
-        </Card>
+      <section className="space-y-12 sm:space-y-14">
+        <Reveal className="grid gap-10 lg:grid-cols-2 lg:items-center lg:gap-14 xl:gap-16">
+          <SmartImage
+            src={ABOUT_HERO_IMAGE}
+            alt="By Celeste body cream among autumn leaves"
+            wrapperClassName="relative aspect-[4/5] w-full overflow-hidden rounded-2xl bg-neutral-100 ring-1 ring-neutral-200/80 sm:aspect-[5/6] lg:aspect-[4/5]"
+            imgClassName="object-cover object-center"
+            loading="eager"
+          />
 
-        <div className="grid gap-4 md:grid-cols-3">
-          <Card>
-            <h2 className="text-sm font-semibold text-neutral-900">Regional Victoria</h2>
-            <p className="mt-2 text-xs leading-5 text-neutral-700">
-              We&apos;re rooted outside the big-city rush in Leneva Victoria. That distance helps us
-              keep decisions human-sized — from how we blend to how we host local brand events.
+          <div className="flex flex-col justify-center space-y-5 lg:py-4">
+            <p className="text-sm font-medium tracking-wide text-neutral-600">By Celeste</p>
+            <h1 className="text-3xl font-semibold tracking-tight text-neutral-900 sm:text-4xl">
+              About us
+            </h1>
+            <p className="max-w-xl text-base leading-relaxed text-neutral-700 sm:text-[1.0625rem] sm:leading-[1.75]">
+              Established in Albury NSW in 2006, our Nourishing sapone clay and body products are
+              handmade and hand cut by our Master Soap Maker using raw ingredients sourced from local
+              orchards, vineyards and olive groves.
             </p>
-            <p className="mt-3 border-t border-neutral-100 pt-3 text-[11px] leading-5 text-neutral-600">
-              {BUSINESS_LOCATION.locality}, {BUSINESS_LOCATION.country}
+            <p className="text-sm font-medium text-neutral-800">
+              Wholesale and Private Label available
+            </p>
+            <div className="flex flex-wrap gap-3 pt-2">
+              <Link
+                to="/shop"
+                className="rounded-md bg-neutral-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-neutral-800"
+              >
+                Shop the range
+              </Link>
+              <Link
+                to="/wholesale/apply"
+                className="rounded-md px-5 py-2.5 text-sm font-medium text-neutral-800 ring-1 ring-neutral-300 transition hover:bg-neutral-100"
+              >
+                Wholesale enquiry
+              </Link>
+            </div>
+          </div>
+        </Reveal>
+
+        <Reveal className="grid gap-4 md:grid-cols-3">
+          <Card>
+            <h2 className="text-sm font-semibold text-neutral-900">Handmade in Australia</h2>
+            <p className="mt-2 text-sm leading-relaxed text-neutral-700">
+              Small batches, hand cut and carefully finished — the same care that has defined the
+              brand since 2006.
             </p>
           </Card>
           <Card>
-            <h2 className="text-sm font-semibold text-neutral-900">Australian ingredients</h2>
-            <p className="mt-2 text-xs leading-5 text-neutral-700">
-              Kakadu Plum, Desert Lime, Quandong, Banksia, Lemon Myrtle, and other natives appear
-              across our range. We celebrate them on every product page because knowing what
-              touches your skin should be easy.
+            <h2 className="text-sm font-semibold text-neutral-900">Local sourcing</h2>
+            <p className="mt-2 text-sm leading-relaxed text-neutral-700">
+              Raw ingredients from regional orchards, vineyards and olive groves keep formulas rooted
+              in place and season.
             </p>
           </Card>
           <Card>
-            <h2 className="text-sm font-semibold text-neutral-900">Cruelty-free &amp; careful</h2>
-            <p className="mt-2 text-xs leading-5 text-neutral-700">
-              We don&apos;t test on animals. Products are made in Australia with an emphasis on
-              transparency — so you can shop with confidence, whether you&apos;re new to the brand
-              or stocking your bathroom shelf for the long haul.
+            <h2 className="text-sm font-semibold text-neutral-900">Cruelty-free</h2>
+            <p className="mt-2 text-sm leading-relaxed text-neutral-700">
+              We do not test on animals. Explore ingredients on each product page and shop with
+              confidence.
             </p>
           </Card>
-        </div>
+        </Reveal>
 
-        <div className="flex flex-wrap gap-3">
-          <Link
-            to="/shop"
-            className="rounded-md bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-neutral-800"
-          >
-            Shop the range
-          </Link>
+        <Reveal>
           <Link
             to="/events"
-            className="rounded-md px-4 py-2.5 text-sm font-medium text-neutral-800 ring-1 ring-neutral-300 transition hover:bg-neutral-100"
+            className="inline-flex rounded-md px-5 py-2.5 text-sm font-medium text-neutral-800 ring-1 ring-neutral-300 transition hover:bg-neutral-100"
           >
             See upcoming events
           </Link>
-        </div>
+        </Reveal>
       </section>
     </>
   )
