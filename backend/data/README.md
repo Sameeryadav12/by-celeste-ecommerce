@@ -1,5 +1,7 @@
 # Client catalog data (optional override)
 
+**Typed product list:** `backend/src/data/client-catalog.ts` — edit this file and run `npm run seed:client-catalog`.
+
 ## What this folder is for
 
 When Jane provides a **Word document** with the real product range, the development team can turn it into a **Markdown file** that matches the same structure as `docs/04-products.md`, then save it here as:
