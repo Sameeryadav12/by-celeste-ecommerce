@@ -1,6 +1,6 @@
 import 'dotenv/config'
 import { Prisma } from '@prisma/client'
-import { CLIENT_CATALOG_PRODUCTS } from '../../data/client-catalog'
+import { CLIENT_CATALOG_PRODUCTS } from '../data/client-catalog'
 import { prisma } from '../config/prisma'
 import { slugify } from '../utils/slug'
 
@@ -10,7 +10,7 @@ function catalogNameWithoutWeight(name: string): string {
 }
 
 /**
- * Upserts categories, ingredients, and products from backend/data/client-catalog.ts
+ * Upserts categories, ingredients, and products from src/data/client-catalog.ts
  *
  * Run: npm run seed:client-catalog
  */
