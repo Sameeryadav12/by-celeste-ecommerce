@@ -31,6 +31,12 @@ export const env = {
   JWT_ACCESS_SECRET: getEnv('JWT_ACCESS_SECRET'),
   JWT_ACCESS_EXPIRES_IN: process.env.JWT_ACCESS_EXPIRES_IN ?? '7d',
 
+  /**
+   * Optional 32-byte hex key (64 hex chars) for encrypting TOTP secrets at rest.
+   * If omitted, a key is derived from JWT_ACCESS_SECRET (fine for dev; set explicitly in production).
+   */
+  TOTP_ENCRYPTION_KEY: process.env.TOTP_ENCRYPTION_KEY?.trim() || undefined,
+
   AUTH_COOKIE_NAME: process.env.AUTH_COOKIE_NAME ?? 'by_celeste_access',
   AUTH_COOKIE_SECURE: parseBoolean(process.env.AUTH_COOKIE_SECURE ?? '', false),
   AUTH_COOKIE_SAMESITE:

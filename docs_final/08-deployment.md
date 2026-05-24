@@ -1,25 +1,153 @@
-# Deployment
+# Deployment guide
 
-## Purpose
+How to put **By Celeste** live for **www.byceleste.com**.
 
-This document will explain how the website goes live, how it is hosted, and how updates are safely released.
+**Suggested hosting:** Vercel (website) + Render (API + database).
 
-## What will later go into this document
+---
 
-- Where the frontend is hosted and where the backend is hosted
-- How the database is hosted and backed up
-- What “environments” mean (development vs staging vs production)
-- How updates are deployed and rolled back if needed
-- Basic monitoring (uptime, error alerts) and who gets notified
+## Overview
 
-## Square sandbox and webhooks (Step 7 — before production)
+| Part | Host | Folder |
+|------|------|--------|
+| Customer site, admin, wholesale UI | Vercel | `frontend/` |
+| API + database | Render | `backend/` |
+| Postgres | Render Postgres | — |
 
-When you deploy or demo **real checkout**, you will need:
+---
 
-- **Square sandbox credentials** for safe testing (access token, location id).  
-- A **public HTTPS URL** for webhooks in non-local setups (students often use a tunnel such as **ngrok** pointing at `POST /api/webhooks/square`).  
-- The **webhook subscription signature key** and a **notification URL that matches character-for-character** what the backend uses to verify signatures.  
-- **`CHECKOUT_SUCCESS_REDIRECT_URL`** set to your live or demo storefront success page (for example `https://your-site/checkout/success`). Square’s hosted checkout also uses the **redirect URL** returned by the API.
+## 1. Before you deploy
 
-Production later switches to **production** Square tokens, production base URL (`https://connect.squareup.com`), and production webhook subscriptions.
+- [ ] No `.env` files in Git (only `.env.example`).
+- [ ] Production builds pass: `npm run build` in `backend/` and `frontend/`.
+- [ ] Jane admin created with `npm run seed:jane-admin` (not demo admin).
+- [ ] `SEED_DEMO_USERS` is **not** set on production.
 
+---
+
+## 2. Database
+
+1. Create a **PostgreSQL** database (e.g. Render Postgres).
+2. Copy the connection string into Render **`DATABASE_URL`**.
+3. Migrations run on deploy via `npm run start:render` or manually:
+
+```bash
+cd backend
+npx prisma migrate deploy
+```
+
+---
+
+## 3. Backend (Render)
+
+| Setting | Value |
+|---------|--------|
+| Root directory | `backend` |
+| Build | `npm install --include=dev && npm run build && npx prisma generate` |
+| Start | `npm run start:render` (migrations + catalog/events seed + server) |
+
+### Required environment variables
+
+| Variable | Purpose |
+|----------|---------|
+| `DATABASE_URL` | Postgres connection |
+| `JWT_ACCESS_SECRET` | Auth signing (long random string) |
+| `FRONTEND_ORIGIN` | Exact Vercel URL, e.g. `https://www.byceleste.com` |
+| `AUTH_COOKIE_SECURE` | `true` |
+| `AUTH_COOKIE_SAMESITE` | `lax` if same site; `none` if API and shop on different domains |
+| `CHECKOUT_SUCCESS_REDIRECT_URL` | `https://www.byceleste.com/checkout/success` |
+
+### Square (production)
+
+| Variable | Purpose |
+|----------|---------|
+| `SQUARE_ACCESS_TOKEN` | Production token |
+| `SQUARE_LOCATION_ID` | Square location |
+| `SQUARE_WEBHOOK_SIGNATURE_KEY` | Webhook verification |
+| `SQUARE_WEBHOOK_NOTIFICATION_URL` | `https://YOUR-API-HOST/api/webhooks/square` |
+| `SQUARE_ENVIRONMENT` | `production` |
+
+In Square Developer Dashboard:
+
+- Webhook URL must **match** `SQUARE_WEBHOOK_NOTIFICATION_URL` exactly.
+- Redirect / success URL must match `CHECKOUT_SUCCESS_REDIRECT_URL`.
+
+Until Square is configured, checkout shows a safe message: payments are not connected yet.
+
+### Optional
+
+| Variable | Purpose |
+|----------|---------|
+| `TOTP_ENCRYPTION_KEY` | 64 hex chars for admin 2FA secret storage (recommended in production) |
+| `SEED_DEMO_USERS` | `true` only on **demo** hosts — not production |
+
+---
+
+## 4. Frontend (Vercel)
+
+| Setting | Value |
+|---------|--------|
+| Root directory | `frontend` |
+| Build | `npm run build` |
+| Output | `dist` |
+
+| Variable | Value |
+|----------|--------|
+| `VITE_API_BASE_URL` | `https://your-render-service.onrender.com` (no trailing slash) |
+
+`frontend/vercel.json` handles SPA routing.
+
+---
+
+## 5. Domain and DNS
+
+**Target:** **www.byceleste.com**
+
+1. Point the domain to **Vercel** (frontend).
+2. Add the custom domain in Vercel project settings.
+3. Update **`FRONTEND_ORIGIN`** on Render to `https://www.byceleste.com`.
+4. Update **`CHECKOUT_SUCCESS_REDIRECT_URL`** to the live success page URL.
+5. Update Square webhook and redirect URLs to production domains.
+
+---
+
+## 6. Image uploads (important)
+
+Admin can upload product and event images to server disk (`backend/uploads/…`).
+
+**Warning:** On Render free tier, **disk may reset** after redeploy. Uploaded images can disappear.
+
+For long-term production, plan **cloud storage** (e.g. S3, Cloudinary). That integration is not in this repo yet.
+
+---
+
+## 7. Final go-live checklist
+
+- [ ] DNS live for www.byceleste.com
+- [ ] HTTPS on frontend and API
+- [ ] Square production keys and webhook tested
+- [ ] One small real test order → **PAID** in admin
+- [ ] Jane logged in at `/admin` with password changed
+- [ ] Optional: admin 2FA enabled (Admin → Security)
+- [ ] Demo accounts disabled / not seeded on production
+- [ ] Policy pages reviewed (final legal wording)
+- [ ] Product images finalised
+
+---
+
+## 8. Smoke tests
+
+- [ ] `GET https://<api-host>/health` returns OK
+- [ ] Shop loads products
+- [ ] Login and account pages work
+- [ ] `/admin` requires admin login
+- [ ] `/wholesale` requires approved wholesale login
+- [ ] CSV export from admin products/orders
+
+---
+
+## Related docs
+
+- [DEPLOYMENT.md](./DEPLOYMENT.md) — short checklist
+- [22-client-handover-guide.md](./22-client-handover-guide.md) — client-facing notes
+- [12-square-payment-flow.md](./12-square-payment-flow.md) — Square details

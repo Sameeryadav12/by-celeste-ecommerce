@@ -13,7 +13,10 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
   return (
     <Card className="group flex h-full flex-col overflow-hidden transform-gpu transition-all duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-lg">
       <div className="flex min-h-0 flex-1 flex-col gap-4">
-        <div className="relative overflow-hidden rounded-xl bg-neutral-100 ring-1 ring-neutral-200/60">
+        <Link
+          to={`/shop/${product.slug}`}
+          className="relative block cursor-pointer overflow-hidden rounded-xl bg-neutral-100 ring-1 ring-neutral-200/60 transition-opacity hover:opacity-95"
+        >
           <SmartImage
             src={product.imageUrl}
             alt={product.name}
@@ -26,11 +29,16 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
               Featured
             </span>
           ) : null}
-        </div>
+        </Link>
 
         <div className="min-h-0 flex-1 space-y-1">
           <h2 className="line-clamp-2 min-h-[2.75rem] text-base font-semibold leading-snug text-neutral-900">
-            {product.name}
+            <Link
+              to={`/shop/${product.slug}`}
+              className="cursor-pointer transition-colors hover:text-neutral-600 hover:underline hover:underline-offset-2"
+            >
+              {product.name}
+            </Link>
           </h2>
           <div className="min-h-[1.375rem] flex flex-wrap gap-1.5 pt-0.5">
             {nativeBadges.map((label) => (

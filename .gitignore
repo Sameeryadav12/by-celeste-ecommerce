@@ -62,3 +62,26 @@ Thumbs.db
 
 # --- Misc ---
 *.local
+
+# --- Local uploads (product/event images on server disk) ---
+backend/uploads/products/*
+!backend/uploads/products/.gitkeep
+backend/uploads/events/*
+!backend/uploads/events/.gitkeep
+
+# --- Exported CSV downloads (local only) ---
+**/exports/*.csv
+*.export.csv
+
+# --- Design / wireframe assets (keep locally; not needed on GitHub) ---
+Canva/
+wireframes/
+New Wireframes/
+Sprint 4 Wireframes/
+Website_Requirement_Description.png
+Website_Requirement_Description..png
+Perplexity.txt
+
+# --- Cursor debug logs ---
+.cursor/
+debug-*.log

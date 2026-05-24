@@ -41,7 +41,7 @@ export function ProductPrice({
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-base font-semibold text-neutral-900">{priceText}</span>
         {isWholesalePrice && retailRefText ? (
-          <span className="text-sm text-neutral-500 line-through">RRP {retailRefText}</span>
+          <span className="text-sm text-neutral-500">RRP {retailRefText}</span>
         ) : compareText ? (
           <span className="text-sm text-neutral-500 line-through">{compareText}</span>
         ) : null}

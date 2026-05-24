@@ -3,3 +3,9 @@ node_modules
 .env
 
 /generated/prisma
+
+# Uploaded images (keep folders via .gitkeep)
+uploads/products/*
+!uploads/products/.gitkeep
+uploads/events/*
+!uploads/events/.gitkeep

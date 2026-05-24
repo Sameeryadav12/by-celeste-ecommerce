@@ -2,25 +2,51 @@ import type { Request, Response } from 'express'
 import { OrderPaymentStatus, OrderStatus } from '@prisma/client'
 import { asyncHandler } from '../utils/asyncHandler'
 import { ApiError } from '../utils/apiError'
+import { sendCsvAttachment, wantsCsvFormat } from '../utils/csvResponse'
 import { paramString } from '../utils/routeParams'
-import { getAdminOrderById, listAdminOrders, updateAdminOrderStatus } from '../services/adminOrders.service'
+import {
+  exportAdminOrdersCsv,
+  getAdminOrderById,
+  listAdminOrders,
+  updateAdminOrderStatus,
+} from '../services/adminOrders.service'
 
-export const adminListOrders = asyncHandler(async (req: Request, res: Response) => {
-  const qLimit = req.query.limit
-  const limit = qLimit != null ? Number(qLimit) : undefined
-  if (limit != null && (!Number.isFinite(limit) || limit < 1)) {
-    throw new ApiError({ statusCode: 400, code: 'INVALID_QUERY', message: 'limit must be a positive number.' })
-  }
-
-  const search = typeof req.query.search === 'string' ? req.query.search : undefined
-  const statusRaw = typeof req.query.status === 'string' ? req.query.status : undefined
-  const paymentStatusRaw =
-    typeof req.query.paymentStatus === 'string' ? req.query.paymentStatus : undefined
+function parseAdminOrderListFilters(q: Request['query']) {
+  const search = typeof q.search === 'string' ? q.search : undefined
+  const statusRaw = typeof q.status === 'string' ? q.status : undefined
+  const paymentStatusRaw = typeof q.paymentStatus === 'string' ? q.paymentStatus : undefined
   const status = statusRaw && statusRaw in OrderStatus ? (statusRaw as OrderStatus) : undefined
   const paymentStatus =
     paymentStatusRaw && paymentStatusRaw in OrderPaymentStatus
       ? (paymentStatusRaw as OrderPaymentStatus)
       : undefined
+  return { search, statusRaw, paymentStatusRaw, status, paymentStatus }
+}
+
+/** Dedicated CSV download — avoids Express treating `export` as an order id. */
+export const adminDownloadOrdersCsv = asyncHandler(async (req: Request, res: Response) => {
+  const { search, status, paymentStatus } = parseAdminOrderListFilters(req.query)
+  const csv = await exportAdminOrdersCsv({ search, status, paymentStatus })
+  const stamp = new Date().toISOString().slice(0, 10)
+  sendCsvAttachment(res, `by-celeste-orders-${stamp}.csv`, csv)
+})
+
+export const adminListOrders = asyncHandler(async (req: Request, res: Response) => {
+  const { search, statusRaw, paymentStatusRaw, status, paymentStatus } =
+    parseAdminOrderListFilters(req.query)
+
+  if (wantsCsvFormat(req.query)) {
+    const csv = await exportAdminOrdersCsv({ search, status, paymentStatus })
+    const stamp = new Date().toISOString().slice(0, 10)
+    sendCsvAttachment(res, `by-celeste-orders-${stamp}.csv`, csv)
+    return
+  }
+
+  const qLimit = req.query.limit
+  const limit = qLimit != null ? Number(qLimit) : undefined
+  if (limit != null && (!Number.isFinite(limit) || limit < 1)) {
+    throw new ApiError({ statusCode: 400, code: 'INVALID_QUERY', message: 'limit must be a positive number.' })
+  }
 
   if (statusRaw && !status) {
     throw new ApiError({

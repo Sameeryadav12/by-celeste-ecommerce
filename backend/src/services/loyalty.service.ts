@@ -40,7 +40,9 @@ export async function awardLoyaltyForPaidOrderIfEligible(orderId: string): Promi
     })
 
     if (!order?.userId) return
-    if (order.paymentStatus !== OrderPaymentStatus.PAID || order.status !== OrderStatus.PAID) {
+    const orderConfirmed =
+      order.status === OrderStatus.PAID || order.status === OrderStatus.CONFIRMED
+    if (order.paymentStatus !== OrderPaymentStatus.PAID || !orderConfirmed) {
       return
     }
 

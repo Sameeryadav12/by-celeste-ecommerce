@@ -1,7 +1,8 @@
-/**
- * Client location (public-facing). No street-level details by client request.
- */
+import { BUSINESS_DETAILS } from './businessDetails'
+
+/** Public location wording (footer and SEO). */
 export const BUSINESS_LOCATION = {
-  locality: 'Leneva Victoria',
+  locality: BUSINESS_DETAILS.addressShort,
   country: 'Australia',
+  fullAddress: BUSINESS_DETAILS.addressLine,
 } as const

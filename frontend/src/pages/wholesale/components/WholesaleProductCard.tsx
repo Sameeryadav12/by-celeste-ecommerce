@@ -1,9 +1,15 @@
 import { Link } from 'react-router-dom'
 import { useMemo, useState } from 'react'
+import { useAuth } from '../../../auth/AuthContext'
 import { Card } from '../../../components/ui/Card'
 import { SmartImage } from '../../../components/media/SmartImage'
 import type { CatalogProduct } from '../../../features/catalog/catalogTypes'
-import { ProductPrice } from '../../../features/catalog/components/ProductPrice'
+import {
+  effectiveWholesaleUnit,
+  isApprovedWholesaleUser,
+  normalizeWholesaleCatalogProduct,
+} from '../../../features/wholesale/wholesalePricing'
+import { WholesaleUnitPrice } from '../../../features/wholesale/components/WholesaleUnitPrice'
 import { AddToCartButton } from '../../../features/cart/components/AddToCartButton'
 import { QuantityControl } from '../../../features/cart/components/QuantityControl'
 import { ProductCardDescription } from '../../../features/catalog/components/ProductCardDescription'
@@ -16,7 +22,10 @@ function clampInt(value: number, min: number, max: number) {
   return next
 }
 
-export function WholesaleProductCard({ product }: { product: CatalogProduct }) {
+export function WholesaleProductCard({ product: raw }: { product: CatalogProduct }) {
+  const { user } = useAuth()
+  const approved = isApprovedWholesaleUser(user)
+  const product = normalizeWholesaleCatalogProduct(raw, approved)
   const maxQty = Math.max(1, product.stockQuantity || 1)
   const [quantity, setQuantity] = useState(1)
 
@@ -51,12 +60,7 @@ export function WholesaleProductCard({ product }: { product: CatalogProduct }) {
 
         <div className="mt-auto flex flex-col gap-3 border-t border-neutral-100 pt-4">
           <div className="flex items-center justify-between gap-3">
-            <ProductPrice
-              price={product.price}
-              compareAtPrice={product.compareAtPrice}
-              retailUnitPrice={product.retailUnitPrice}
-              isWholesalePrice={product.isWholesalePrice}
-            />
+            <WholesaleUnitPrice product={product} approved={approved} />
             <Link
               to={`/shop/${product.slug}`}
               className="inline-flex h-10 shrink-0 items-center justify-center rounded-md px-3 text-sm font-medium text-neutral-900 ring-1 ring-neutral-300 transition hover:bg-neutral-100"
@@ -87,11 +91,12 @@ export function WholesaleProductCard({ product }: { product: CatalogProduct }) {
               slug: product.slug,
               name: product.name,
               imageUrl: product.imageUrl,
-              price: product.price,
+              price: effectiveWholesaleUnit(product, approved),
               compareAtPrice: product.compareAtPrice,
               stockQuantity: product.stockQuantity,
               categoryName: product.categories[0]?.name,
               shortDescription: product.shortDescription,
+              pricingMode: approved ? 'wholesale' : undefined,
             }}
             quantity={quantity}
             className="w-full"

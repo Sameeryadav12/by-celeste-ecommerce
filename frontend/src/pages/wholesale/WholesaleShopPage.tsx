@@ -1,35 +1,60 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../../auth/AuthContext'
 import { Button } from '../../components/ui/Button'
 import { Seo } from '../../components/seo/Seo'
 import { getProducts } from '../../features/catalog/catalogApi'
 import type { CatalogProduct } from '../../features/catalog/catalogTypes'
 import { CatalogEmptyState } from '../../features/catalog/components/CatalogEmptyState'
 import { ProductCardSkeleton } from '../../features/catalog/components/ProductCardSkeleton'
+import {
+  isApprovedWholesaleUser,
+  normalizeWholesaleCatalogProduct,
+} from '../../features/wholesale/wholesalePricing'
+import { WholesalePricingNote } from './components/WholesalePricingNote'
 import { WholesaleProductCard } from './components/WholesaleProductCard'
-import { Reveal } from '../../components/animation/Reveal'
+import { WholesaleSupportCard } from './components/WholesaleSupportCard'
 
 const PAGE_SIZE = 18
 
 export function WholesaleShopPage() {
+  const { user, status } = useAuth()
+  const approved = isApprovedWholesaleUser(user)
   const [products, setProducts] = useState<CatalogProduct[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [fetchKey, setFetchKey] = useState(0)
 
   useEffect(() => {
+    if (status === 'idle' || status === 'loading') return
+
     const controller = new AbortController()
+    let cancelled = false
+
     setLoading(true)
     setError(null)
+
     getProducts({ page: 1, limit: PAGE_SIZE, sort: 'name_asc' }, controller.signal)
-      .then((result) => setProducts(result.products))
+      .then((result) => {
+        if (cancelled) return
+        const approvedNow = isApprovedWholesaleUser(user)
+        setProducts(result.products.map((p) => normalizeWholesaleCatalogProduct(p, approvedNow)))
+      })
       .catch((err) => {
+        if (cancelled) return
         if (err instanceof Error && err.name === 'AbortError') return
         setError(err instanceof Error ? err.message : 'Could not load products right now.')
+        setProducts([])
       })
-      .finally(() => setLoading(false))
-    return () => controller.abort()
-  }, [fetchKey])
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+      controller.abort()
+    }
+  }, [fetchKey, status, user?.id, user?.role, user?.wholesaleApprovalStatus])
 
   return (
     <>
@@ -48,15 +73,20 @@ export function WholesaleShopPage() {
             Browse products with wholesale pricing. Your cart will use wholesale prices while you’re
             signed in and approved.
           </p>
+          <div className="max-w-2xl pt-2">
+            <WholesalePricingNote />
+          </div>
         </div>
 
-        <div className="rounded-lg border border-emerald-200/70 bg-emerald-50/70 px-3 py-2.5 text-sm text-emerald-950">
-          <span className="font-medium">Wholesale Pricing Active</span>
-          <span className="text-emerald-900/80">
-            {' '}
-            – prices shown below reflect your approved wholesale account.
-          </span>
-        </div>
+        {approved ? (
+          <div className="rounded-lg border border-emerald-200/70 bg-emerald-50/70 px-3 py-2.5 text-sm text-emerald-950">
+            <span className="font-medium">Wholesale Pricing Active</span>
+            <span className="text-emerald-900/80">
+              {' '}
+              – prices shown below reflect your approved wholesale account.
+            </span>
+          </div>
+        ) : null}
 
         {error ? (
           <div className="flex flex-col gap-3 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 sm:flex-row sm:items-center sm:justify-between">
@@ -76,13 +106,11 @@ export function WholesaleShopPage() {
         ) : null}
 
         {loading ? (
-          <Reveal>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {Array.from({ length: PAGE_SIZE }).map((_, index) => (
-                <ProductCardSkeleton key={index} />
-              ))}
-            </div>
-          </Reveal>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: PAGE_SIZE }).map((_, index) => (
+              <ProductCardSkeleton key={index} />
+            ))}
+          </div>
         ) : products.length === 0 ? (
           <CatalogEmptyState
             message="No products are available right now."
@@ -96,16 +124,15 @@ export function WholesaleShopPage() {
             }
           />
         ) : (
-          <Reveal>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {products.map((product) => (
-                <WholesaleProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          </Reveal>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {products.map((product) => (
+              <WholesaleProductCard key={product.id} product={product} />
+            ))}
+          </div>
         )}
+
+        <WholesaleSupportCard />
       </section>
     </>
   )
 }
-

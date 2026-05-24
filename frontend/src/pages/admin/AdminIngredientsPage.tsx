@@ -3,11 +3,13 @@ import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import {
   createAdminIngredient,
-  deleteAdminIngredient,
-  listIngredients,
+  deactivateAdminIngredient,
+  listAdminIngredients,
+  permanentDeleteAdminIngredient,
   updateAdminIngredient,
   type AdminIngredient,
 } from '../../features/admin/adminApi'
+import { AdminStatusBadge } from './components/AdminStatusBadge'
 
 type IngredientForm = {
   id?: string
@@ -29,13 +31,18 @@ export function AdminIngredientsPage() {
 
   const [form, setForm] = useState<IngredientForm>(initialForm())
 
+  async function reload() {
+    const data = await listAdminIngredients()
+    setIngredients(data)
+  }
+
   useEffect(() => {
     let cancelled = false
     async function load() {
       setError(null)
       setLoading(true)
       try {
-        const data = await listIngredients()
+        const data = await listAdminIngredients()
         if (!cancelled) setIngredients(data)
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Could not load ingredients.')
@@ -84,8 +91,7 @@ export function AdminIngredientsPage() {
       }
 
       resetForm()
-      const refreshed = await listIngredients()
-      setIngredients(refreshed)
+      await reload()
     } catch (e2) {
       setError(e2 instanceof Error ? e2.message : 'Could not save ingredient.')
     } finally {
@@ -93,16 +99,50 @@ export function AdminIngredientsPage() {
     }
   }
 
-  async function handleDelete(id: string) {
-    const confirmed = window.confirm('Delete this ingredient? This cannot be undone.')
-    if (!confirmed) return
+  async function handleDeactivate(ing: AdminIngredient) {
+    const ok = window.confirm(
+      `Hide "${ing.name}" from ingredient lists?\n\nLinked products keep their data; this ingredient will not appear in new assignments.`,
+    )
+    if (!ok) return
     setSaving(true)
     setError(null)
     try {
-      await deleteAdminIngredient(id)
-      resetForm()
-      const refreshed = await listIngredients()
-      setIngredients(refreshed)
+      await deactivateAdminIngredient(ing.id)
+      if (form.id === ing.id) resetForm()
+      await reload()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not hide ingredient.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function handleReactivate(ing: AdminIngredient) {
+    setSaving(true)
+    setError(null)
+    try {
+      await updateAdminIngredient(ing.id, { isActive: true })
+      await reload()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not reactivate ingredient.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function handlePermanentDelete(ing: AdminIngredient) {
+    const ok = window.confirm(
+      `Permanently delete "${ing.name}"?\n\nProduct order history is safe, but this removes the ingredient record and unlinks it from products.`,
+    )
+    if (!ok) return
+    const ok2 = window.confirm('This cannot be undone. Delete permanently?')
+    if (!ok2) return
+    setSaving(true)
+    setError(null)
+    try {
+      await permanentDeleteAdminIngredient(ing.id)
+      if (form.id === ing.id) resetForm()
+      await reload()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not delete ingredient.')
     } finally {
@@ -114,7 +154,7 @@ export function AdminIngredientsPage() {
     <div className="space-y-6">
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Ingredients</h1>
-        <p className="text-sm text-slate-500">Create, edit, and maintain ingredient records.</p>
+        <p className="text-sm text-slate-500">Create, edit, and hide ingredient records.</p>
       </div>
 
       {error ? (
@@ -188,7 +228,7 @@ export function AdminIngredientsPage() {
       <Card>
         <div className="space-y-1 p-4">
           <h3 className="text-base font-semibold text-neutral-900">Existing ingredients</h3>
-          <p className="text-sm text-neutral-600">Click Edit to load an ingredient.</p>
+          <p className="text-sm text-neutral-600">Hide ingredients instead of deleting when possible.</p>
         </div>
         {loading ? (
           <div className="p-4 text-sm text-neutral-600">Loading…</div>
@@ -201,18 +241,38 @@ export function AdminIngredientsPage() {
                 <div className="space-y-1">
                   <p className="font-medium text-neutral-900">{i.name}</p>
                   <p className="text-xs text-neutral-500">{i.slug}</p>
+                  <AdminStatusBadge status={i.isActive ? 'ACTIVE' : 'HIDDEN'} />
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Button type="button" variant="ghost" className="!px-3 !py-1.5 text-xs" onClick={() => onEdit(i)}>
                     Edit
                   </Button>
+                  {i.isActive ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="!px-3 !py-1.5 text-xs"
+                      onClick={() => void handleDeactivate(i)}
+                    >
+                      Hide
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="!px-3 !py-1.5 text-xs"
+                      onClick={() => void handleReactivate(i)}
+                    >
+                      Show
+                    </Button>
+                  )}
                   <Button
                     type="button"
                     variant="ghost"
-                    className="!px-3 !py-1.5 text-xs"
-                    onClick={() => handleDelete(i.id)}
+                    className="!px-3 !py-1.5 text-xs text-rose-700 hover:!bg-rose-50"
+                    onClick={() => void handlePermanentDelete(i)}
                   >
-                    Delete
+                    Delete permanently
                   </Button>
                 </div>
               </li>
@@ -223,4 +283,3 @@ export function AdminIngredientsPage() {
     </div>
   )
 }
-

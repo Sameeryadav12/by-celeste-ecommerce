@@ -42,6 +42,14 @@ model User {
 
   lastLoginAt DateTime?
 
+  /// Admin (and future optional wholesale) TOTP 2FA — authenticator apps only; never SMS.
+  totpEnabled           Boolean @default(false)
+  /** AES-256-GCM encrypted TOTP secret (base64). Present during pending enrollment or when 2FA is enabled. */
+  totpSecretEncrypted   String? @db.Text
+
+  /** Private notes for admin staff only — never shown to the customer. */
+  adminNotes            String? @db.Text
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -81,6 +89,7 @@ enum OrderStatus {
   PENDING
   AWAITING_PAYMENT
   PAID
+  CONFIRMED
   PAYMENT_FAILED
   CANCELLED
 }
@@ -107,6 +116,9 @@ model Order {
   id     String  @id @default(cuid())
   userId String?
   user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  /** Customer-facing reference (BC-1000, BC-1001, …). */
+  orderNumber Int @unique
 
   email       String
   firstName   String
@@ -209,12 +221,14 @@ model Ingredient {
   slug        String   @unique
   description String
   benefits    String?
+  isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   products Product[]
 
   @@index([slug])
+  @@index([isActive])
 }
 
 /// Catalog product. Prices use Decimal (Postgres NUMERIC) for exact money; no float rounding issues.

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getPublicBusinessSettings, type BusinessSettings } from '../../features/content/contentApi'
+import { BUSINESS_DETAILS } from '../../config/businessDetails'
+import { FooterSocialLinks } from '../../components/layout/FooterSocialLinks'
 import { WS_PRIMARY, WS_SECONDARY } from './wholesaleUi'
 
 export function WholesaleSupportPage() {
@@ -26,7 +28,8 @@ export function WholesaleSupportPage() {
         </div>
         <h1 className="mt-2 text-2xl font-semibold tracking-tight text-neutral-900">Support</h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-700">
-          Help for wholesale ordering, your account on file, and product questions.
+          Help for wholesale ordering and your account. Approved accounts pay 50% of retail and can
+          buy products only — not list or sell on this site.
         </p>
       </div>
 
@@ -42,26 +45,31 @@ export function WholesaleSupportPage() {
       <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
         <h2 className="text-sm font-semibold text-neutral-900">Contact</h2>
         <p className="mt-2 text-sm leading-6 text-neutral-700">
-          Use storefront contact options or the details your account manager gave you when approved.
+          <a
+            href={`mailto:${BUSINESS_DETAILS.supportEmail}`}
+            className="font-medium text-neutral-900 underline underline-offset-2"
+          >
+            {BUSINESS_DETAILS.supportEmail}
+          </a>
+          <br />
+          <a href={`tel:${BUSINESS_DETAILS.phoneTel}`} className="text-neutral-800">
+            {BUSINESS_DETAILS.phone}
+          </a>
         </p>
         {business?.footerSupportText ? (
           <p className="mt-4 rounded-lg border border-neutral-100 bg-neutral-50 px-4 py-3 text-sm text-neutral-800">
             {business.footerSupportText}
           </p>
         ) : null}
-        {business?.facebookUrl ? (
-          <div className="mt-4">
-            <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">Contact us</p>
-            <a
-              href={business.facebookUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`${WS_SECONDARY} mt-2 w-full max-w-xs sm:w-auto`}
-            >
-              Visit Facebook
-            </a>
+        <div className="mt-4">
+          <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">Social</p>
+          <div className="mt-2">
+            <FooterSocialLinks
+              facebookUrl={business?.facebookUrl}
+              instagramUrl={business?.instagramUrl}
+            />
           </div>
-        ) : null}
+        </div>
         <div className="mt-6 flex flex-wrap gap-2">
           <Link to="/wholesale/orders" className={WS_PRIMARY}>
             My orders

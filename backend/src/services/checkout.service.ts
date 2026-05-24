@@ -8,12 +8,18 @@ import {
 import { env } from '../config/env'
 import { prisma } from '../config/prisma'
 import { ApiError } from '../utils/apiError'
+import { formatOrderNumber } from '../utils/orderNumber'
 import type { CreateCheckoutSessionInput } from './checkout.validation'
 import { calculateShippingAud } from './shippingRules'
-import { createSquareHostedPaymentLink, isSquareConfigured } from './squareClient'
+import {
+  createSquareHostedPaymentLink,
+  isSquareConfigured,
+  SQUARE_CHECKOUT_UNAVAILABLE_MESSAGE,
+} from './squareClient'
 import { awardLoyaltyForPaidOrderIfEligible } from './loyalty.service'
 import { effectiveProductUnitPrice } from './wholesalePricing'
 import type { PricingViewer } from './wholesalePricing'
+import { allocateOrderNumber } from './orderNumber.service'
 
 async function loadPricingViewerForCheckout(userId: string | undefined): Promise<PricingViewer> {
   if (!userId) return null
@@ -50,6 +56,14 @@ export async function createCheckoutSession(params: {
       code: 'CHECKOUT_URL_NOT_CONFIGURED',
       message:
         'Checkout success URL is not configured. Set CHECKOUT_SUCCESS_REDIRECT_URL in the backend environment.',
+    })
+  }
+
+  if (!isSquareConfigured()) {
+    throw new ApiError({
+      statusCode: 503,
+      code: 'SQUARE_NOT_CONFIGURED',
+      message: SQUARE_CHECKOUT_UNAVAILABLE_MESSAGE,
     })
   }
 
@@ -120,8 +134,10 @@ export async function createCheckoutSession(params: {
   const totalDec = subtotalDec.add(shippingDec)
 
   const order = await prisma.$transaction(async (tx) => {
+    const orderNumber = await allocateOrderNumber(tx)
     const created = await tx.order.create({
       data: {
+        orderNumber,
         userId: userId ?? null,
         email: input.email,
         firstName: input.firstName,
@@ -170,54 +186,12 @@ export async function createCheckoutSession(params: {
   successUrl.searchParams.set('orderId', order.id)
 
   const paymentNote = paymentNoteForOrder(order.id)
-
-  /**
-   * Local / class demo: when Square is not configured, skip hosted checkout and send the buyer
-   * straight to the success page with the order marked PAID. Never runs in production.
-   */
-  if (!isSquareConfigured() && env.NODE_ENV !== 'production') {
-    // eslint-disable-next-line no-console
-    console.warn(
-      '[checkout] Square not configured — using DEMO checkout (order marked paid). Add SQUARE_ACCESS_TOKEN + SQUARE_LOCATION_ID for real payments.',
-    )
-    await prisma.$transaction(async (tx) => {
-      await tx.order.update({
-        where: { id: order.id },
-        data: {
-          status: OrderStatus.PAID,
-          paymentStatus: OrderPaymentStatus.PAID,
-        },
-      })
-      await tx.orderPayment.updateMany({
-        where: { orderId: order.id },
-        data: {
-          status: PaymentRecordStatus.PAID,
-          provider: 'DEMO',
-          providerReference: 'demo-local-checkout',
-        },
-      })
-    })
-    await awardLoyaltyForPaidOrderIfEligible(order.id)
-    return {
-      orderId: order.id,
-      checkoutUrl: successUrl.toString(),
-      demoCheckout: true as const,
-      status: {
-        orderStatus: OrderStatus.PAID,
-        paymentStatus: OrderPaymentStatus.PAID,
-      },
-      totals: {
-        subtotalAud: subtotalDec.toFixed(2),
-        shippingAud: shippingDec.toFixed(2),
-        totalAud: totalDec.toFixed(2),
-      },
-    }
-  }
+  const orderRef = formatOrderNumber(order.orderNumber)
 
   try {
     const square = await createSquareHostedPaymentLink({
       idempotencyKey: randomUUID(),
-      quickPayName: `By Celeste order ${order.id.slice(0, 8)}`,
+      quickPayName: `By Celeste ${orderRef}`,
       totalAud: Number(totalDec.toFixed(2)),
       redirectUrlAfterPayment: successUrl.toString(),
       paymentNote,
@@ -233,6 +207,8 @@ export async function createCheckoutSession(params: {
 
     return {
       orderId: order.id,
+      orderNumber: order.orderNumber,
+      orderRef,
       checkoutUrl: square.checkoutUrl,
       status: {
         orderStatus: OrderStatus.AWAITING_PAYMENT,
@@ -265,6 +241,7 @@ export async function getPublicOrderStatus(orderId: string) {
     where: { id: orderId },
     select: {
       id: true,
+      orderNumber: true,
       status: true,
       paymentStatus: true,
       totalAmount: true,
@@ -282,6 +259,8 @@ export async function getPublicOrderStatus(orderId: string) {
 
   return {
     orderId: order.id,
+    orderNumber: order.orderNumber,
+    orderRef: formatOrderNumber(order.orderNumber),
     status: order.status,
     paymentStatus: order.paymentStatus,
     totalAmount: order.totalAmount.toFixed(2),

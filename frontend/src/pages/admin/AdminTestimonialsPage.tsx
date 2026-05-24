@@ -103,6 +103,10 @@ export function AdminTestimonialsPage() {
   }
 
   async function handleVisibility(row: AdminTestimonial) {
+    if (row.isVisible) {
+      const ok = window.confirm(`Hide testimonial from ${row.customerName}? It will not appear on the website.`)
+      if (!ok) return
+    }
     setMessage(null)
     setError(null)
     try {
@@ -114,13 +118,14 @@ export function AdminTestimonialsPage() {
     }
   }
 
-  async function handleDelete(row: AdminTestimonial) {
-    if (!window.confirm(`Delete testimonial from ${row.customerName}? This cannot be undone.`)) return
+  async function handlePermanentDelete(row: AdminTestimonial) {
+    if (!window.confirm(`Permanently delete testimonial from ${row.customerName}?`)) return
+    if (!window.confirm('This cannot be undone. Delete permanently?')) return
     setMessage(null)
     setError(null)
     try {
       await deleteAdminTestimonial(row.id)
-      setMessage('Testimonial deleted.')
+      setMessage('Testimonial permanently deleted.')
       if (form.id === row.id) resetForm()
       await loadRows()
     } catch (e) {
@@ -252,9 +257,9 @@ export function AdminTestimonialsPage() {
                     type="button"
                     variant="ghost"
                     className="!px-3 !py-1.5 text-xs text-rose-700 hover:!bg-rose-50"
-                    onClick={() => handleDelete(row)}
+                    onClick={() => void handlePermanentDelete(row)}
                   >
-                    Delete
+                    Delete permanently
                   </Button>
                 </div>
               </li>

@@ -19,6 +19,8 @@ export type AuthUser = {
   approvedAt: string | null
   createdAt: string
   updatedAt: string
+  /** Present when server exposes admin 2FA state (admin accounts only). */
+  totpEnabled?: boolean
 }
 
 export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated'

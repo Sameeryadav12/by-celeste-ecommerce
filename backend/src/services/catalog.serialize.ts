@@ -36,6 +36,7 @@ export function serializeIngredient(i: {
   slug: string
   description: string
   benefits: string | null
+  isActive: boolean
   createdAt: Date
   updatedAt: Date
 }) {
@@ -45,6 +46,7 @@ export function serializeIngredient(i: {
     slug: i.slug,
     description: i.description,
     benefits: i.benefits,
+    isActive: i.isActive,
     createdAt: i.createdAt.toISOString(),
     updatedAt: i.updatedAt.toISOString(),
   }
@@ -97,7 +99,12 @@ export function serializeProductForPublic(p: ProductWithRelations, viewer: Prici
     howToUse: p.howToUse,
     benefits: p.benefits,
     price: decimalToString(effective)!,
-    ...(isWholesalePrice ? { retailUnitPrice: decimalToString(p.price)! } : {}),
+    ...(isWholesalePrice
+      ? {
+          retailUnitPrice: decimalToString(p.price)!,
+          catalogWholesalePrice: decimalToString(p.wholesalePrice),
+        }
+      : {}),
     isWholesalePrice,
     compareAtPrice: decimalToString(p.compareAtPrice),
     imageUrl: p.imageUrl,

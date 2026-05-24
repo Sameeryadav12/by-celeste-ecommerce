@@ -77,6 +77,7 @@ export const ingredientCreateSchema = z
       .trim()
       .max(2000, 'Benefits text is too long.')
       .optional(),
+    isActive: z.boolean().optional(),
   })
   .strict()
 
@@ -98,6 +99,7 @@ export const ingredientUpdateSchema = z
     benefits: z
       .union([z.string().trim().max(2000, 'Benefits text is too long.'), z.null()])
       .optional(),
+    isActive: z.boolean().optional(),
   })
   .strict()
   .refine((data) => Object.keys(data).length > 0, {

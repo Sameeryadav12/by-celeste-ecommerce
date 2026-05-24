@@ -1,4 +1,5 @@
-import { apiFetch } from '../../lib/api'
+import { apiFetch, buildApiUrl, getApiBaseUrl } from '../../lib/api'
+import { formatOrderNumber } from '../../lib/orderNumber'
 
 export type AdminSummary = {
   totalProducts: number
@@ -6,10 +7,22 @@ export type AdminSummary = {
   totalOrders: number
   paidOrders: number
   upcomingEvents: number
+  pendingWholesaleApplications: number
+  square: {
+    connected: boolean
+    missingEnv: string[]
+  }
+  lowStockProducts: Array<{
+    id: string
+    name: string
+    stockQuantity: number
+  }>
 }
 
 export type AdminOrderListRow = {
   id: string
+  orderNumber: number
+  orderRef?: string
   createdAt: string
   status: string
   paymentStatus: string
@@ -19,6 +32,7 @@ export type AdminOrderListRow = {
 
 export type AdminOrderDetail = {
   id: string
+  orderNumber: number
   createdAt: string
   updatedAt: string
   status: string
@@ -55,8 +69,18 @@ export type AdminOrderDetail = {
   }>
 }
 
-export async function fetchAdminSummary() {
-  return apiFetch<AdminSummary>('/api/admin/summary', { method: 'GET' })
+export async function fetchAdminSummary(): Promise<AdminSummary> {
+  const data = await apiFetch<Partial<AdminSummary>>('/api/admin/summary', { method: 'GET' })
+  return {
+    totalProducts: data.totalProducts ?? 0,
+    activeProducts: data.activeProducts ?? 0,
+    totalOrders: data.totalOrders ?? 0,
+    paidOrders: data.paidOrders ?? 0,
+    upcomingEvents: data.upcomingEvents ?? 0,
+    pendingWholesaleApplications: data.pendingWholesaleApplications ?? 0,
+    square: data.square ?? { connected: false, missingEnv: [] },
+    lowStockProducts: data.lowStockProducts ?? [],
+  }
 }
 
 export type AdminListProductsResponse = {
@@ -140,8 +164,8 @@ export async function updateAdminProduct(id: string, body: unknown) {
   )
 }
 
-export async function deactivateAdminProduct(id: string) {
-  return apiFetch(`/api/admin/products/${id}`, { method: 'DELETE' })
+export async function deleteAdminProduct(id: string) {
+  return apiFetch<{ message: string; id: string }>(`/api/admin/products/${id}`, { method: 'DELETE' })
 }
 
 export type AdminEventItem = {
@@ -199,10 +223,14 @@ export async function listAllCategories(includeInactive: boolean) {
   ).then((r) => r.categories)
 }
 
+/** Active ingredients for product forms and public pickers. */
 export async function listIngredients() {
-  const data = await apiFetch<{ ingredients: Array<{ id: string; name: string; slug: string; description: string; benefits: string | null }> }>(
-    '/api/ingredients',
-  )
+  const data = await apiFetch<{ ingredients: AdminIngredient[] }>('/api/ingredients')
+  return data.ingredients
+}
+
+export async function listAdminIngredients() {
+  const data = await apiFetch<{ ingredients: AdminIngredient[] }>('/api/admin/ingredients')
   return data.ingredients
 }
 
@@ -238,6 +266,7 @@ export type AdminIngredient = {
   slug: string
   description: string
   benefits: string | null
+  isActive: boolean
 }
 
 export async function createAdminIngredient(body: unknown) {
@@ -248,8 +277,12 @@ export async function updateAdminIngredient(id: string, body: unknown) {
   return apiFetch<{ ingredient: AdminIngredient }>(`/api/admin/ingredients/${id}`, { method: 'PUT', body }).then((r) => r.ingredient)
 }
 
-export async function deleteAdminIngredient(id: string) {
+export async function deactivateAdminIngredient(id: string) {
   return apiFetch(`/api/admin/ingredients/${id}`, { method: 'DELETE' })
+}
+
+export async function permanentDeleteAdminIngredient(id: string) {
+  return apiFetch(`/api/admin/ingredients/${id}/permanent`, { method: 'DELETE' })
 }
 
 export async function listAdminOrders(opts?: {
@@ -276,6 +309,339 @@ export async function updateAdminOrderStatus(orderId: string, status: string) {
     `/api/admin/orders/${orderId}/status`,
     { method: 'PUT', body: { status } },
   ).then((r) => r.order)
+}
+
+export type AdminCustomerListRow = {
+  id: string
+  firstName: string
+  lastName: string
+  email: string
+  role: 'CUSTOMER' | 'WHOLESALE' | 'ADMIN'
+  isActive: boolean
+  createdAt: string
+  orderCount: number
+  loyaltyPointsBalance: number
+  wholesaleApprovalStatus: 'NONE' | 'PENDING' | 'APPROVED' | 'REJECTED'
+}
+
+export type AdminCustomerSpending = {
+  paidOrderCount: number
+  totalSpentAud: string
+  lastPaidOrderAt: string | null
+  lastPaidOrderTotal: string | null
+}
+
+export const EMPTY_ADMIN_CUSTOMER_SPENDING: AdminCustomerSpending = {
+  paidOrderCount: 0,
+  totalSpentAud: '0.00',
+  lastPaidOrderAt: null,
+  lastPaidOrderTotal: null,
+}
+
+export function normalizeAdminCustomerDetail(raw: AdminCustomerDetail): AdminCustomerDetail {
+  return {
+    ...raw,
+    adminNotes: raw.adminNotes ?? '',
+    orderCount: raw.orderCount ?? 0,
+    orders: Array.isArray(raw.orders) ? raw.orders : [],
+    spending: raw.spending
+      ? {
+          paidOrderCount: raw.spending.paidOrderCount ?? 0,
+          totalSpentAud: raw.spending.totalSpentAud ?? '0.00',
+          lastPaidOrderAt: raw.spending.lastPaidOrderAt ?? null,
+          lastPaidOrderTotal: raw.spending.lastPaidOrderTotal ?? null,
+        }
+      : EMPTY_ADMIN_CUSTOMER_SPENDING,
+  }
+}
+
+export type AdminCustomerDetail = {
+  id: string
+  firstName: string
+  lastName: string
+  email: string
+  contactEmail: string | null
+  role: 'CUSTOMER' | 'WHOLESALE' | 'ADMIN'
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+  loyaltyPointsBalance: number
+  wholesaleApprovalStatus: 'NONE' | 'PENDING' | 'APPROVED' | 'REJECTED'
+  businessName: string | null
+  abn: string | null
+  approvedAt: string | null
+  lastLoginAt: string | null
+  adminNotes: string
+  orderCount: number
+  spending: AdminCustomerSpending
+  orders: Array<{
+    id: string
+    orderNumber: number
+    createdAt: string
+    status: string
+    paymentStatus: string
+    totalAmount: string
+  }>
+}
+
+export async function listAdminCustomers(opts?: {
+  limit?: number
+  search?: string
+  role?: 'CUSTOMER' | 'WHOLESALE' | 'ALL'
+  status?: 'active' | 'inactive' | 'all'
+}) {
+  const params = new URLSearchParams()
+  if (opts?.limit) params.set('limit', String(opts.limit))
+  if (opts?.search) params.set('search', opts.search)
+  if (opts?.role) params.set('role', opts.role)
+  if (opts?.status) params.set('status', opts.status)
+  const suffix = params.toString() ? `?${params.toString()}` : ''
+  return apiFetch<{ customers: AdminCustomerListRow[] }>(`/api/admin/customers${suffix}`).then(
+    (r) => r.customers,
+  )
+}
+
+export async function getAdminCustomer(id: string) {
+  const payload = await apiFetch<{ customer: AdminCustomerDetail } | AdminCustomerDetail>(
+    `/api/admin/customers/${id}`,
+  )
+  const raw =
+    payload && typeof payload === 'object' && 'customer' in payload && payload.customer
+      ? payload.customer
+      : (payload as AdminCustomerDetail)
+  return normalizeAdminCustomerDetail(raw)
+}
+
+export async function updateAdminCustomerStatus(id: string, isActive: boolean) {
+  return apiFetch<{ customer: AdminCustomerListRow; message: string }>(
+    `/api/admin/customers/${id}/status`,
+    { method: 'PUT', body: { isActive } },
+  ).then((r) => r)
+}
+
+export async function updateAdminCustomerNotes(id: string, adminNotes: string) {
+  return apiFetch<{ adminNotes: string }>(`/api/admin/customers/${id}/notes`, {
+    method: 'PUT',
+    body: { adminNotes },
+  })
+}
+
+function apiErrorMessageFromBody(text: string, fallback: string): string {
+  try {
+    const data = JSON.parse(text) as { error?: { message?: string } }
+    return data.error?.message ?? fallback
+  } catch {
+    return fallback
+  }
+}
+
+function looksLikeJsonExport(text: string): boolean {
+  const body = text.replace(/^\uFEFF/, '').trimStart()
+  return body.startsWith('{') || body.startsWith('[')
+}
+
+function csvEscape(value: string | number): string {
+  const s = String(value ?? '')
+  if (/[",\r\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`
+  return s
+}
+
+function csvRow(cells: Array<string | number>): string {
+  return cells.map(csvEscape).join(',')
+}
+
+function wholesaleExportValue(retail: string, wholesalePrice: string | null): string {
+  if (wholesalePrice) return Number(wholesalePrice).toFixed(2)
+  const n = Number(retail)
+  return Number.isFinite(n) ? (n * 0.5).toFixed(2) : ''
+}
+
+function saveCsvFile(csvBody: string, filename: string) {
+  const body = csvBody.startsWith('\uFEFF') ? csvBody : `\uFEFF${csvBody}`
+  const blob = new Blob([body], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+function buildProductsExportCsv(
+  products: AdminListProductsResponse['products'],
+): string {
+  const lines = [
+    csvRow([
+      'Product name',
+      'Category',
+      'Retail price',
+      'Wholesale price',
+      'Stock',
+      'Status',
+      'Featured',
+    ]),
+    ...products.map((p) =>
+      csvRow([
+        p.name,
+        (p.categories ?? []).map((c) => c.name).join('; '),
+        p.price,
+        wholesaleExportValue(p.price, p.wholesalePrice),
+        p.stockQuantity,
+        p.isActive ? 'Active' : 'Hidden',
+        p.isFeatured ? 'Yes' : 'No',
+      ]),
+    ),
+  ]
+  return lines.join('\n')
+}
+
+function buildOrdersExportCsv(orders: AdminOrderListRow[]): string {
+  const lines = [
+    csvRow([
+      'Order number',
+      'Customer name',
+      'Customer email',
+      'Created date',
+      'Total',
+      'Order status',
+      'Payment status',
+    ]),
+    ...orders.map((o) =>
+      csvRow([
+        formatOrderNumber(o.orderNumber),
+        `${o.customer.firstName} ${o.customer.lastName}`.trim(),
+        o.customer.email,
+        o.createdAt.slice(0, 10),
+        o.totalAmount,
+        o.status,
+        o.paymentStatus,
+      ]),
+    ),
+  ]
+  return lines.join('\n')
+}
+
+function shouldUseClientCsvFallback(message: string): boolean {
+  return (
+    message.includes('Route not found') ||
+    message.includes('JSON instead of CSV') ||
+    message.includes('Could not export')
+  )
+}
+
+async function downloadAdminCsv(
+  path: string,
+  fallbackFilename: string,
+  errorMessage: string,
+) {
+  const res = await fetch(`${getApiBaseUrl()}${path}`, {
+    credentials: 'include',
+  })
+
+  const text = await res.text()
+
+  if (!res.ok) {
+    throw new Error(apiErrorMessageFromBody(text, errorMessage))
+  }
+
+  if (looksLikeJsonExport(text)) {
+    throw new Error(
+      apiErrorMessageFromBody(
+        text,
+        'Export returned JSON instead of CSV. Restart the backend and try again.',
+      ),
+    )
+  }
+
+  const disposition = res.headers.get('Content-Disposition') ?? ''
+  const match = /filename="([^"]+)"/i.exec(disposition)
+  const filename = match?.[1] ?? fallbackFilename
+
+  saveCsvFile(text, filename)
+}
+
+export async function downloadAdminProductsCsv(opts?: {
+  search?: string
+  category?: string
+  activeOnly?: boolean
+}) {
+  const params = new URLSearchParams()
+  if (opts?.search) params.set('search', opts.search)
+  if (opts?.category) params.set('category', opts.category)
+  if (opts?.activeOnly === false) params.set('activeOnly', 'false')
+  const stamp = new Date().toISOString().slice(0, 10)
+  const suffix = params.toString() ? `?${params.toString()}` : ''
+  const filename = `by-celeste-products-${stamp}.csv`
+
+  try {
+    await downloadAdminCsv(
+      `/api/admin/exports/products${suffix}`,
+      filename,
+      'Could not export products.',
+    )
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Could not export products.'
+    if (!shouldUseClientCsvFallback(msg)) throw e
+    const data = await listAdminProducts({
+      page: 1,
+      limit: 500,
+      search: opts?.search,
+      category: opts?.category,
+      activeOnly: opts?.activeOnly,
+    })
+    saveCsvFile(buildProductsExportCsv(data.products), filename)
+  }
+}
+
+export async function downloadAdminOrdersCsv(opts?: {
+  search?: string
+  status?: string
+  paymentStatus?: string
+}) {
+  const params = new URLSearchParams()
+  if (opts?.search) params.set('search', opts.search)
+  if (opts?.status) params.set('status', opts.status)
+  if (opts?.paymentStatus) params.set('paymentStatus', opts.paymentStatus)
+  const stamp = new Date().toISOString().slice(0, 10)
+  const suffix = params.toString() ? `?${params.toString()}` : ''
+  const filename = `by-celeste-orders-${stamp}.csv`
+
+  try {
+    await downloadAdminCsv(
+      `/api/admin/exports/orders${suffix}`,
+      filename,
+      'Could not export orders.',
+    )
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Could not export orders.'
+    if (!shouldUseClientCsvFallback(msg)) throw e
+    const orders = await listAdminOrders({
+      limit: 500,
+      search: opts?.search,
+      status: opts?.status,
+      paymentStatus: opts?.paymentStatus,
+    })
+    saveCsvFile(buildOrdersExportCsv(orders), filename)
+  }
+}
+
+export async function downloadAdminCustomersCsv(opts?: {
+  search?: string
+  role?: 'CUSTOMER' | 'WHOLESALE' | 'ALL'
+  status?: 'active' | 'inactive' | 'all'
+}) {
+  const params = new URLSearchParams()
+  if (opts?.search) params.set('search', opts.search)
+  if (opts?.role) params.set('role', opts.role)
+  if (opts?.status) params.set('status', opts.status)
+  const suffix = params.toString() ? `?${params.toString()}` : ''
+  const stamp = new Date().toISOString().slice(0, 10)
+
+  await downloadAdminCsv(
+    `/api/admin/customers/export${suffix}`,
+    `by-celeste-customers-${stamp}.csv`,
+    'Could not export customers.',
+  )
 }
 
 export type AdminTestimonial = {
@@ -328,6 +694,7 @@ export type AdminMarketingContent = {
   testimonialsSectionHeading: string
   testimonialsSectionSubheading: string
   facebookUrl: string
+  instagramUrl: string
   footerTrustWording: string
   updatedAt: string
 }
@@ -363,6 +730,7 @@ export type AdminBusinessSettings = {
   footerLocationWording: string
   footerSupportText: string
   facebookUrl: string
+  instagramUrl: string
   trustStripWording: string
   shippingMethodLabel: string
   shippingAmountDisplay: string
@@ -468,5 +836,101 @@ export async function moderateAdminWholesaler(
     method: 'PUT',
     body: { action },
   }).then((r) => r.wholesaler)
+}
+
+/** Admin-only TOTP (authenticator app) — optional second factor at login. */
+export type AdminTotpStatus = {
+  totpEnabled: boolean
+  totpEnrollmentPending: boolean
+}
+
+export type AdminTotpSetupStart = {
+  qrDataUrl: string
+  otpauthUrl: string
+  resumedPending: boolean
+}
+
+export async function fetchAdminTotpStatus() {
+  return apiFetch<AdminTotpStatus>('/api/admin/security/totp/status', { method: 'GET' })
+}
+
+export async function startAdminTotpSetup() {
+  return apiFetch<AdminTotpSetupStart>('/api/admin/security/totp/setup-start', { method: 'POST' })
+}
+
+export async function verifyAdminTotpSetup(code: string) {
+  return apiFetch<{ totpEnabled: true }>('/api/admin/security/totp/setup-verify', {
+    method: 'POST',
+    body: { code },
+  })
+}
+
+export async function disableAdminTotp(password: string) {
+  return apiFetch<{ totpEnabled: false }>('/api/admin/security/totp/disable', {
+    method: 'POST',
+    body: { password },
+  })
+}
+
+export async function uploadAdminProductImage(
+  file: File,
+  options?: { replaceImageUrl?: string },
+): Promise<{ imageUrl: string }> {
+  const form = new FormData()
+  form.append('image', file)
+  if (options?.replaceImageUrl?.trim()) {
+    form.append('replaceImageUrl', options.replaceImageUrl.trim())
+  }
+
+  const res = await fetch(buildApiUrl('/api/admin/uploads/product-image'), {
+    method: 'POST',
+    body: form,
+    credentials: 'include',
+  })
+
+  const contentType = res.headers.get('Content-Type') ?? ''
+  const isJson = contentType.includes('application/json')
+  const data = (isJson ? await res.json() : null) as
+    | { success: boolean; data?: { imageUrl: string }; error?: { message: string } }
+    | null
+
+  if (!res.ok || !data || data.success === false) {
+    const message =
+      data?.error?.message || 'Could not upload the image. Please try again.'
+    throw new Error(message)
+  }
+
+  return data.data as { imageUrl: string }
+}
+
+export async function uploadAdminEventImage(
+  file: File,
+  options?: { replaceImageUrl?: string },
+): Promise<{ imageUrl: string }> {
+  const form = new FormData()
+  form.append('image', file)
+  if (options?.replaceImageUrl?.trim()) {
+    form.append('replaceImageUrl', options.replaceImageUrl.trim())
+  }
+
+  const res = await fetch(buildApiUrl('/api/admin/uploads/event-image'), {
+    method: 'POST',
+    body: form,
+    credentials: 'include',
+  })
+
+  const contentType = res.headers.get('Content-Type') ?? ''
+  const isJson = contentType.includes('application/json')
+  const data = (isJson ? await res.json() : null) as
+    | { success: boolean; data?: { imageUrl: string }; error?: { message: string } }
+    | null
+
+  if (!res.ok || !data || data.success === false) {
+    const message =
+      data?.error?.message || 'Could not upload the image. Please try again.'
+    throw new Error(message)
+  }
+
+  return data.data as { imageUrl: string }
 }
 

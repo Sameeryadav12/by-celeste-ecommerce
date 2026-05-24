@@ -1,3 +1,4 @@
+import { resolveMediaUrl } from '../../lib/mediaUrl'
 import type {
   CatalogCategory,
   CatalogIngredient,
@@ -31,6 +32,7 @@ type ApiProduct = {
   benefits: string[]
   price: string
   retailUnitPrice?: string
+  catalogWholesalePrice?: string | null
   isWholesalePrice?: boolean
   compareAtPrice: string | null
   imageUrl: string
@@ -42,9 +44,8 @@ type ApiProduct = {
 
 function toAbsoluteImageUrl(imageUrl: string): string {
   if (/^https?:\/\//i.test(imageUrl)) return imageUrl
-  // Seed data stores product images as root-relative paths like `/images/products/...`.
-  // Those images are expected to be served from the frontend static/public folder,
-  // not from the backend API host.
+  if (imageUrl.startsWith('/uploads/')) return resolveMediaUrl(imageUrl)
+  // Seed data: `/images/products/...` from frontend public/
   if (imageUrl.startsWith('/')) return imageUrl
   return imageUrl
 }
@@ -82,6 +83,10 @@ export function mapProduct(raw: ApiProduct): CatalogProduct {
     retailUnitPrice:
       raw.retailUnitPrice != null && raw.retailUnitPrice !== ''
         ? Number(raw.retailUnitPrice)
+        : undefined,
+    catalogWholesalePrice:
+      raw.catalogWholesalePrice != null && raw.catalogWholesalePrice !== ''
+        ? Number(raw.catalogWholesalePrice)
         : undefined,
     isWholesalePrice: Boolean(raw.isWholesalePrice),
     compareAtPrice: raw.compareAtPrice == null ? null : Number(raw.compareAtPrice),

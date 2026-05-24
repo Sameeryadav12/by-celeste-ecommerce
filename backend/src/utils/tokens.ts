@@ -8,6 +8,13 @@ export type AccessTokenPayload = {
   role: 'CUSTOMER' | 'WHOLESALE' | 'ADMIN'
 }
 
+export type TwoFactorPendingPayload = {
+  step: 'totp_pending'
+  sub: string
+  email: string
+  role: 'ADMIN'
+}
+
 export function signAccessToken(payload: AccessTokenPayload) {
   const options: SignOptions = {
     // jsonwebtoken typings use `ms.StringValue`; env string is valid at runtime
@@ -17,7 +24,29 @@ export function signAccessToken(payload: AccessTokenPayload) {
 }
 
 export function verifyAccessToken(token: string) {
-  return jwt.verify(token, env.JWT_ACCESS_SECRET) as AccessTokenPayload
+  const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET) as AccessTokenPayload & { step?: string }
+  if (decoded.step === 'totp_pending') {
+    throw new jwt.JsonWebTokenError('Invalid access token')
+  }
+  return decoded as AccessTokenPayload
+}
+
+export function signTwoFactorPendingToken(payload: { sub: string; email: string }) {
+  const body: TwoFactorPendingPayload = {
+    step: 'totp_pending',
+    sub: payload.sub,
+    email: payload.email,
+    role: 'ADMIN',
+  }
+  return jwt.sign(body, env.JWT_ACCESS_SECRET, { expiresIn: '5m' })
+}
+
+export function verifyTwoFactorPendingToken(token: string): TwoFactorPendingPayload {
+  const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET) as TwoFactorPendingPayload & { step?: string }
+  if (decoded.step !== 'totp_pending' || decoded.role !== 'ADMIN') {
+    throw new Error('Invalid two-factor token')
+  }
+  return decoded
 }
 
 export function setAuthCookie(res: Response, token: string) {

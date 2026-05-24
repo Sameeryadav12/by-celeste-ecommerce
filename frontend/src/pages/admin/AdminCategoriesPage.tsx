@@ -94,7 +94,11 @@ export function AdminCategoriesPage() {
     }
   }
 
-  async function handleDeactivate(id: string) {
+  async function handleDeactivate(id: string, name: string) {
+    const ok = window.confirm(
+      `Deactivate category "${name}"?\n\nIt will be hidden from the shop. Products can be reassigned later.`,
+    )
+    if (!ok) return
     setSaving(true)
     setError(null)
     try {
@@ -209,7 +213,7 @@ export function AdminCategoriesPage() {
                       type="button"
                       variant="ghost"
                       className="!px-3 !py-1.5 text-xs"
-                      onClick={() => handleDeactivate(c.id)}
+                      onClick={() => handleDeactivate(c.id, c.name)}
                     >
                       Deactivate
                     </Button>

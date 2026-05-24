@@ -13,6 +13,7 @@ const styles: Record<string, string> = {
   STANDARD: 'bg-slate-100 text-slate-700 ring-1 ring-slate-300',
   AWAITING_PAYMENT: 'bg-amber-50 text-amber-900 ring-1 ring-amber-200',
   PAID: 'bg-emerald-50 text-emerald-900 ring-1 ring-emerald-200',
+  CONFIRMED: 'bg-emerald-50 text-emerald-900 ring-1 ring-emerald-200',
   PAYMENT_FAILED: 'bg-red-50 text-red-800 ring-1 ring-red-200',
   FAILED: 'bg-red-50 text-red-800 ring-1 ring-red-200',
   CANCELLED: 'bg-neutral-100 text-neutral-700 ring-1 ring-neutral-300',

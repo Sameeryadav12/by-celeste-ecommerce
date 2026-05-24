@@ -4,6 +4,8 @@ Plain-language notes for **By Celeste** — behaviour, architecture, and operati
 
 | Doc | Topic |
 |-----|--------|
+| **[01-setup-guide.md](./01-setup-guide.md)** | **Local install (step-by-step)** |
+| **[02-demo-accounts-and-seeding.md](./02-demo-accounts-and-seeding.md)** | **Seeds and demo logins** |
 | [01-overview.md](./01-overview.md) | Product / feature overview |
 | [02-architecture.md](./02-architecture.md) | System shape |
 | [03-authentication.md](./03-authentication.md) | Auth & cookies |
@@ -11,8 +13,8 @@ Plain-language notes for **By Celeste** — behaviour, architecture, and operati
 | [05-orders-and-checkout.md](./05-orders-and-checkout.md) | Orders |
 | [06-loyalty-and-wholesale.md](./06-loyalty-and-wholesale.md) | Loyalty & wholesale |
 | [07-events-and-calendar.md](./07-events-and-calendar.md) | Events |
-| [08-deployment.md](./08-deployment.md) | Deployment narrative |
-| **[DEPLOYMENT.md](./DEPLOYMENT.md)** | **Checklist (Vercel + Render)** |
+| **[08-deployment.md](./08-deployment.md)** | **Deployment (Vercel + Render + domain)** |
+| [DEPLOYMENT.md](./DEPLOYMENT.md) | Short deployment checklist |
 | [09-frontend-layout-and-navigation.md](./09-frontend-layout-and-navigation.md) | UI shell |
 | [10-shop-and-product-pages.md](./10-shop-and-product-pages.md) | Shop UX |
 | [11-cart-and-checkout-flow.md](./11-cart-and-checkout-flow.md) | Cart & checkout |
@@ -21,9 +23,11 @@ Plain-language notes for **By Celeste** — behaviour, architecture, and operati
 | [14-wholesale-flow.md](./14-wholesale-flow.md) | Wholesale |
 | [15-events-feature.md](./15-events-feature.md) | Events feature |
 | [16-admin-dashboard.md](./16-admin-dashboard.md) | Admin |
+| [28-admin-totp-security.md](./28-admin-totp-security.md) | Admin optional authenticator (TOTP) 2FA |
 | [17-seo-basics.md](./17-seo-basics.md) | SEO |
 | [18-ui-and-brand-polish.md](./18-ui-and-brand-polish.md) | Brand UI |
 | [18-product-and-brand-reference.md](./18-product-and-brand-reference.md) | Reference |
 | [19-client-assets-and-catalog.md](./19-client-assets-and-catalog.md) | Assets |
+| **[22-client-handover-guide.md](./22-client-handover-guide.md)** | **Client handover (Jane)** |
 
-Start here for going live: **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
+**New to the project?** [01-setup-guide.md](./01-setup-guide.md) → [22-client-handover-guide.md](./22-client-handover-guide.md) → [08-deployment.md](./08-deployment.md).

@@ -49,6 +49,32 @@ export const loginSchema = z
   })
   .strict()
 
+export const loginTotpSchema = z
+  .object({
+    twoFactorToken: z.string().min(10, 'Missing or invalid two-factor token.'),
+    code: z
+      .string({ required_error: 'Authenticator code is required.' })
+      .trim()
+      .regex(/^\d{6}$/, 'Enter the 6-digit code from your authenticator app.'),
+  })
+  .strict()
+
+export const totpVerifySetupSchema = z
+  .object({
+    code: z
+      .string({ required_error: 'Authenticator code is required.' })
+      .trim()
+      .regex(/^\d{6}$/, 'Enter the 6-digit code from your authenticator app.'),
+  })
+  .strict()
+
+export const totpDisableSchema = z
+  .object({
+    password: z.string({ required_error: 'Password is required.' }).min(1, 'Password is required.'),
+  })
+  .strict()
+
 export type SignupInput = z.infer<typeof signupSchema>
 export type LoginInput = z.infer<typeof loginSchema>
+export type LoginTotpInput = z.infer<typeof loginTotpSchema>
 

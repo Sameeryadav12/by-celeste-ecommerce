@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { Button } from '../components/ui/Button'
 import { useCart } from '../features/cart/CartContext'
+import { WholesalePricingNote } from './wholesale/components/WholesalePricingNote'
 import { CartSummaryCard } from '../features/cart/components/CartSummaryCard'
 import { QuantityControl } from '../features/cart/components/QuantityControl'
 import { formatAud } from '../features/cart/money'
@@ -12,7 +13,7 @@ import { getPublicBusinessSettings, type BusinessSettings } from '../features/co
 
 export function CartPage() {
   const [business, setBusiness] = useState<BusinessSettings | null>(null)
-  const { items, summary, incrementItem, decrementItem, removeItem, setItemQuantity, clearCart } =
+  const { items, summary, pricingMode, incrementItem, decrementItem, removeItem, setItemQuantity, clearCart } =
     useCart()
 
   const shippingAmount = calculateShipping(summary.subtotal)
@@ -78,6 +79,12 @@ export function CartPage() {
           Continue shopping
         </Link>
       </div>
+
+      {pricingMode === 'wholesale' ? (
+        <div className="max-w-xl">
+          <WholesalePricingNote />
+        </div>
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-[1fr,360px]">
         {/* ── Item list ── */}

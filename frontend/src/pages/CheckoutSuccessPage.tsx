@@ -7,7 +7,7 @@ import { formatAud } from '../features/cart/money'
 
 function statusMessage(data: OrderStatusResponse | null) {
   if (!data) return 'Checking your order…'
-  if (data.paymentStatus === 'PAID') {
+  if (data.paymentStatus === 'PAID' || data.status === 'CONFIRMED' || data.status === 'PAID') {
     return 'Payment received — thank you! Your order is confirmed on our system.'
   }
   if (data.paymentStatus === 'FAILED' || data.status === 'PAYMENT_FAILED') {
@@ -75,8 +75,8 @@ export function CheckoutSuccessPage() {
             {data ? (
               <dl className="mt-4 space-y-2 text-sm text-neutral-700">
                 <div className="flex justify-between">
-                  <dt>Order reference</dt>
-                  <dd className="font-mono text-xs text-neutral-600">{data.orderId}</dd>
+                  <dt>Order number</dt>
+                  <dd className="font-medium text-neutral-900">{data.orderRef}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt>Payment status</dt>

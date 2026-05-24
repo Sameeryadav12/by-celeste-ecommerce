@@ -3,8 +3,11 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext'
 import { fetchMyOrders, type AccountOrderSummary } from '../../features/account/accountApi'
 import { OrderStatusBadge } from '../../features/account/components/OrderStatusBadge'
+import { formatOrderNumber } from '../../lib/orderNumber'
 import { PaymentStatusBadge } from '../../features/account/components/PaymentStatusBadge'
 import { formatAud } from '../../features/cart/money'
+import { WholesalePricingNote } from './components/WholesalePricingNote'
+import { WholesaleSupportCard } from './components/WholesaleSupportCard'
 import { WS_PRIMARY, WS_SECONDARY, WS_SECONDARY_SM } from './wholesaleUi'
 
 function wholesaleStatusLabel(status: 'APPROVED' | 'PENDING' | 'REJECTED' | 'NONE') {
@@ -43,10 +46,6 @@ function formatOrderDateShort(iso: string) {
   } catch {
     return iso
   }
-}
-
-function shortOrderId(id: string) {
-  return `#${id.slice(-8).toUpperCase()}`
 }
 
 export function WholesaleDashboardPage() {
@@ -104,6 +103,9 @@ export function WholesaleDashboardPage() {
         <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-700">
           Snapshot of your wholesale orders and partner access.
         </p>
+        <div className="mt-3 max-w-2xl">
+          <WholesalePricingNote />
+        </div>
       </div>
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:items-stretch">
@@ -171,10 +173,7 @@ export function WholesaleDashboardPage() {
                 {recentOrders.map((o) => (
                   <tr key={o.id}>
                     <td className="py-3 pr-3 align-middle">
-                      <div className="font-medium text-neutral-900">{shortOrderId(o.id)}</div>
-                      <div className="mt-0.5 max-w-[200px] truncate font-mono text-[11px] text-neutral-400">
-                        {o.id}
-                      </div>
+                      <div className="font-medium text-neutral-900">{formatOrderNumber(o.orderNumber)}</div>
                     </td>
                     <td className="py-3 pr-3 align-middle text-neutral-600">{formatOrderDateShort(o.createdAt)}</td>
                     <td className="py-3 pr-3 align-middle font-medium tabular-nums text-neutral-900">
@@ -216,6 +215,8 @@ export function WholesaleDashboardPage() {
           </Link>
         </div>
       </section>
+
+      <WholesaleSupportCard />
     </div>
   )
 }

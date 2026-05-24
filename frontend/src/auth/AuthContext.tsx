@@ -8,12 +8,22 @@ import {
   type ReactNode,
 } from 'react'
 import type { AuthStatus, AuthUser } from './authTypes'
-import { fetchCurrentUser, login as apiLogin, logout as apiLogout, signup as apiSignup } from './authApi'
+import {
+  fetchCurrentUser,
+  login as apiLogin,
+  loginTotp as apiLoginTotp,
+  logout as apiLogout,
+  signup as apiSignup,
+  type LoginResult,
+} from './authApi'
+
+type LoginOutcome = AuthUser | Extract<LoginResult, { requiresTwoFactor: true }>
 
 type AuthContextValue = {
   status: AuthStatus
   user: AuthUser | null
-  login: (input: { email: string; password: string }) => Promise<AuthUser>
+  login: (input: { email: string; password: string }) => Promise<LoginOutcome>
+  completeLoginWithTotp: (input: { twoFactorToken: string; code: string }) => Promise<AuthUser>
   signup: (input: {
     firstName: string
     lastName: string
@@ -46,15 +56,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void refreshUser()
   }, [refreshUser])
 
-  const login = useCallback(
-    async (input: { email: string; password: string }) => {
-      const result = await apiLogin(input)
-      setUser(result.user)
-      setStatus('authenticated')
-      return result.user
-    },
-    [],
-  )
+  const login = useCallback(async (input: { email: string; password: string }) => {
+    const data = await apiLogin(input)
+    if ('requiresTwoFactor' in data) {
+      return data
+    }
+    setUser(data.user)
+    setStatus('authenticated')
+    return data.user
+  }, [])
+
+  const completeLoginWithTotp = useCallback(async (input: { twoFactorToken: string; code: string }) => {
+    const { user } = await apiLoginTotp(input)
+    setUser(user)
+    setStatus('authenticated')
+    return user
+  }, [])
 
   const signup = useCallback(
     async (input: {
@@ -85,11 +102,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       status,
       user,
       login,
+      completeLoginWithTotp,
       signup,
       logout,
       refreshUser,
     }),
-    [login, logout, refreshUser, signup, status, user],
+    [login, completeLoginWithTotp, logout, refreshUser, signup, status, user],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

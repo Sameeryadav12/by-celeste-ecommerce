@@ -1,6 +1,8 @@
 import { OrderPaymentStatus, OrderStatus } from '@prisma/client'
 import { prisma } from '../config/prisma'
 import { ApiError } from '../utils/apiError'
+import { toCsvRow } from '../utils/csv'
+import { formatOrderNumber, parseOrderNumberQuery } from '../utils/orderNumber'
 
 export async function listAdminOrders(opts?: {
   limit?: number
@@ -13,6 +15,7 @@ export async function listAdminOrders(opts?: {
   const where: {
     status?: OrderStatus
     paymentStatus?: OrderPaymentStatus
+    orderNumber?: number
     OR?: Array<{
       firstName?: { contains: string; mode: 'insensitive' }
       lastName?: { contains: string; mode: 'insensitive' }
@@ -23,11 +26,16 @@ export async function listAdminOrders(opts?: {
   if (opts?.paymentStatus) where.paymentStatus = opts.paymentStatus
   if (opts?.search?.trim()) {
     const search = opts.search.trim()
-    where.OR = [
-      { firstName: { contains: search, mode: 'insensitive' } },
-      { lastName: { contains: search, mode: 'insensitive' } },
-      { email: { contains: search, mode: 'insensitive' } },
-    ]
+    const orderNum = parseOrderNumberQuery(search)
+    if (orderNum != null) {
+      where.orderNumber = orderNum
+    } else {
+      where.OR = [
+        { firstName: { contains: search, mode: 'insensitive' } },
+        { lastName: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+      ]
+    }
   }
 
   const rows = await prisma.order.findMany({
@@ -36,6 +44,7 @@ export async function listAdminOrders(opts?: {
     take: limit,
     select: {
       id: true,
+      orderNumber: true,
       createdAt: true,
       status: true,
       paymentStatus: true,
@@ -48,6 +57,8 @@ export async function listAdminOrders(opts?: {
 
   return rows.map((o) => ({
     id: o.id,
+    orderNumber: o.orderNumber,
+    orderRef: formatOrderNumber(o.orderNumber),
     createdAt: o.createdAt.toISOString(),
     status: o.status,
     paymentStatus: o.paymentStatus,
@@ -100,6 +111,7 @@ export async function getAdminOrderById(orderId: string) {
   // Admin always sees full details for this order.
   return {
     id: order.id,
+    orderNumber: order.orderNumber,
     createdAt: order.createdAt.toISOString(),
     updatedAt: order.updatedAt.toISOString(),
     status: order.status,
@@ -174,5 +186,77 @@ export async function updateAdminOrderStatus(orderId: string, status: OrderStatu
     paymentStatus: updated.paymentStatus,
     updatedAt: updated.updatedAt.toISOString(),
   }
+}
+
+export async function exportAdminOrdersCsv(opts?: {
+  search?: string
+  status?: OrderStatus
+  paymentStatus?: OrderPaymentStatus
+}) {
+  const where: {
+    status?: OrderStatus
+    paymentStatus?: OrderPaymentStatus
+    orderNumber?: number
+    OR?: Array<{
+      firstName?: { contains: string; mode: 'insensitive' }
+      lastName?: { contains: string; mode: 'insensitive' }
+      email?: { contains: string; mode: 'insensitive' }
+    }>
+  } = {}
+  if (opts?.status) where.status = opts.status
+  if (opts?.paymentStatus) where.paymentStatus = opts.paymentStatus
+  if (opts?.search?.trim()) {
+    const search = opts.search.trim()
+    const orderNum = parseOrderNumberQuery(search)
+    if (orderNum != null) {
+      where.orderNumber = orderNum
+    } else {
+      where.OR = [
+        { firstName: { contains: search, mode: 'insensitive' } },
+        { lastName: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+      ]
+    }
+  }
+
+  const rows = await prisma.order.findMany({
+    where,
+    orderBy: { createdAt: 'desc' },
+    take: 500,
+    select: {
+      orderNumber: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      createdAt: true,
+      totalAmount: true,
+      status: true,
+      paymentStatus: true,
+    },
+  })
+
+  const header = toCsvRow([
+    'Order number',
+    'Customer name',
+    'Customer email',
+    'Created date',
+    'Total',
+    'Order status',
+    'Payment status',
+  ])
+
+  const lines = rows.map((o) =>
+    toCsvRow([
+      formatOrderNumber(o.orderNumber),
+      `${o.firstName} ${o.lastName}`.trim(),
+      o.email,
+      o.createdAt.toISOString().slice(0, 10),
+      o.totalAmount.toFixed(2),
+      o.status,
+      o.paymentStatus,
+    ]),
+  )
+
+  return [header, ...lines].join('\n')
 }
 

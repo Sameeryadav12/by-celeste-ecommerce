@@ -8,7 +8,9 @@ import {
   adminDeleteCategory,
   adminDeleteIngredient,
   adminDeleteProduct,
+  adminListIngredients,
   adminListProducts,
+  adminPermanentDeleteIngredient,
   adminGetProduct,
   adminUpdateCategory,
   adminUpdateIngredient,
@@ -19,16 +21,20 @@ export const adminCatalogRouter = Router()
 
 adminCatalogRouter.use(requireAuth, requireRole([Role.ADMIN]))
 
-adminCatalogRouter.get('/products', adminListProducts)
-adminCatalogRouter.get('/products/:id', adminGetProduct)
-adminCatalogRouter.post('/products', adminCreateProduct)
-adminCatalogRouter.put('/products/:id', adminUpdateProduct)
-adminCatalogRouter.delete('/products/:id', adminDeleteProduct)
+const adminProductsRouter = Router()
+adminProductsRouter.get('/', adminListProducts)
+adminProductsRouter.get('/:id', adminGetProduct)
+adminProductsRouter.post('/', adminCreateProduct)
+adminProductsRouter.put('/:id', adminUpdateProduct)
+adminProductsRouter.delete('/:id', adminDeleteProduct)
+adminCatalogRouter.use('/products', adminProductsRouter)
 
 adminCatalogRouter.post('/categories', adminCreateCategory)
 adminCatalogRouter.put('/categories/:id', adminUpdateCategory)
 adminCatalogRouter.delete('/categories/:id', adminDeleteCategory)
 
+adminCatalogRouter.get('/ingredients', adminListIngredients)
 adminCatalogRouter.post('/ingredients', adminCreateIngredient)
 adminCatalogRouter.put('/ingredients/:id', adminUpdateIngredient)
+adminCatalogRouter.delete('/ingredients/:id/permanent', adminPermanentDeleteIngredient)
 adminCatalogRouter.delete('/ingredients/:id', adminDeleteIngredient)

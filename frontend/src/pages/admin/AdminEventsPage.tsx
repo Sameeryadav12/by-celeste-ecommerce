@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import {
@@ -7,8 +7,20 @@ import {
   type AdminEventItem,
   updateAdminEvent,
   unpublishAdminEvent,
+  uploadAdminEventImage,
 } from '../../features/admin/adminApi'
+import { resolveMediaUrl } from '../../lib/mediaUrl'
 import { AdminStatusBadge } from './components/AdminStatusBadge'
+
+function isValidImageUrl(value: string) {
+  if (value.startsWith('/')) return true
+  try {
+    new URL(value)
+    return true
+  } catch {
+    return false
+  }
+}
 
 type EventForm = {
   id?: string
@@ -51,7 +63,7 @@ function initialForm(): EventForm {
     addressLine1: '',
     addressLine2: '',
     suburb: '',
-    state: 'NSW',
+    state: 'VIC',
     postcode: '',
     country: 'Australia',
     startDateTimeLocal: '',
@@ -70,8 +82,24 @@ export function AdminEventsPage() {
   const [message, setMessage] = useState<string | null>(null)
 
   const [form, setForm] = useState<EventForm>(initialForm())
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [uploadFile, setUploadFile] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [uploadSuccess, setUploadSuccess] = useState<string | null>(null)
+  const [previewFailed, setPreviewFailed] = useState(false)
 
   const selectedId = form.id
+
+  const imagePreviewUrl = useMemo(() => {
+    const v = form.imageUrl.trim()
+    if (!v || !isValidImageUrl(v)) return null
+    return resolveMediaUrl(v)
+  }, [form.imageUrl])
+
+  useEffect(() => {
+    setPreviewFailed(false)
+  }, [imagePreviewUrl])
 
   const featuredLabel = useMemo(() => {
     return selectedId ? (form.isFeatured ? 'Featured' : 'Not featured') : ''
@@ -120,6 +148,54 @@ export function AdminEventsPage() {
   function resetForm() {
     setForm(initialForm())
     setError(null)
+    setUploadFile(null)
+    setUploadError(null)
+    setUploadSuccess(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const ALLOWED_UPLOAD_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+  const MAX_UPLOAD_BYTES = 5 * 1024 * 1024
+
+  function validateUploadFile(file: File): string | null {
+    if (!ALLOWED_UPLOAD_TYPES.includes(file.type)) {
+      return 'Only JPG, PNG, or WebP images are allowed.'
+    }
+    if (file.size > MAX_UPLOAD_BYTES) {
+      return 'Image must be 5MB or smaller.'
+    }
+    return null
+  }
+
+  async function handleImageUpload() {
+    setUploadError(null)
+    setUploadSuccess(null)
+    if (!uploadFile) {
+      setUploadError('Choose an image file first.')
+      return
+    }
+    const validation = validateUploadFile(uploadFile)
+    if (validation) {
+      setUploadError(validation)
+      return
+    }
+    setUploading(true)
+    try {
+      const previousUrl = form.imageUrl.trim()
+      const replaceImageUrl = previousUrl.startsWith('/uploads/events/')
+        ? previousUrl
+        : undefined
+      const { imageUrl } = await uploadAdminEventImage(uploadFile, { replaceImageUrl })
+      setForm((p) => ({ ...p, imageUrl }))
+      setPreviewFailed(false)
+      setUploadSuccess('Image uploaded.')
+      setUploadFile(null)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    } catch (e) {
+      setUploadError(e instanceof Error ? e.message : 'Upload failed.')
+    } finally {
+      setUploading(false)
+    }
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -386,15 +462,84 @@ export function AdminEventsPage() {
               />
             </label>
 
-            <label className="space-y-1 text-sm sm:col-span-2">
-              <span className="block font-medium text-neutral-800">Image URL (optional)</span>
-              <input
-                value={form.imageUrl}
-                onChange={(e) => setForm((p) => ({ ...p, imageUrl: e.target.value }))}
-                placeholder="https://... or /path..."
-                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-neutral-900"
-              />
-            </label>
+            <div className="space-y-3 sm:col-span-2">
+              <p className="text-sm font-medium text-neutral-800">Event image (optional)</p>
+              <p className="text-xs text-neutral-500">Upload an image or paste a URL below.</p>
+
+              <div className="rounded-md border border-dashed border-neutral-300 bg-neutral-50 p-3">
+                <p className="text-xs font-medium text-neutral-700">Upload image</p>
+                <p className="mt-0.5 text-xs text-neutral-500">
+                  JPG, PNG, or WebP — max 5MB. Saved as optimized WebP (up to 1200px wide).
+                </p>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+                    className="max-w-full text-xs text-neutral-700 file:mr-2 file:rounded-md file:border-0 file:bg-neutral-200 file:px-2 file:py-1 file:text-xs file:font-medium"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] ?? null
+                      setUploadFile(file)
+                      setUploadError(null)
+                      setUploadSuccess(null)
+                      if (file) {
+                        const msg = validateUploadFile(file)
+                        if (msg) setUploadError(msg)
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    loading={uploading}
+                    disabled={uploading || !uploadFile}
+                    onClick={() => void handleImageUpload()}
+                  >
+                    {uploading ? 'Uploading…' : 'Upload'}
+                  </Button>
+                </div>
+                {uploadError ? (
+                  <p className="mt-2 text-xs text-red-600" role="alert">
+                    {uploadError}
+                  </p>
+                ) : null}
+                {uploadSuccess ? (
+                  <p className="mt-2 text-xs text-emerald-700" role="status">
+                    {uploadSuccess}
+                  </p>
+                ) : null}
+              </div>
+
+              {imagePreviewUrl ? (
+                <div>
+                  <p className="mb-2 text-xs text-neutral-500">Preview</p>
+                  {previewFailed ? (
+                    <p className="text-sm text-neutral-500">Image preview unavailable</p>
+                  ) : (
+                    <div className="inline-flex overflow-hidden rounded-md border border-neutral-200 bg-white">
+                      <img
+                        src={imagePreviewUrl}
+                        alt="Event preview"
+                        className="h-24 w-24 object-cover"
+                        onError={() => setPreviewFailed(true)}
+                      />
+                    </div>
+                  )}
+                </div>
+              ) : null}
+
+              <label className="block space-y-1 text-sm">
+                <span className="font-medium text-neutral-800">Image URL (optional)</span>
+                <input
+                  value={form.imageUrl}
+                  onChange={(e) => {
+                    setForm((p) => ({ ...p, imageUrl: e.target.value }))
+                    setPreviewFailed(false)
+                  }}
+                  placeholder="https://... or /uploads/events/..."
+                  className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-neutral-900"
+                />
+              </label>
+            </div>
 
             <label className="flex items-center gap-2 text-sm">
               <input

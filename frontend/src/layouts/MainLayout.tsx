@@ -5,10 +5,12 @@ import { Container } from '../components/layout/Container'
 import { Button } from '../components/ui/Button'
 import { useCart } from '../features/cart/CartContext'
 import { BUSINESS_LOCATION } from '../config/businessAddress'
+import { BUSINESS_DETAILS } from '../config/businessDetails'
 import { BrandLogo } from '../components/branding/BrandLogo'
 import { BrandLogoWatermark } from '../components/branding/BrandLogoWatermark'
 import { TrustBadgeRow } from '../components/trust/TrustBadgeRow'
 import { BrandIcon } from '../components/icons/BrandIcon'
+import { FooterSocialLinks } from '../components/layout/FooterSocialLinks'
 import {
   getPublicBusinessSettings,
   getPublicMarketingContent,
@@ -317,7 +319,7 @@ export function MainLayout() {
 
       <footer className="site-footer border-t border-neutral-200 bg-white py-12 text-sm text-neutral-700 sm:py-14">
         <Container>
-          <div className="grid items-start gap-10 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)] md:gap-12 lg:gap-14">
+          <div className="grid items-start gap-10 md:grid-cols-2 lg:grid-cols-4 md:gap-8 lg:gap-10">
             <div className="flex max-w-md flex-col md:max-w-none md:pr-4 lg:pr-8">
               <Link
                 to="/"
@@ -365,29 +367,73 @@ export function MainLayout() {
               </ul>
             </div>
             <div className="space-y-3 pt-0.5 md:pt-1">
+              <div className="text-xs font-semibold uppercase tracking-[0.1em] text-neutral-500">
+                Policies
+              </div>
+              <ul className="space-y-2 text-xs text-neutral-600">
+                <li>
+                  <Link to="/policies/shipping" className="hover:text-neutral-900">
+                    Shipping
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/policies/returns" className="hover:text-neutral-900">
+                    Returns
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/policies/privacy" className="hover:text-neutral-900">
+                    Privacy
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/policies/terms" className="hover:text-neutral-900">
+                    Terms
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/policies/wholesale-terms" className="hover:text-neutral-900">
+                    Wholesale terms
+                  </Link>
+                </li>
+              </ul>
+            </div>
+            <div className="space-y-3 pt-0.5 md:pt-1">
               <div className="text-xs font-semibold uppercase tracking-[0.1em] text-neutral-500">Contact</div>
               <address className="text-xs leading-5 text-neutral-600 not-italic">
                 <span className="block font-medium text-neutral-800">
-                  {business?.businessDisplayName || 'By Celeste'}
+                  {business?.businessDisplayName || BUSINESS_DETAILS.name}
                 </span>
-                <span className="mt-1 flex items-center gap-1.5">
-                  <BrandIcon name="location" className="h-3.5 w-3.5 shrink-0 opacity-50" alt="" />
-                  {business?.footerLocationWording || `${BUSINESS_LOCATION.locality}, ${BUSINESS_LOCATION.country}`}
+                <span className="mt-1 block text-neutral-500">{BUSINESS_DETAILS.abnDisplay}</span>
+                <span className="mt-1 flex items-start gap-1.5">
+                  <BrandIcon name="location" className="mt-0.5 h-3.5 w-3.5 shrink-0 opacity-50" alt="" />
+                  {business?.footerLocationWording ||
+                    BUSINESS_LOCATION.fullAddress ||
+                    BUSINESS_LOCATION.locality}
                 </span>
+                <a
+                  href={`mailto:${BUSINESS_DETAILS.supportEmail}`}
+                  className="mt-2 block font-medium text-neutral-800 underline underline-offset-2 hover:text-neutral-900"
+                >
+                  {BUSINESS_DETAILS.supportEmail}
+                </a>
+                <a
+                  href={BUSINESS_DETAILS.websiteUrl}
+                  className="mt-1 block text-neutral-600 hover:text-neutral-900"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {BUSINESS_DETAILS.website}
+                </a>
               </address>
               <p className="text-xs leading-5 text-neutral-500">
                 {business?.footerSupportText ||
-                  'For order questions, use the details on your confirmation or reach out through your account when signed in.'}
+                  'Questions? Email us — we reply during business hours.'}
               </p>
-              <a
-                href={business?.facebookUrl || marketing?.facebookUrl || 'https://www.facebook.com'}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1.5 text-xs font-medium text-neutral-700 underline underline-offset-2 hover:text-neutral-900"
-              >
-                <BrandIcon name="facebook" className="h-3.5 w-3.5 shrink-0 opacity-60" alt="" />
-                Facebook
-              </a>
+              <FooterSocialLinks
+                facebookUrl={business?.facebookUrl || marketing?.facebookUrl}
+                instagramUrl={business?.instagramUrl || marketing?.instagramUrl}
+              />
             </div>
           </div>
 

@@ -21,6 +21,7 @@ export type MarketingContentRecord = {
   testimonialsSectionHeading: string
   testimonialsSectionSubheading: string
   facebookUrl: string
+  instagramUrl: string
   footerTrustWording: string
   updatedAt: string
 }
@@ -43,6 +44,7 @@ export type BusinessSettingsRecord = {
   footerLocationWording: string
   footerSupportText: string
   facebookUrl: string
+  instagramUrl: string
   trustStripWording: string
   shippingMethodLabel: string
   shippingAmountDisplay: string
@@ -221,7 +223,8 @@ const DEFAULT_MARKETING: MarketingContentRecord = {
   testimonialsSectionHeading: 'What Our Customers Say',
   testimonialsSectionSubheading:
     'A few recent words from customers who use By Celeste every day.',
-  facebookUrl: 'https://www.facebook.com',
+  facebookUrl: 'https://www.facebook.com/people/By-Celeste/100063829142451/',
+  instagramUrl: 'https://www.instagram.com/by_celeste1/',
   footerTrustWording: 'Handcrafted in regional Victoria · Boutique Australian skincare',
   updatedAt: new Date().toISOString(),
 }
@@ -241,10 +244,11 @@ const DEFAULT_THEME: ThemeSettingsRecord = {
 
 const DEFAULT_BUSINESS: BusinessSettingsRecord = {
   businessDisplayName: 'By Celeste',
-  footerLocationWording: 'Leneva Victoria, Australia',
+  footerLocationWording: '10 Mortimer Tce, Leneva VIC 3691',
   footerSupportText:
-    'For order questions, use the details on your confirmation or reach out through your account when signed in.',
-  facebookUrl: 'https://www.facebook.com',
+    'Questions? Email jane.byceleste@gmail.com — we reply during business hours.',
+  facebookUrl: 'https://www.facebook.com/people/By-Celeste/100063829142451/',
+  instagramUrl: 'https://www.instagram.com/by_celeste1/',
   trustStripWording: 'Handcrafted in regional Victoria · Boutique Australian skincare',
   shippingMethodLabel: 'Flat rate shipping',
   shippingAmountDisplay: '$12.00',
@@ -287,9 +291,9 @@ export async function readContentDb(): Promise<ContentDb> {
     : (parsed.testimonials ?? DEFAULT_TESTIMONIALS)
   return {
     testimonials,
-    marketing: parsed.marketing ?? DEFAULT_MARKETING,
+    marketing: { ...DEFAULT_MARKETING, ...(parsed.marketing ?? {}) },
     theme: parsed.theme ?? DEFAULT_THEME,
-    business: parsed.business ?? DEFAULT_BUSINESS,
+    business: { ...DEFAULT_BUSINESS, ...(parsed.business ?? {}) },
   }
 }
 

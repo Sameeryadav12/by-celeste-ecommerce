@@ -13,6 +13,7 @@ import { AccountOrdersSkeleton } from '../features/account/components/AccountOrd
 import { AccountPortalSummary } from '../features/account/components/AccountPortalSummary'
 import { AccountProfileEditor } from '../features/account/components/AccountProfileEditor'
 import { formatAud } from '../features/cart/money'
+import { formatOrderNumber } from '../lib/orderNumber'
 
 function formatOrderDate(iso: string) {
   try {
@@ -384,7 +385,7 @@ export function AccountDashboardPage() {
                 className="flex flex-col gap-4 py-5 first:pt-2 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="min-w-0 space-y-2">
-                  <p className="font-mono text-[11px] text-neutral-400">{o.id}</p>
+                  <p className="text-sm font-medium text-neutral-800">{formatOrderNumber(o.orderNumber)}</p>
                   <p className="text-sm text-neutral-800">{formatOrderDate(o.createdAt)}</p>
                   <div className="flex flex-wrap gap-2">
                     <OrderStatusBadge status={o.status} />

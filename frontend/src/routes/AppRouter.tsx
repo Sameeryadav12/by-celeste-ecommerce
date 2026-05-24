@@ -20,12 +20,14 @@ import { AdminEventsPage } from '../pages/admin/AdminEventsPage'
 import { AdminOrdersPage } from '../pages/admin/AdminOrdersPage'
 import { AdminOrderDetailPage } from '../pages/admin/AdminOrderDetailPage'
 import { AdminCustomersPage } from '../pages/admin/AdminCustomersPage'
+import { AdminCustomerDetailPage } from '../pages/admin/AdminCustomerDetailPage'
 import { AdminWholesalePage } from '../pages/admin/AdminWholesalePage'
 import { AdminWholesaleDetailPage } from '../pages/admin/AdminWholesaleDetailPage'
 import { AdminTestimonialsPage } from '../pages/admin/AdminTestimonialsPage'
 import { AdminMarketingPage } from '../pages/admin/AdminMarketingPage'
 import { AdminThemePage } from '../pages/admin/AdminThemePage'
 import { AdminSettingsPage } from '../pages/admin/AdminSettingsPage'
+import { AdminSecurityPage } from '../pages/admin/AdminSecurityPage'
 import { HomePage } from '../pages/HomePage'
 import { LoginPage } from '../pages/LoginPage'
 import { ProductDetailPage } from '../pages/ProductDetailPage'
@@ -33,6 +35,7 @@ import { ShopPage } from '../pages/ShopPage'
 import { SignupPage } from '../pages/SignupPage'
 import { WholesaleApplyPage } from '../pages/WholesalePage'
 import { AboutPage } from '../pages/AboutPage'
+import { PolicyPage } from '../pages/PolicyPage'
 import { TestimonialsPage } from '../pages/TestimonialsPage'
 import { ProtectedRoute } from '../auth/ProtectedRoute'
 import { EventDetailPage } from '../pages/EventDetailPage'
@@ -82,6 +85,7 @@ const router = createBrowserRouter([
           { path: 'orders', element: <AdminOrdersPage /> },
           { path: 'orders/:id', element: <AdminOrderDetailPage /> },
           { path: 'customers', element: <AdminCustomersPage /> },
+          { path: 'customers/:id', element: <AdminCustomerDetailPage /> },
           { path: 'wholesale', element: <AdminWholesalePage /> },
           { path: 'wholesale/:id', element: <AdminWholesaleDetailPage /> },
           { path: 'testimonials', element: <AdminTestimonialsPage /> },
@@ -89,6 +93,7 @@ const router = createBrowserRouter([
           { path: 'marketing', element: <AdminMarketingPage /> },
           { path: 'theme', element: <AdminThemePage /> },
           { path: 'settings', element: <AdminSettingsPage /> },
+          { path: 'security', element: <AdminSecurityPage /> },
         ],
       },
     ],
@@ -126,6 +131,7 @@ const router = createBrowserRouter([
       { path: '/checkout/success', element: <CheckoutSuccessPage /> },
       { path: '/checkout/cancel', element: <CheckoutCancelPage /> },
       { path: '/about', element: <AboutPage /> },
+      { path: '/policies/:slug', element: <PolicyPage /> },
       { path: '/testimonials', element: <TestimonialsPage /> },
       { path: '/login', element: <LoginPage /> },
       { path: '/signup', element: <SignupPage /> },

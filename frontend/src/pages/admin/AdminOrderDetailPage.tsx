@@ -7,9 +7,17 @@ import {
   updateAdminOrderStatus,
   type AdminOrderDetail,
 } from '../../features/admin/adminApi'
+import { formatOrderNumber } from '../../lib/orderNumber'
 import { AdminStatusBadge } from './components/AdminStatusBadge'
 
-const ORDER_STATUSES = ['PENDING', 'AWAITING_PAYMENT', 'PAID', 'PAYMENT_FAILED', 'CANCELLED'] as const
+const ORDER_STATUSES = [
+  'PENDING',
+  'AWAITING_PAYMENT',
+  'PAID',
+  'CONFIRMED',
+  'PAYMENT_FAILED',
+  'CANCELLED',
+] as const
 
 export function AdminOrderDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -119,7 +127,7 @@ export function AdminOrderDetailPage() {
         <Card>
           <h2 className="text-base font-semibold text-slate-900">Order summary</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 text-sm">
-            <Summary label="Order ID" value={order.id} />
+            <Summary label="Order number" value={formatOrderNumber(order.orderNumber)} />
             <Summary label="Created" value={new Date(order.createdAt).toLocaleString()} />
             <Summary label="Updated" value={new Date(order.updatedAt).toLocaleString()} />
             <Summary label="Order total" value={formatCurrency(order.totalAmount)} />

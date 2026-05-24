@@ -13,9 +13,35 @@ export type CreatePaymentLinkResult = {
   squareOrderId?: string
 }
 
+export const SQUARE_CHECKOUT_UNAVAILABLE_MESSAGE =
+  'Online payment is not connected yet. Please contact By Celeste.'
+
 /** True when Square sandbox/production credentials are set (real hosted checkout). */
 export function isSquareConfigured(): boolean {
   return Boolean(env.SQUARE_ACCESS_TOKEN?.trim() && env.SQUARE_LOCATION_ID?.trim())
+}
+
+/** Webhook verification (production go-live). */
+export function isSquareWebhookConfigured(): boolean {
+  return Boolean(
+    env.SQUARE_WEBHOOK_SIGNATURE_KEY?.trim() && env.SQUARE_WEBHOOK_NOTIFICATION_URL?.trim(),
+  )
+}
+
+export function getSquareSetupStatus() {
+  return {
+    checkoutReady: isSquareConfigured(),
+    webhookReady: isSquareWebhookConfigured(),
+    environment: env.SQUARE_ENVIRONMENT,
+    missingForCheckout: [
+      !env.SQUARE_ACCESS_TOKEN?.trim() ? 'SQUARE_ACCESS_TOKEN' : null,
+      !env.SQUARE_LOCATION_ID?.trim() ? 'SQUARE_LOCATION_ID' : null,
+    ].filter(Boolean) as string[],
+    missingForWebhooks: [
+      !env.SQUARE_WEBHOOK_SIGNATURE_KEY?.trim() ? 'SQUARE_WEBHOOK_SIGNATURE_KEY' : null,
+      !env.SQUARE_WEBHOOK_NOTIFICATION_URL?.trim() ? 'SQUARE_WEBHOOK_NOTIFICATION_URL' : null,
+    ].filter(Boolean) as string[],
+  }
 }
 
 /**
@@ -36,8 +62,7 @@ export async function createSquareHostedPaymentLink(params: {
     throw new ApiError({
       statusCode: 503,
       code: 'SQUARE_NOT_CONFIGURED',
-      message:
-        'Payments are not configured on the server yet. Add Square sandbox credentials to continue.',
+      message: SQUARE_CHECKOUT_UNAVAILABLE_MESSAGE,
     })
   }
 

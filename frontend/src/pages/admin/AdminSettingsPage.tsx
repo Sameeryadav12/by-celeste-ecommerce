@@ -9,10 +9,11 @@ import {
 
 const EMPTY: AdminBusinessSettings = {
   businessDisplayName: 'By Celeste',
-  footerLocationWording: 'Leneva Victoria, Australia',
+  footerLocationWording: '10 Mortimer Tce, Leneva VIC 3691',
   footerSupportText:
     'For order questions, use the details on your confirmation or reach out through your account when signed in.',
-  facebookUrl: 'https://www.facebook.com',
+  facebookUrl: 'https://www.facebook.com/people/By-Celeste/100063829142451/',
+  instagramUrl: 'https://www.instagram.com/by_celeste1/',
   trustStripWording: 'Handcrafted in regional Victoria · Boutique Australian skincare',
   shippingMethodLabel: 'Flat rate shipping',
   shippingAmountDisplay: '$12.00',
@@ -119,10 +120,20 @@ export function AdminSettingsPage() {
               <input
                 value={form.facebookUrl}
                 onChange={(e) => setForm((p) => ({ ...p, facebookUrl: e.target.value }))}
+                placeholder="https://www.facebook.com/…"
                 className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-slate-900"
               />
             </Field>
-            <Field label="Footer trust wording">
+            <Field label="Instagram profile URL">
+              <input
+                value={form.instagramUrl}
+                onChange={(e) => setForm((p) => ({ ...p, instagramUrl: e.target.value }))}
+                placeholder="https://www.instagram.com/…"
+                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-slate-900"
+              />
+              <p className="mt-1 text-xs text-slate-500">Leave empty to hide Instagram in the footer.</p>
+            </Field>
+            <Field label="Footer trust wording" className="sm:col-span-2">
               <input
                 value={form.trustStripWording}
                 onChange={(e) => setForm((p) => ({ ...p, trustStripWording: e.target.value }))}

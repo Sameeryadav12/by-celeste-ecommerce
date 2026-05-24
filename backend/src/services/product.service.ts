@@ -1,5 +1,10 @@
 import { Prisma } from '@prisma/client'
 import { prisma } from '../config/prisma'
+import { toCsvRow } from '../utils/csv'
+import {
+  deleteManagedProductUpload,
+  replaceManagedProductImageIfNeeded,
+} from '../utils/productImageStorage'
 import { ApiError } from '../utils/apiError'
 import { slugify } from '../utils/slug'
 import { serializeProductForAdmin, serializeProductForPublic } from './catalog.serialize'
@@ -194,6 +199,75 @@ export async function listProductsAdmin(query: ListProductsQuery) {
   }
 }
 
+function wholesaleExportPrice(retail: Prisma.Decimal, wholesale: Prisma.Decimal | null): string {
+  if (wholesale != null) return wholesale.toFixed(2)
+  return retail.mul(new Prisma.Decimal('0.5')).toFixed(2)
+}
+
+export async function exportAdminProductsCsv(query: ListProductsQuery) {
+  const activeOnly = query.activeOnly !== false
+
+  const where: Prisma.ProductWhereInput = {}
+
+  if (activeOnly) {
+    where.isActive = true
+  }
+
+  if (query.featured === true) {
+    where.isFeatured = true
+  }
+
+  if (query.category?.trim()) {
+    const c = query.category.trim()
+    where.categories = {
+      some: {
+        OR: [{ slug: c }, { id: c }],
+        ...(activeOnly ? { isActive: true } : {}),
+      },
+    }
+  }
+
+  if (query.search?.trim()) {
+    where.name = { contains: query.search.trim(), mode: 'insensitive' }
+  }
+
+  const rows = await prisma.product.findMany({
+    where,
+    orderBy: orderByFromSort(query.sort),
+    take: 500,
+    include: {
+      categories: {
+        select: { name: true },
+        orderBy: { name: 'asc' },
+      },
+    },
+  })
+
+  const header = toCsvRow([
+    'Product name',
+    'Category',
+    'Retail price',
+    'Wholesale price',
+    'Stock',
+    'Status',
+    'Featured',
+  ])
+
+  const lines = rows.map((p) =>
+    toCsvRow([
+      p.name,
+      p.categories.map((c) => c.name).join('; '),
+      p.price.toFixed(2),
+      wholesaleExportPrice(p.price, p.wholesalePrice),
+      p.stockQuantity,
+      p.isActive ? 'Active' : 'Hidden',
+      p.isFeatured ? 'Yes' : 'No',
+    ]),
+  )
+
+  return [header, ...lines].join('\n')
+}
+
 export async function getProductBySlugPublic(slug: string, viewer: PricingViewer) {
   const product = await prisma.product.findFirst({
     where: { slug, isActive: true },
@@ -317,6 +391,11 @@ export async function updateProduct(id: string, input: ProductUpdateInput) {
     })
   }
 
+  if (input.imageUrl != null) {
+    const nextImageUrl = input.imageUrl.trim()
+    await replaceManagedProductImageIfNeeded(existing.imageUrl, nextImageUrl)
+  }
+
   const updated = await prisma.product.update({
     where: { id },
     data: {
@@ -398,4 +477,22 @@ export async function deactivateProduct(id: string) {
   })
 
   return serializeProductForAdmin(updated, { includeRelations: true })
+}
+
+/** Permanent delete: removes catalogue row. Order history keeps productId snapshots only. */
+export async function permanentlyDeleteProduct(id: string) {
+  const existing = await prisma.product.findUnique({ where: { id } })
+  if (!existing) {
+    throw new ApiError({
+      statusCode: 404,
+      code: 'PRODUCT_NOT_FOUND',
+      message: 'Product not found.',
+    })
+  }
+
+  const imageUrl = existing.imageUrl
+  await prisma.product.delete({ where: { id } })
+  await deleteManagedProductUpload(imageUrl)
+
+  return { id, name: existing.name }
 }

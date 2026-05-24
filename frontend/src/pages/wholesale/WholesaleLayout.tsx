@@ -1,5 +1,6 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { Link, NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext'
+import { useCart } from '../../features/cart/CartContext'
 import { WS_SECONDARY } from './wholesaleUi'
 
 type NavItem = {
@@ -35,6 +36,7 @@ function SidebarNavItem({ item }: { item: NavItem }) {
 
 export function WholesaleLayout() {
   const { user } = useAuth()
+  const { summary } = useCart()
 
   return (
     <div className="min-h-screen bg-neutral-50">
@@ -76,9 +78,14 @@ export function WholesaleLayout() {
                   Signed in as {user?.email ?? '—'}
                 </div>
               </div>
-              <a href="/" className={`${WS_SECONDARY} px-3 py-1.5 text-xs`}>
-                Back to store
-              </a>
+              <div className="flex flex-wrap items-center gap-2">
+                <Link to="/cart" className={`${WS_SECONDARY} px-3 py-1.5 text-xs`}>
+                  Cart{summary.itemCount > 0 ? ` (${summary.itemCount})` : ''}
+                </Link>
+                <a href="/" className={`${WS_SECONDARY} px-3 py-1.5 text-xs`}>
+                  Back to store
+                </a>
+              </div>
             </div>
           </header>
 

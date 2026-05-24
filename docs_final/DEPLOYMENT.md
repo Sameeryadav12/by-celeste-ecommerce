@@ -1,5 +1,7 @@
 # Deployment checklist (Vercel + Render + Postgres)
 
+> **Full guide:** [08-deployment.md](./08-deployment.md) (domain, Square, image storage, go-live).
+
 Use this when moving from local development to **Vercel (frontend)** and **Render (backend + Postgres)**. Nothing here runs automatically; it is a manual checklist.
 
 ## 1. Secrets & files
@@ -51,10 +53,10 @@ Run locally: `cd backend && npm run seed:demo-admin` (idempotent).
 
 | Account | Role | Portal |
 |---------|------|--------|
-| `admin@byceleste.com` / `Admin123!` | ADMIN | `/admin` |
-| `wholesale@byceleste.com` / `Wholesale123!` | WHOLESALE (approved) | `/wholesale` |
+| `admin@byceleste.com` | ADMIN | `/admin` |
+| `wholesale@byceleste.com` | WHOLESALE (approved) | `/wholesale` |
 
-Override emails/passwords with `DEMO_ADMIN_*` and `DEMO_WHOLESALE_*` env vars (see `backend/.env.example`). Retail customers use **Sign up** on the storefront; they cannot access `/admin` or full wholesale pricing until approved.
+Passwords are set via demo seed env vars — see `backend/.env.example` (comments only; do not commit real passwords). Retail customers use **Sign up** on the storefront; they cannot access `/admin` or full wholesale pricing until approved.
 
 ## 4. Frontend (Vercel)
 

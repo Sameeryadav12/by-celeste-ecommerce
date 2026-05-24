@@ -4,6 +4,7 @@ import { Button } from '../../components/ui/Button'
 import { Seo } from '../../components/seo/Seo'
 import { fetchMyOrders, type AccountOrderSummary } from '../../features/account/accountApi'
 import { OrderStatusBadge } from '../../features/account/components/OrderStatusBadge'
+import { formatOrderNumber } from '../../lib/orderNumber'
 import { PaymentStatusBadge } from '../../features/account/components/PaymentStatusBadge'
 import { formatAud } from '../../features/cart/money'
 import { Card } from '../../components/ui/Card'
@@ -17,10 +18,6 @@ function formatOrderDate(iso: string) {
   } catch {
     return iso
   }
-}
-
-function shortOrderId(id: string) {
-  return `#${id.slice(-8).toUpperCase()}`
 }
 
 export function WholesaleOrdersPage() {
@@ -156,8 +153,7 @@ export function WholesaleOrdersPage() {
                   {orders.map((o) => (
                     <tr key={o.id}>
                       <td className="px-5 py-4">
-                        <div className="font-medium text-neutral-900">{shortOrderId(o.id)}</div>
-                        <div className="mt-1 font-mono text-[11px] text-neutral-400">{o.id}</div>
+                        <div className="font-medium text-neutral-900">{formatOrderNumber(o.orderNumber)}</div>
                       </td>
                       <td className="px-5 py-4 text-neutral-600">{formatOrderDate(o.createdAt)}</td>
                       <td className="px-5 py-4 tabular-nums">{o.itemCount}</td>

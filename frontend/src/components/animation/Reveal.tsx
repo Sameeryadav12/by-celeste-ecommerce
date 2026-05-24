@@ -29,22 +29,42 @@ export function Reveal({
     const el = ref.current
     if (!el) return
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0]
-        if (!entry) return
-        if (entry.isIntersecting) {
-          setVisible(true)
-          if (once) observer.disconnect()
-        } else if (!once) {
-          setVisible(false)
-        }
-      },
-      { threshold, rootMargin },
-    )
+    let observer: IntersectionObserver | null = null
 
-    observer.observe(el)
-    return () => observer.disconnect()
+    const markVisibleIfInView = () => {
+      const rect = el.getBoundingClientRect()
+      const vh = window.innerHeight || document.documentElement.clientHeight
+      if (rect.top < vh && rect.bottom > 0) {
+        setVisible(true)
+        return true
+      }
+      return false
+    }
+
+    const raf = requestAnimationFrame(() => {
+      if (markVisibleIfInView() && once) return
+
+      observer = new IntersectionObserver(
+        (entries) => {
+          const entry = entries[0]
+          if (!entry) return
+          if (entry.isIntersecting) {
+            setVisible(true)
+            if (once) observer?.disconnect()
+          } else if (!once) {
+            setVisible(false)
+          }
+        },
+        { threshold, rootMargin },
+      )
+
+      observer.observe(el)
+    })
+
+    return () => {
+      cancelAnimationFrame(raf)
+      observer?.disconnect()
+    }
   }, [once, rootMargin, threshold])
 
   return (

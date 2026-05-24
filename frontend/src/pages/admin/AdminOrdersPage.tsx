@@ -4,9 +4,11 @@ import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { AdminTableSkeleton } from '../../features/admin/components/AdminTableSkeleton'
 import {
+  downloadAdminOrdersCsv,
   listAdminOrders,
   type AdminOrderListRow,
 } from '../../features/admin/adminApi'
+import { formatOrderNumber } from '../../lib/orderNumber'
 import { AdminStatusBadge } from './components/AdminStatusBadge'
 
 export function AdminOrdersPage() {
@@ -16,6 +18,8 @@ export function AdminOrdersPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [paymentFilter, setPaymentFilter] = useState('all')
+  const [exportBusy, setExportBusy] = useState(false)
+  const [exportError, setExportError] = useState<string | null>(null)
 
   async function loadOrders() {
     setLoading(true)
@@ -29,7 +33,8 @@ export function AdminOrdersPage() {
       })
       setOrders(data)
     } catch (e) {
-      setError('Could not load orders. Please try again.')
+      const msg = e instanceof Error ? e.message : 'Could not load orders.'
+      setError(msg.includes('load orders') ? msg : `Could not load orders. ${msg}`)
     } finally {
       setLoading(false)
     }
@@ -48,6 +53,22 @@ export function AdminOrdersPage() {
     () => search.trim() || statusFilter !== 'all' || paymentFilter !== 'all',
     [search, statusFilter, paymentFilter],
   )
+
+  async function handleExportCsv() {
+    setExportBusy(true)
+    setExportError(null)
+    try {
+      await downloadAdminOrdersCsv({
+        search: search.trim() || undefined,
+        status: statusFilter === 'all' ? undefined : statusFilter,
+        paymentStatus: paymentFilter === 'all' ? undefined : paymentFilter,
+      })
+    } catch (e) {
+      setExportError(e instanceof Error ? e.message : 'Could not export orders.')
+    } finally {
+      setExportBusy(false)
+    }
+  }
 
   return (
     <div className="space-y-5">
@@ -70,13 +91,29 @@ export function AdminOrdersPage() {
         </div>
       ) : null}
 
+      {exportError ? (
+        <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {exportError}
+        </div>
+      ) : null}
+
       <Card>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
             <h2 className="text-base font-semibold text-slate-900">Order list</h2>
             <p className="text-sm text-slate-500">Newest orders appear first. Use filters to narrow results.</p>
           </div>
-          <div className="grid w-full gap-2 sm:w-auto sm:grid-cols-3">
+          <Button
+            type="button"
+            variant="ghost"
+            loading={exportBusy}
+            disabled={exportBusy}
+            onClick={() => void handleExportCsv()}
+          >
+            Export CSV
+          </Button>
+        </div>
+        <div className="grid w-full gap-2 sm:grid-cols-3">
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -107,7 +144,6 @@ export function AdminOrdersPage() {
               <option value="FAILED">Failed</option>
               <option value="CANCELLED">Cancelled</option>
             </select>
-          </div>
         </div>
 
         {hasFilters ? <p className="mt-3 text-xs text-slate-500">Filters are applied to this list.</p> : null}
@@ -144,9 +180,8 @@ export function AdminOrdersPage() {
               <tbody className="divide-y divide-slate-100 bg-white text-sm text-slate-700">
                 {orders.map((o) => (
                   <tr key={o.id}>
-                    <td className="px-4 py-3">
-                      <p className="font-medium text-slate-900">{shortOrderId(o.id)}</p>
-                      <p className="text-xs text-slate-500">{o.id}</p>
+                    <td className="px-4 py-3 font-medium text-slate-900">
+                      {o.orderRef ?? formatOrderNumber(o.orderNumber)}
                     </td>
                     <td className="px-4 py-3">
                       <p className="font-medium text-slate-900">{formatCustomer(o)}</p>
@@ -177,10 +212,6 @@ export function AdminOrdersPage() {
       </Card>
     </div>
   )
-}
-
-function shortOrderId(id: string) {
-  return `#${id.slice(-8).toUpperCase()}`
 }
 
 function formatCurrency(value: string) {

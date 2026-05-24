@@ -39,6 +39,8 @@ This document describes **loyalty** and **wholesale** in plain English for Jane 
 
 - A **wholesale account** uses the **WHOLESALE** role and carries **approval status** separate from “customer vs admin”.  
 - **Retail customers** are unchanged: they never see wholesale-only language unless they are on the **Wholesale** information page.
+- **Approved wholesale pricing** is **50% off retail** on every product (calculated automatically at checkout and in the wholesale shop).
+- Wholesale accounts **purchase products only**; they cannot list or sell products on the website.
 
 ### How approval status works
 

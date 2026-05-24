@@ -11,6 +11,7 @@ export async function updateBusinessSettings(
     footerLocationWording: string
     footerSupportText: string
     facebookUrl: string
+    instagramUrl: string
     trustStripWording: string
     shippingMethodLabel: string
     shippingAmountDisplay: string

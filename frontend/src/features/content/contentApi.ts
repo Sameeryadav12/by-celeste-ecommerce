@@ -20,6 +20,7 @@ export type MarketingContent = {
   testimonialsSectionHeading: string
   testimonialsSectionSubheading: string
   facebookUrl: string
+  instagramUrl: string
   footerTrustWording: string
   updatedAt: string
 }
@@ -42,6 +43,7 @@ export type BusinessSettings = {
   footerLocationWording: string
   footerSupportText: string
   facebookUrl: string
+  instagramUrl: string
   trustStripWording: string
   shippingMethodLabel: string
   shippingAmountDisplay: string

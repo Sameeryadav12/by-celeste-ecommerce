@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchAdminSummary, type AdminSummary } from '../../features/admin/adminApi'
+import { getPolicyHandoverStatuses } from '../../config/policies'
 import { AdminSummaryCard } from './components/AdminSummaryCard'
 import { Card } from '../../components/ui/Card'
 
@@ -87,11 +88,95 @@ export function AdminDashboardPage() {
           />
           <AdminSummaryCard
             title="Wholesale"
-            value="\u2014"
-            subtitle="Pending applications"
+            value={summary?.pendingWholesaleApplications ?? 0}
+            subtitle={
+              (summary?.pendingWholesaleApplications ?? 0) === 0
+                ? 'No pending applications'
+                : 'Pending applications'
+            }
           />
         </div>
       )}
+
+      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+        <Card>
+          <h2 className="text-base font-semibold text-slate-900">Square readiness</h2>
+          {loading ? (
+            <p className="mt-2 text-sm text-slate-500">Loading…</p>
+          ) : (
+            <>
+              <p className="mt-2 text-sm text-slate-600">
+                Status:{' '}
+                <span className="font-medium text-slate-900">
+                  {summary?.square?.connected ? 'Connected' : 'Not connected'}
+                </span>
+              </p>
+              <p className="mt-2 text-sm text-slate-600">
+                {summary?.square?.connected
+                  ? 'Square payment setup detected.'
+                  : 'Square payment setup required before live payments.'}
+              </p>
+              {summary?.square?.missingEnv?.length ? (
+                <p className="mt-2 text-xs text-amber-800">
+                  Missing: {summary.square.missingEnv.join(', ')}
+                </p>
+              ) : null}
+            </>
+          )}
+        </Card>
+
+        <Card>
+          <h2 className="text-base font-semibold text-slate-900">Low stock</h2>
+          {loading ? (
+            <p className="mt-2 text-sm text-slate-500">Loading…</p>
+          ) : (summary?.lowStockProducts?.length ?? 0) > 0 ? (
+            <ul className="mt-3 space-y-2 text-sm">
+              {(summary?.lowStockProducts ?? []).map((p) => (
+                <li key={p.id} className="flex items-center justify-between gap-2">
+                  <span className="min-w-0 truncate text-slate-700">
+                    {p.name}{' '}
+                    <span className="text-slate-500">({p.stockQuantity} left)</span>
+                  </span>
+                  <Link
+                    to={`/admin/products/${p.id}/edit`}
+                    className="shrink-0 text-xs font-medium text-slate-900 underline"
+                  >
+                    Edit
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-2 text-sm text-slate-600">No low stock products.</p>
+          )}
+        </Card>
+
+        <Card>
+          <h2 className="text-base font-semibold text-slate-900">Policy status</h2>
+          <ul className="mt-3 space-y-2 text-sm">
+            {getPolicyHandoverStatuses().map((item) => (
+              <li key={item.slug} className="flex items-center justify-between gap-2">
+                <Link
+                  to={`/policies/${item.slug}`}
+                  className="text-slate-700 underline decoration-slate-300 underline-offset-2 hover:text-slate-900"
+                >
+                  {item.label}
+                </Link>
+                <span
+                  className={[
+                    'shrink-0 rounded-full px-2 py-0.5 text-xs font-medium',
+                    item.status === 'Ready'
+                      ? 'bg-emerald-50 text-emerald-700'
+                      : 'bg-amber-50 text-amber-800',
+                  ].join(' ')}
+                >
+                  {item.status}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>

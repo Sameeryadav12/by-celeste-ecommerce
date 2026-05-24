@@ -3,6 +3,7 @@ import type { AuthUser } from '../../auth/authTypes'
 
 export type AccountOrderSummary = {
   id: string
+  orderNumber: number
   createdAt: string
   status: string
   paymentStatus: string
@@ -12,6 +13,7 @@ export type AccountOrderSummary = {
 
 export type AccountOrderDetail = {
   id: string
+  orderNumber: number
   createdAt: string
   updatedAt: string
   status: string

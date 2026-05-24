@@ -1,4 +1,4 @@
-import { apiFetch } from '../lib/api'
+import { apiFetch, getApiBaseUrl } from '../lib/api'
 import type { AuthUser } from './authTypes'
 
 export type SignupInput = {
@@ -13,6 +13,38 @@ export type LoginInput = {
   password: string
 }
 
+export type LoginTotpInput = {
+  twoFactorToken: string
+  code: string
+}
+
+export type LoginResult =
+  | { user: AuthUser }
+  | { requiresTwoFactor: true; twoFactorToken: string }
+
+async function postAuthJson<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(`${getApiBaseUrl()}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+    credentials: 'include',
+  })
+  const contentType = res.headers.get('Content-Type') ?? ''
+  const isJson = contentType.includes('application/json')
+  const data = (isJson ? await res.json() : null) as
+    | { success: boolean; data?: unknown; error?: { code: string; message: string } }
+    | null
+
+  if (!res.ok || !data || data.success === false) {
+    const message =
+      data?.error?.message ||
+      'Something went wrong while talking to the server. Please try again.'
+    throw new Error(message)
+  }
+
+  return data.data as T
+}
+
 export async function signup(input: SignupInput): Promise<{ user: AuthUser }> {
   return apiFetch<{ user: AuthUser }, SignupInput>('/api/auth/signup', {
     method: 'POST',
@@ -23,13 +55,17 @@ export async function signup(input: SignupInput): Promise<{ user: AuthUser }> {
   })
 }
 
-export async function login(input: LoginInput): Promise<{ user: AuthUser }> {
-  return apiFetch<{ user: AuthUser }, LoginInput>('/api/auth/login', {
-    method: 'POST',
-    body: {
-      ...input,
-      email: input.email.trim().toLowerCase(),
-    },
+export async function login(input: LoginInput): Promise<LoginResult> {
+  return postAuthJson<LoginResult>('/api/auth/login', {
+    ...input,
+    email: input.email.trim().toLowerCase(),
+  })
+}
+
+export async function loginTotp(input: LoginTotpInput): Promise<{ user: AuthUser }> {
+  return postAuthJson<{ user: AuthUser }>('/api/auth/login/totp', {
+    twoFactorToken: input.twoFactorToken,
+    code: input.code.trim().replace(/\s+/g, ''),
   })
 }
 

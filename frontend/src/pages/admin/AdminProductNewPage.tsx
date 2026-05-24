@@ -17,8 +17,6 @@ export function AdminProductNewPage() {
         replace: true,
         state: { flash: 'Product created successfully.' },
       })
-    } catch (e) {
-      setSubmitError(e instanceof Error ? e.message : 'Could not create product.')
     } finally {
       setSubmitting(false)
     }

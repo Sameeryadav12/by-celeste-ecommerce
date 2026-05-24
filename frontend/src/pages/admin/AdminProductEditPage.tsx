@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { getAdminProduct, updateAdminProduct, type AdminProductDetail } from '../../features/admin/adminApi'
+import { Card } from '../../components/ui/Card'
+import { Button } from '../../components/ui/Button'
+import {
+  deleteAdminProduct,
+  getAdminProduct,
+  updateAdminProduct,
+  type AdminProductDetail,
+} from '../../features/admin/adminApi'
 import { AdminProductForm, productValuesFromDetail } from './components/AdminProductForm'
 
 export function AdminProductEditPage() {
@@ -11,6 +18,8 @@ export function AdminProductEditPage() {
   const [loadError, setLoadError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [dangerBusy, setDangerBusy] = useState(false)
+  const [dangerError, setDangerError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!id) return
@@ -44,10 +53,39 @@ export function AdminProductEditPage() {
         replace: true,
         state: { flash: 'Product updated successfully.' },
       })
-    } catch (e) {
-      setSubmitError(e instanceof Error ? e.message : 'Could not update product.')
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  async function handlePermanentDelete() {
+    if (!id || !product) return
+
+    const ok = window.confirm(
+      `Permanently delete "${product.name}"?\n\nOnly use this if the product was added by mistake. Order history keeps line snapshots but the catalogue row is removed.\n\nContinue?`,
+    )
+    if (!ok) return
+
+    const typed = window.prompt(
+      `Type the product name exactly to confirm permanent delete:\n\n${product.name}`,
+    )
+    if (typed?.trim() !== product.name) {
+      setDangerError('Delete cancelled — name did not match.')
+      return
+    }
+
+    setDangerBusy(true)
+    setDangerError(null)
+    try {
+      await deleteAdminProduct(id)
+      navigate('/admin/products', {
+        replace: true,
+        state: { flash: `"${product.name}" was permanently deleted.` },
+      })
+    } catch (e) {
+      setDangerError(e instanceof Error ? e.message : 'Could not delete product.')
+    } finally {
+      setDangerBusy(false)
     }
   }
 
@@ -85,7 +123,8 @@ export function AdminProductEditPage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Edit product</h1>
           <p className="mt-1 text-sm text-slate-500">
-            Update product details, pricing, stock, category links, and visibility.
+            Update details, upload images, pricing, and visibility. Use <strong>Hide</strong> on the
+            product list to remove from the shop without deleting.
           </p>
         </div>
         <Link
@@ -103,6 +142,27 @@ export function AdminProductEditPage() {
         submitError={submitError}
         onSubmit={handleUpdate}
       />
+
+      <Card className="!border-red-100 !bg-red-50/30">
+        <h2 className="text-sm font-semibold text-red-900">Advanced — permanent delete</h2>
+        <p className="mt-2 text-sm text-red-800/90">
+          Removes this product from the database. Prefer <strong>Hide</strong> on the product list so
+          past orders keep full product links. Image upload above still works for normal edits.
+        </p>
+        {dangerError ? (
+          <p className="mt-2 text-sm text-red-700">{dangerError}</p>
+        ) : null}
+        <Button
+          type="button"
+          variant="ghost"
+          className="mt-3 !border !border-red-300 !text-red-800 hover:!bg-red-100"
+          loading={dangerBusy}
+          disabled={dangerBusy}
+          onClick={() => void handlePermanentDelete()}
+        >
+          Permanently delete product
+        </Button>
+      </Card>
     </div>
   )
 }

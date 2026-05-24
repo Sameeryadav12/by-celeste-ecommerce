@@ -16,6 +16,7 @@ export async function updateMarketingContent(
     testimonialsSectionHeading: string
     testimonialsSectionSubheading: string
     facebookUrl: string
+    instagramUrl: string
     footerTrustWording: string
   }>,
 ) {

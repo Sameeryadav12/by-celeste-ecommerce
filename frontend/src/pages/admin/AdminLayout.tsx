@@ -42,6 +42,7 @@ const NAV_GROUPS = [
     items: [
       { to: '/admin/theme', label: 'Theme / Appearance', icon: 'theme' as const },
       { to: '/admin/settings', label: 'Settings', icon: 'settings' as const },
+      { to: '/admin/security', label: 'Security', icon: 'security' as const },
     ],
   },
 ] as const

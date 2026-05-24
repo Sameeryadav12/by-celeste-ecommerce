@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '../../../components/ui/Button'
 import { useCart } from '../CartContext'
+import type { CartPricingMode } from '../cartStorage'
 
 type CartProductInput = {
   productId: string
@@ -13,6 +14,7 @@ type CartProductInput = {
   stockQuantity: number
   categoryName?: string
   shortDescription?: string
+  pricingMode?: CartPricingMode
 }
 
 const SUCCESS_TOAST_MS = 2500

@@ -5,10 +5,17 @@ import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { fetchMyOrder, type AccountOrderDetail } from '../../features/account/accountApi'
 import { OrderStatusBadge } from '../../features/account/components/OrderStatusBadge'
+import { formatOrderNumber } from '../../lib/orderNumber'
 import { PaymentStatusBadge } from '../../features/account/components/PaymentStatusBadge'
 import { formatAud } from '../../features/cart/money'
+import { useAuth } from '../../auth/AuthContext'
 import { useCart } from '../../features/cart/CartContext'
 import { getProductBySlug } from '../../features/catalog/catalogApi'
+import {
+  effectiveWholesaleUnit,
+  isApprovedWholesaleUser,
+  normalizeWholesaleCatalogProduct,
+} from '../../features/wholesale/wholesalePricing'
 
 function formatOrderDate(iso: string) {
   try {
@@ -20,13 +27,11 @@ function formatOrderDate(iso: string) {
   }
 }
 
-function shortOrderId(id: string) {
-  return `#${id.slice(-8).toUpperCase()}`
-}
-
 export function WholesaleOrderDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { user } = useAuth()
+  const approved = isApprovedWholesaleUser(user)
   const { addItem } = useCart()
 
   const [order, setOrder] = useState<AccountOrderDetail | null>(null)
@@ -78,7 +83,7 @@ export function WholesaleOrderDetailPage() {
 
       results.forEach((res, index) => {
         if (res.status !== 'fulfilled') return
-        const p = res.value
+        const p = normalizeWholesaleCatalogProduct(res.value, approved)
         const line = order.items[index]
 
         addItem({
@@ -86,12 +91,13 @@ export function WholesaleOrderDetailPage() {
           slug: p.slug,
           name: p.name,
           imageUrl: p.imageUrl,
-          price: p.price, // viewer-based (wholesale when approved)
-          compareAtPrice: p.compareAtPrice,
+          price: effectiveWholesaleUnit(p, approved),
+          compareAtPrice: p.compareAtPrice ?? null,
           stockQuantity: p.stockQuantity,
           categoryName: p.categories[0]?.name,
           shortDescription: p.shortDescription,
           quantity: line.quantity,
+          pricingMode: approved ? 'wholesale' : undefined,
         })
       })
 
@@ -134,7 +140,7 @@ export function WholesaleOrderDetailPage() {
   return (
     <>
       <Seo
-        title={`Wholesale Order ${shortOrderId(order.id)} | By Celeste`}
+        title={`Wholesale Order ${formatOrderNumber(order.orderNumber)} | By Celeste`}
         description="Wholesale order details and reorder."
       />
 
@@ -148,9 +154,8 @@ export function WholesaleOrderDetailPage() {
               ← Back to orders
             </Link>
             <h1 className="mt-2 text-2xl font-semibold tracking-tight text-neutral-900">
-              Order {shortOrderId(order.id)}
+              Order {formatOrderNumber(order.orderNumber)}
             </h1>
-            <p className="mt-1 font-mono text-xs text-neutral-500">{order.id}</p>
             <p className="mt-1 text-sm text-neutral-600">{formatOrderDate(order.createdAt)}</p>
             <p className="mt-1 text-sm text-neutral-600">{itemCount} item(s)</p>
           </div>

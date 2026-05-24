@@ -27,6 +27,8 @@ export type CatalogProduct = {
   price: number
   /** Present when approved wholesale pricing applies — public retail unit for reference. */
   retailUnitPrice?: number
+  /** DB wholesale column when exposed for approved viewers. */
+  catalogWholesalePrice?: number
   isWholesalePrice: boolean
   compareAtPrice: number | null
   imageUrl: string

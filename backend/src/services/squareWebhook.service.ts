@@ -52,7 +52,7 @@ function mapOrderPaymentStatusFromSquare(squareStatus: string | undefined): Orde
 
 function mapOrderStatusFromSquare(squareStatus: string | undefined): OrderStatus | null {
   const s = squareStatus?.toUpperCase()
-  if (s === 'COMPLETED' || s === 'APPROVED') return OrderStatus.PAID
+  if (s === 'COMPLETED' || s === 'APPROVED') return OrderStatus.CONFIRMED
   if (s === 'FAILED') return OrderStatus.PAYMENT_FAILED
   if (s === 'CANCELED' || s === 'CANCELLED') return OrderStatus.CANCELLED
   return null
@@ -165,7 +165,10 @@ export async function processSquareWebhookRequest(params: {
       },
     })
 
-    if (orderStatus === OrderStatus.PAID && orderPaymentStatus === OrderPaymentStatus.PAID) {
+    const paidAndConfirmed =
+      orderPaymentStatus === OrderPaymentStatus.PAID &&
+      (orderStatus === OrderStatus.CONFIRMED || orderStatus === OrderStatus.PAID)
+    if (paidAndConfirmed) {
       await awardLoyaltyForPaidOrderIfEligible(orderId)
     }
   }

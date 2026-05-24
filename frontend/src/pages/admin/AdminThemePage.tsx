@@ -1,11 +1,65 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
+import { resolveMediaUrl } from '../../lib/mediaUrl'
 import {
   getAdminThemeSettings,
   updateAdminThemeSettings,
   type AdminThemeSettings,
 } from '../../features/admin/adminApi'
+
+function displayAssetPath(raw: string): string {
+  const t = raw.trim()
+  if (!t) return ''
+  try {
+    return decodeURIComponent(t)
+  } catch {
+    return t
+  }
+}
+
+function LogoPathField({
+  label,
+  value,
+  onChange,
+  placeholder,
+  hint,
+}: {
+  label: string
+  value: string
+  onChange: (next: string) => void
+  placeholder: string
+  hint: string
+}) {
+  const display = displayAssetPath(value)
+  const previewSrc = value.trim() ? resolveMediaUrl(value.trim()) : ''
+  const looksLikeImage = /\.(png|jpe?g|gif|webp|svg)(\?|$)/i.test(value.trim())
+
+  return (
+    <label className="space-y-1 text-sm sm:col-span-2">
+      <span className="block font-medium text-slate-800">{label}</span>
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 font-mono text-xs outline-none focus:ring-1 focus:ring-slate-900"
+      />
+      <p className="text-xs text-slate-500">{hint}</p>
+      {display ? (
+        <p className="text-xs text-slate-600">
+          File: <span className="font-medium text-slate-800">{display}</span>
+        </p>
+      ) : (
+        <p className="text-xs text-slate-500">Leave blank to use the default storefront logo.</p>
+      )}
+      {previewSrc && looksLikeImage ? (
+        <div className="mt-2 inline-flex rounded-lg border border-slate-200 bg-slate-50 p-3">
+          <img src={previewSrc} alt="" className="max-h-14 max-w-[200px] object-contain" />
+        </div>
+      ) : null}
+    </label>
+  )
+}
 
 const EMPTY: AdminThemeSettings = {
   primaryBrandColor: '#171717',
@@ -158,36 +212,31 @@ export function AdminThemePage() {
         <Card>
           <h2 className="text-base font-semibold text-slate-900">Brand assets and trust accents</h2>
           <p className="mt-1 text-xs text-slate-500">
-            Use safe path references for logos/icons. Upload management can be added later.
+            Enter a site path such as <span className="font-mono">/images/branding/Celeste logo.png</span>{' '}
+            (spaces are fine). Avoid pasting encoded URLs unless needed.
           </p>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <label className="space-y-1 text-sm">
-              <span className="block font-medium text-slate-800">Header logo path/reference</span>
-              <input
-                value={form.headerLogoPath}
-                onChange={(e) => setForm((p) => ({ ...p, headerLogoPath: e.target.value }))}
-                placeholder="/images/branding/Celeste%20logo.png"
-                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-slate-900"
-              />
-            </label>
-            <label className="space-y-1 text-sm">
-              <span className="block font-medium text-slate-800">Footer logo path/reference</span>
-              <input
-                value={form.footerLogoPath}
-                onChange={(e) => setForm((p) => ({ ...p, footerLogoPath: e.target.value }))}
-                placeholder="/images/branding/Celeste%20logo.png"
-                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-slate-900"
-              />
-            </label>
-            <label className="space-y-1 text-sm">
-              <span className="block font-medium text-slate-800">Trust badge icon path (optional)</span>
-              <input
-                value={form.trustBadgeIconPath}
-                onChange={(e) => setForm((p) => ({ ...p, trustBadgeIconPath: e.target.value }))}
-                placeholder="/icons/australian-made.svg"
-                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-slate-900"
-              />
-            </label>
+            <LogoPathField
+              label="Header logo"
+              value={form.headerLogoPath}
+              onChange={(headerLogoPath) => setForm((p) => ({ ...p, headerLogoPath }))}
+              placeholder="/images/branding/Celeste logo.png"
+              hint="Shown in the site header."
+            />
+            <LogoPathField
+              label="Footer logo"
+              value={form.footerLogoPath}
+              onChange={(footerLogoPath) => setForm((p) => ({ ...p, footerLogoPath }))}
+              placeholder="/images/branding/Celeste logo.png"
+              hint="Shown in the footer."
+            />
+            <LogoPathField
+              label="Trust badge icon (optional)"
+              value={form.trustBadgeIconPath}
+              onChange={(trustBadgeIconPath) => setForm((p) => ({ ...p, trustBadgeIconPath }))}
+              placeholder="/icons/australian-made.svg"
+              hint="Small icon beside the trust strip."
+            />
             <label className="space-y-1 text-sm">
               <span className="block font-medium text-slate-800">Trust badges heading</span>
               <input

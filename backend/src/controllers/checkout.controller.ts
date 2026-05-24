@@ -3,6 +3,22 @@ import { asyncHandler } from '../utils/asyncHandler'
 import { ApiError } from '../utils/apiError'
 import { createCheckoutSessionSchema } from '../services/checkout.validation'
 import { createCheckoutSession } from '../services/checkout.service'
+import {
+  getSquareSetupStatus,
+  SQUARE_CHECKOUT_UNAVAILABLE_MESSAGE,
+} from '../services/squareClient'
+
+export const getCheckoutReadiness = asyncHandler(async (_req: Request, res: Response) => {
+  const setup = getSquareSetupStatus()
+  res.json({
+    success: true,
+    data: {
+      checkoutAvailable: setup.checkoutReady,
+      message: setup.checkoutReady ? null : SQUARE_CHECKOUT_UNAVAILABLE_MESSAGE,
+      square: setup,
+    },
+  })
+})
 
 export const postCreateCheckoutSession = asyncHandler(async (req: Request, res: Response) => {
   const parsed = createCheckoutSessionSchema.safeParse(req.body)

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import { PasswordInput } from '../components/ui/PasswordInput'
 
 type FieldErrors = {
   firstName?: string
@@ -178,13 +179,11 @@ export function SignupPage() {
             <label htmlFor="password" className="text-sm font-medium text-neutral-800">
               Password
             </label>
-            <input
+            <PasswordInput
               id="password"
-              type="password"
               autoComplete="new-password"
-              className="block w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm outline-none transition focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900"
               value={password}
-              onChange={(event) => setPassword(event.target.value)}
+              onChange={setPassword}
             />
             {fieldErrors.password ? (
               <p className="text-xs text-red-600">{fieldErrors.password}</p>
@@ -199,13 +198,11 @@ export function SignupPage() {
             <label htmlFor="confirmPassword" className="text-sm font-medium text-neutral-800">
               Confirm password
             </label>
-            <input
+            <PasswordInput
               id="confirmPassword"
-              type="password"
               autoComplete="new-password"
-              className="block w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm outline-none transition focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900"
               value={confirmPassword}
-              onChange={(event) => setConfirmPassword(event.target.value)}
+              onChange={setConfirmPassword}
             />
             {fieldErrors.confirmPassword ? (
               <p className="text-xs text-red-600">{fieldErrors.confirmPassword}</p>

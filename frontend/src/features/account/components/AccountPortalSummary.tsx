@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import type { AuthUser } from '../../../auth/authTypes'
 import { WS_ACCOUNT_CARD } from '../../../pages/wholesale/wholesaleUi'
 
-type Mode = 'wholesale-approval' | 'customer-summary'
+type Mode = 'wholesale-approval' | 'wholesale-summary' | 'customer-summary'
 
 function ApprovalCardIcon({ status }: { status: AuthUser['wholesaleApprovalStatus'] }) {
   const wrap =
@@ -113,6 +113,52 @@ export function AccountPortalSummary({
   orderCount = 0,
   loyaltyBalance = 0,
 }: AccountPortalSummaryProps) {
+  if (mode === 'wholesale-summary') {
+    const status = user?.wholesaleApprovalStatus ?? 'NONE'
+    const pricingActive = status === 'APPROVED'
+    return (
+      <div className={WS_ACCOUNT_CARD}>
+        <div className="mb-3 flex items-center gap-3 border-b border-neutral-100 pb-3">
+          <ApprovalCardIcon status={status} />
+          <h2 className="text-[10px] font-bold uppercase tracking-[0.14em] text-neutral-400">Summary</h2>
+        </div>
+        {loading ? (
+          <p className="text-sm text-neutral-600">Loading…</p>
+        ) : (
+          <div>
+            <SummaryRow label="Account type">
+              <span className="text-neutral-950">Wholesale</span>
+            </SummaryRow>
+            <SummaryRow label="Approval">
+              <span className={`inline-flex rounded-full ${approvalBadgeTone(status)}`}>
+                {approvalBadgeDisplay(status)}
+              </span>
+            </SummaryRow>
+            <SummaryRow label="Total orders">
+              {orderCount === 0 ? (
+                <span className="font-medium text-neutral-500">None yet</span>
+              ) : (
+                <Link
+                  to="/wholesale/orders"
+                  className="font-semibold text-neutral-900 underline decoration-neutral-300 underline-offset-2 transition hover:text-neutral-950"
+                >
+                  {orderCount} {orderCount === 1 ? 'order' : 'orders'}
+                </Link>
+              )}
+            </SummaryRow>
+            <SummaryRow label="Wholesale pricing">
+              {pricingActive ? (
+                <span className="text-emerald-800">Active</span>
+              ) : (
+                <span className="font-medium text-neutral-500">Not active</span>
+              )}
+            </SummaryRow>
+          </div>
+        )}
+      </div>
+    )
+  }
+
   if (mode === 'wholesale-approval') {
     const status = user?.wholesaleApprovalStatus ?? 'NONE'
     return (

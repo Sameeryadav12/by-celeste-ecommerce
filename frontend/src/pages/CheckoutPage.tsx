@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
@@ -7,7 +7,7 @@ import { useCart } from '../features/cart/CartContext'
 import { CartSummaryCard } from '../features/cart/components/CartSummaryCard'
 import { formatAud } from '../features/cart/money'
 import { calculateShipping } from '../features/cart/shippingRules'
-import { createCheckoutSession } from '../features/checkout/checkoutApi'
+import { createCheckoutSession, fetchCheckoutReadiness } from '../features/checkout/checkoutApi'
 import { Seo } from '../components/seo/Seo'
 
 const AU_STATES = ['NSW', 'VIC', 'QLD', 'WA', 'SA', 'TAS', 'ACT', 'NT'] as const
@@ -51,6 +51,21 @@ export function CheckoutPage() {
   const [errors, setErrors] = useState<FormErrors>({})
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [paymentBlockedMessage, setPaymentBlockedMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    fetchCheckoutReadiness()
+      .then((r) => {
+        if (!cancelled) setPaymentBlockedMessage(r.checkoutAvailable ? null : r.message)
+      })
+      .catch(() => {
+        if (!cancelled) setPaymentBlockedMessage(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   if (items.length === 0) {
     return (
@@ -134,6 +149,10 @@ export function CheckoutPage() {
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
+    if (paymentBlockedMessage) {
+      setSubmitError(paymentBlockedMessage)
+      return
+    }
     const ok = validate()
     if (!ok) {
       setSubmitError(null)
@@ -182,6 +201,12 @@ export function CheckoutPage() {
           Square&apos;s secure hosted checkout — we never collect card numbers on this site.
         </p>
       </div>
+
+      {paymentBlockedMessage ? (
+        <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+          {paymentBlockedMessage}
+        </div>
+      ) : null}
 
       <div className="grid gap-4 lg:grid-cols-[2fr,1fr]">
         <form onSubmit={handleSubmit} noValidate>
@@ -296,7 +321,11 @@ export function CheckoutPage() {
             ) : null}
 
             <div className="mt-5">
-              <Button type="submit" className="w-full sm:w-auto" disabled={submitting}>
+              <Button
+                type="submit"
+                className="w-full sm:w-auto"
+                disabled={submitting || Boolean(paymentBlockedMessage)}
+              >
                 {submitting ? 'Starting secure checkout…' : 'Continue to Secure Payment'}
               </Button>
             </div>

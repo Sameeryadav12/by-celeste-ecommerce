@@ -5,6 +5,7 @@ import { Card } from '../components/ui/Card'
 import { fetchMyOrder, type AccountOrderDetail } from '../features/account/accountApi'
 import { OrderStatusBadge } from '../features/account/components/OrderStatusBadge'
 import { PaymentStatusBadge } from '../features/account/components/PaymentStatusBadge'
+import { formatOrderNumber } from '../lib/orderNumber'
 import { formatAud } from '../features/cart/money'
 
 function formatOrderDate(iso: string) {
@@ -87,7 +88,7 @@ export function AccountOrderDetailPage() {
             ← Back to account
           </Link>
           <h1 className="mt-2 text-2xl font-semibold tracking-tight text-neutral-900">Order details</h1>
-          <p className="mt-1 font-mono text-xs text-neutral-500">{order.id}</p>
+          <p className="mt-1 text-sm font-medium text-neutral-800">{formatOrderNumber(order.orderNumber)}</p>
           <p className="mt-1 text-sm text-neutral-600">{formatOrderDate(order.createdAt)}</p>
         </div>
         <div className="flex flex-wrap gap-2">

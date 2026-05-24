@@ -17,7 +17,15 @@ async function ensureUniqueIngredientSlug(base: string, excludeId?: string) {
 
 export async function listIngredientsPublic() {
   const rows = await prisma.ingredient.findMany({
+    where: { isActive: true },
     orderBy: { name: 'asc' },
+  })
+  return rows.map(serializeIngredient)
+}
+
+export async function listIngredientsAdmin() {
+  const rows = await prisma.ingredient.findMany({
+    orderBy: [{ isActive: 'desc' }, { name: 'asc' }],
   })
   return rows.map(serializeIngredient)
 }
@@ -63,19 +71,31 @@ export async function updateIngredient(id: string, input: IngredientUpdateInput)
       ...(input.benefits !== undefined
         ? { benefits: input.benefits === null ? null : input.benefits.trim() }
         : {}),
+      ...(input.isActive !== undefined ? { isActive: input.isActive } : {}),
     },
   })
 
   return serializeIngredient(updated)
 }
 
-/** Soft delete for catalog hygiene: hide from default ingredient list by flag if we add isActive later.
- *  For now ingredients have no isActive — we use hard delete only if no products link, else noop error.
- *  Spec asked soft optional — ingredients lack isActive in schema. I'll add isActive to Ingredient? 
- *  User schema only has: id, name, slug, description, benefits, createdAt, updatedAt — no isActive for ingredient.
- *  So DELETE ingredient: hard delete will CASCADE remove join rows. If product links exist, CASCADE removes links only from join - actually ON DELETE CASCADE on join table removes the link when ingredient deleted, not the product. So hard delete ingredient is OK - products remain, just unlinked.
- *  I'll implement hard delete for ingredient.
- */
+export async function deactivateIngredient(id: string) {
+  const existing = await prisma.ingredient.findUnique({ where: { id } })
+  if (!existing) {
+    throw new ApiError({
+      statusCode: 404,
+      code: 'INGREDIENT_NOT_FOUND',
+      message: 'Ingredient not found.',
+    })
+  }
+
+  const updated = await prisma.ingredient.update({
+    where: { id },
+    data: { isActive: false },
+  })
+  return serializeIngredient(updated)
+}
+
+/** Permanent removal — unlinks from products via join table; product rows are kept. */
 export async function deleteIngredient(id: string) {
   const existing = await prisma.ingredient.findUnique({ where: { id } })
   if (!existing) {

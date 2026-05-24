@@ -19,6 +19,7 @@ export async function listOrdersForUser(userId: string) {
     orderBy: { createdAt: 'desc' },
     select: {
       id: true,
+      orderNumber: true,
       createdAt: true,
       status: true,
       paymentStatus: true,
@@ -33,6 +34,7 @@ export async function listOrdersForUser(userId: string) {
 
   return orders.map((o) => ({
     id: o.id,
+    orderNumber: o.orderNumber,
     createdAt: o.createdAt.toISOString(),
     status: o.status,
     paymentStatus: o.paymentStatus,
@@ -70,6 +72,7 @@ export async function getOrderDetailForUser(userId: string, orderId: string) {
 
   return {
     id: order.id,
+    orderNumber: order.orderNumber,
     createdAt: order.createdAt.toISOString(),
     updatedAt: order.updatedAt.toISOString(),
     status: order.status,

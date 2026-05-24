@@ -17,13 +17,14 @@ export type SafeUser = Pick<
   | 'businessName'
   | 'abn'
   | 'approvedAt'
+  | 'totpEnabled'
   | 'createdAt'
   | 'updatedAt'
 >
 
 function toSafeUser(user: User): SafeUser {
-  // Never return passwordHash to the client
-  const { passwordHash: _pw, ...safe } = user
+  // Never return passwordHash or TOTP secret material to the client
+  const { passwordHash: _pw, totpSecretEncrypted: _ts, ...safe } = user
   return safe
 }
 
@@ -120,7 +121,10 @@ export async function createWholesaleApplicationUser(input: {
   return toSafeUser(user)
 }
 
-export async function authenticateUser(input: { email: string; password: string }) {
+export async function authenticateUser(input: { email: string; password: string }): Promise<{
+  user: SafeUser
+  totpLoginRequired: boolean
+}> {
   const user = await prisma.user.findUnique({ where: { email: input.email } })
   if (!user) {
     throw new ApiError({
@@ -153,7 +157,10 @@ export async function authenticateUser(input: { email: string; password: string 
     select: { id: true },
   })
 
-  return toSafeUser(user)
+  const totpLoginRequired =
+    user.role === 'ADMIN' && user.totpEnabled === true && Boolean(user.totpSecretEncrypted)
+
+  return { user: toSafeUser(user), totpLoginRequired }
 }
 
 export async function getSafeUserById(userId: string) {

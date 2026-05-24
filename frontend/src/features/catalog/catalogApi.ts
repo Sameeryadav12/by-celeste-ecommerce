@@ -18,6 +18,7 @@ type ApiListProductsResponse = {
     benefits: string[]
     price: string
     retailUnitPrice?: string
+    catalogWholesalePrice?: string | null
     isWholesalePrice?: boolean
     compareAtPrice: string | null
     imageUrl: string
@@ -43,6 +44,7 @@ type ApiProductDetailResponse = {
     benefits: string[]
     price: string
     retailUnitPrice?: string
+    catalogWholesalePrice?: string | null
     isWholesalePrice?: boolean
     compareAtPrice: string | null
     imageUrl: string

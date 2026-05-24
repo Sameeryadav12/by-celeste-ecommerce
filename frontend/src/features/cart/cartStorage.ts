@@ -1,6 +1,9 @@
 import type { CartItem } from './cartTypes'
 
 const STORAGE_KEY = 'by_celeste_cart_v1'
+const META_KEY = 'by_celeste_cart_meta_v1'
+
+export type CartPricingMode = 'retail' | 'wholesale'
 
 export function loadCartFromStorage(): CartItem[] {
   if (typeof window === 'undefined') return []
@@ -34,3 +37,21 @@ export function saveCartToStorage(items: CartItem[]) {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
 }
 
+export function loadCartPricingMode(): CartPricingMode | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = window.localStorage.getItem(META_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as { pricingMode?: CartPricingMode }
+    return parsed.pricingMode === 'wholesale' || parsed.pricingMode === 'retail'
+      ? parsed.pricingMode
+      : null
+  } catch {
+    return null
+  }
+}
+
+export function saveCartPricingMode(mode: CartPricingMode) {
+  if (typeof window === 'undefined') return
+  window.localStorage.setItem(META_KEY, JSON.stringify({ pricingMode: mode }))
+}

@@ -83,7 +83,15 @@ Only signed-in customers can see this page. If someone is not signed in and trie
 4. **Customer views their basic account area** — They can see their key details and know they are signed in.  
 5. **Customer signs out safely** — They use the Sign out button, which clears the session cookie.
 
+## Optional: admin two-factor authentication (TOTP)
+
+**Administrator** accounts may turn on **optional** second-factor sign-in using an **authenticator app** (standard TOTP codes, for example Google Authenticator). **SMS is not used.** Customers and wholesale users are not required to use this today.
+
+- After password verification, if 2FA is enabled the login API returns a pending step; the user enters a **6-digit code** before receiving a normal session cookie.
+- Setup and disable are done from the **Admin → Security** page while signed in.
+
+For endpoints, environment variables, and operational notes, see **[28-admin-totp-security.md](./28-admin-totp-security.md)**.
+
 ## Optional: first admin user (not public signup)
 
 A **one-time script** can create a single **admin** user using values from the server environment. This is separate from customer signup and is meant for trusted setup only. See `backend` run instructions and `.env.example` for `ADMIN_BOOTSTRAP_*` variables.
-

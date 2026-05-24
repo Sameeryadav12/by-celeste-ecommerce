@@ -29,6 +29,15 @@ export type CreateCheckoutSessionResponse = {
   }
 }
 
+export type CheckoutReadiness = {
+  checkoutAvailable: boolean
+  message: string | null
+}
+
+export function fetchCheckoutReadiness() {
+  return apiFetch<CheckoutReadiness>('/api/checkout/readiness', { method: 'GET' })
+}
+
 export function createCheckoutSession(body: CreateCheckoutSessionBody) {
   return apiFetch<CreateCheckoutSessionResponse>('/api/checkout/create-session', {
     method: 'POST',
@@ -38,6 +47,8 @@ export function createCheckoutSession(body: CreateCheckoutSessionBody) {
 
 export type OrderStatusResponse = {
   orderId: string
+  orderNumber: number
+  orderRef: string
   status: string
   paymentStatus: string
   totalAmount: string

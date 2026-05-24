@@ -21,8 +21,12 @@ async function main() {
     console.log('[seed:local] Writing default testimonials + marketing/theme/business to data/content/content.json …')
     await resetLocalContentFileToDefaults()
     // eslint-disable-next-line no-console
-    console.log('[seed:local] Seeding categories, ingredients, products …')
-    await runSeedCatalog()
+    try {
+      console.log('[seed:local] Seeding categories, ingredients, products …')
+      await runSeedCatalog()
+    } catch (catalogErr) {
+      console.warn('[seed:local] Catalog seed skipped (products may already exist):', catalogErr)
+    }
     // eslint-disable-next-line no-console
     console.log('[seed:local] Seeding events …')
     await runSeedEvents()
@@ -30,6 +34,12 @@ async function main() {
     console.log('[seed:local] Seeding demo admin + approved wholesale users …')
     await runAdminSeed()
     await runWholesaleDemoSeed()
+    const { runBackfillOrderNumbers } = await import('./backfillOrderNumbers')
+    await runBackfillOrderNumbers()
+    const { runDemoPaidOrderSeed } = await import('./seedDemoPaidOrder')
+    // eslint-disable-next-line no-console
+    console.log('[seed:local] Ensuring one demo paid order …')
+    await runDemoPaidOrderSeed()
     // eslint-disable-next-line no-console
     console.log('[seed:local] Finished.')
   } finally {

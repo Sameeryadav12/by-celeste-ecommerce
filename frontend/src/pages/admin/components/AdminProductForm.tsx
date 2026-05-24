@@ -1,11 +1,14 @@
-import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Button } from '../../../components/ui/Button'
 import { Card } from '../../../components/ui/Card'
 import {
   listAllCategories,
   listIngredients,
+  uploadAdminProductImage,
   type AdminProductDetail,
 } from '../../../features/admin/adminApi'
+import { ApiRequestError, fieldErrorsFromApi } from '../../../lib/apiErrors'
+import { resolveMediaUrl } from '../../../lib/mediaUrl'
 
 export type ProductFormValues = {
   name: string
@@ -118,6 +121,14 @@ export function AdminProductForm({
   const [ingredients, setIngredients] = useState<OptionIngredient[]>([])
   const [loadingMeta, setLoadingMeta] = useState(true)
   const [metaError, setMetaError] = useState<string | null>(null)
+  const [uploadFile, setUploadFile] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [uploadSuccess, setUploadSuccess] = useState<string | null>(null)
+  const [previewFailed, setPreviewFailed] = useState(false)
+  const [manualUrlOpen, setManualUrlOpen] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     setValues(initialValues)
@@ -150,16 +161,93 @@ export function AdminProductForm({
   const imagePreviewUrl = useMemo(() => {
     const v = values.imageUrl.trim()
     if (!v || !isValidUrl(v)) return null
-    return v
+    return resolveMediaUrl(v)
   }, [values.imageUrl])
+
+  useEffect(() => {
+    setPreviewFailed(false)
+  }, [imagePreviewUrl])
+
+  useEffect(() => {
+    const v = initialValues.imageUrl.trim()
+    if (v && (v.startsWith('http') || !v.startsWith('/uploads/products/'))) {
+      setManualUrlOpen(true)
+    }
+  }, [initialValues.imageUrl])
+
+  const ALLOWED_UPLOAD_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+  const MAX_UPLOAD_BYTES = 5 * 1024 * 1024
+
+  function validateUploadFile(file: File): string | null {
+    if (!ALLOWED_UPLOAD_TYPES.includes(file.type)) {
+      return 'Only JPG, PNG, or WebP images are allowed.'
+    }
+    if (file.size > MAX_UPLOAD_BYTES) {
+      return 'Image must be 5MB or smaller.'
+    }
+    return null
+  }
+
+  async function handleImageUpload() {
+    setUploadError(null)
+    setUploadSuccess(null)
+    if (!uploadFile) {
+      setUploadError('Choose an image file first.')
+      return
+    }
+    const validation = validateUploadFile(uploadFile)
+    if (validation) {
+      setUploadError(validation)
+      return
+    }
+    setUploading(true)
+    try {
+      const previousUrl = values.imageUrl.trim()
+      const replaceImageUrl = previousUrl.startsWith('/uploads/products/')
+        ? previousUrl
+        : undefined
+      const { imageUrl } = await uploadAdminProductImage(uploadFile, { replaceImageUrl })
+      setValues((p) => ({ ...p, imageUrl }))
+      setErrors((prev) => {
+        const next = { ...prev }
+        delete next.imageUrl
+        return next
+      })
+      setPreviewFailed(false)
+      setUploadSuccess('Image uploaded and ready to save.')
+      setUploadFile(null)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    } catch (e) {
+      setUploadError(e instanceof Error ? e.message : 'Upload failed.')
+    } finally {
+      setUploading(false)
+    }
+  }
 
   function validate(nextValues: ProductFormValues): ProductFormErrors {
     const nextErrors: ProductFormErrors = {}
 
-    if (!nextValues.name.trim()) nextErrors.name = 'Name is required.'
-    if (!nextValues.shortDescription.trim()) nextErrors.shortDescription = 'Short description is required.'
-    if (!nextValues.description.trim()) nextErrors.description = 'Description is required.'
-    if (!nextValues.howToUse.trim()) nextErrors.howToUse = 'How to use is required.'
+    const name = nextValues.name.trim()
+    if (!name) nextErrors.name = 'Name is required.'
+    else if (name.length < 2) nextErrors.name = 'Name must be at least 2 characters.'
+
+    const shortDescription = nextValues.shortDescription.trim()
+    if (!shortDescription) nextErrors.shortDescription = 'Short description is required.'
+    else if (shortDescription.length < 10) {
+      nextErrors.shortDescription = 'Short description must be at least 10 characters.'
+    }
+
+    const description = nextValues.description.trim()
+    if (!description) nextErrors.description = 'Description is required.'
+    else if (description.length < 20) {
+      nextErrors.description = 'Description must be at least 20 characters.'
+    }
+
+    const howToUse = nextValues.howToUse.trim()
+    if (!howToUse) nextErrors.howToUse = 'How to use is required.'
+    else if (howToUse.length < 10) {
+      nextErrors.howToUse = 'How to use must be at least 10 characters.'
+    }
 
     const price = Number(nextValues.price)
     if (!nextValues.price.trim()) {
@@ -195,9 +283,9 @@ export function AdminProductForm({
 
     const image = nextValues.imageUrl.trim()
     if (!image) {
-      nextErrors.imageUrl = 'Image URL is required.'
+      nextErrors.imageUrl = 'Add a product image by uploading or pasting a URL.'
     } else if (!isValidUrl(image)) {
-      nextErrors.imageUrl = 'Use a valid URL (https://...) or a root path (/images/...).'
+      nextErrors.imageUrl = 'Use a valid URL (https://...) or a path like /uploads/products/....'
     }
 
     return nextErrors
@@ -205,11 +293,15 @@ export function AdminProductForm({
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
+    setSaveError(null)
     const nextErrors = validate(values)
     setErrors(nextErrors)
-    if (Object.keys(nextErrors).length > 0) return
+    if (Object.keys(nextErrors).length > 0) {
+      setSaveError('Please fix the highlighted fields below.')
+      return
+    }
 
-    await onSubmit({
+    const payload: ProductFormPayload = {
       name: values.name.trim(),
       slug: values.slug.trim() || undefined,
       shortDescription: values.shortDescription.trim(),
@@ -224,14 +316,35 @@ export function AdminProductForm({
       ingredientIds: values.ingredientIds,
       isFeatured: values.isFeatured,
       isActive: values.isActive,
-    })
+    }
+
+    try {
+      await onSubmit(payload)
+    } catch (err) {
+      const apiFields = fieldErrorsFromApi(err instanceof ApiRequestError ? err.details : undefined)
+      if (apiFields) {
+        const mapped: ProductFormErrors = {}
+        const keys = Object.keys(apiFields) as (keyof ProductFormValues)[]
+        for (const key of keys) {
+          if (key in values && apiFields[key]) {
+            mapped[key as keyof ProductFormErrors] = apiFields[key]
+          }
+        }
+        setErrors(mapped)
+        setSaveError('Please fix the highlighted fields below.')
+        return
+      }
+      setSaveError(err instanceof Error ? err.message : 'Could not save product.')
+    }
   }
+
+  const bannerError = saveError ?? submitError
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {submitError ? (
+      {bannerError ? (
         <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {submitError}
+          {bannerError}
         </div>
       ) : null}
       {metaError ? (
@@ -269,6 +382,7 @@ export function AdminProductForm({
               onChange={(e) => setValues((p) => ({ ...p, shortDescription: e.target.value }))}
               className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-slate-900"
             />
+            <p className="mt-1 text-xs text-slate-500">At least 10 characters.</p>
           </Field>
         </div>
       </Card>
@@ -293,7 +407,7 @@ export function AdminProductForm({
               className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-slate-900"
             />
             <p className="mt-1 text-xs text-slate-500">
-              Leave blank if this product has no wholesale price.
+              Leave blank to use 50% of retail (default wholesale rule).
             </p>
           </Field>
           <Field label="Compare-at price (optional)" error={errors.compareAtPrice}>
@@ -318,30 +432,110 @@ export function AdminProductForm({
 
       <Card>
         <h2 className="text-base font-semibold text-slate-900">Product details</h2>
-        <p className="mt-1 text-xs text-slate-500">Manage image URL, full details, and usage instructions.</p>
+        <p className="mt-1 text-xs text-slate-500">Product image, full details, and usage instructions.</p>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <Field label="Image URL" error={errors.imageUrl} required className="sm:col-span-2">
-            <input
-              value={values.imageUrl}
-              onChange={(e) => setValues((p) => ({ ...p, imageUrl: e.target.value }))}
-              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-slate-900"
-            />
-          </Field>
-          {imagePreviewUrl ? (
-            <div className="sm:col-span-2">
-              <p className="mb-2 text-xs text-slate-500">Image preview</p>
-              <div className="inline-flex overflow-hidden rounded-md border border-slate-200 bg-white">
-                <img
-                  src={imagePreviewUrl}
-                  alt="Product preview"
-                  className="h-24 w-24 object-cover"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none'
+          <div className="sm:col-span-2">
+            <p className="text-sm font-medium text-slate-800">
+              Product image <span className="text-red-600">*</span>
+            </p>
+            <p className="mt-0.5 text-xs text-slate-500">Upload an image or paste an image URL.</p>
+
+            <div className="mt-3 rounded-md border border-dashed border-slate-300 bg-slate-50 p-3">
+              <p className="text-xs font-medium text-slate-700">Upload image</p>
+              <p className="mt-0.5 text-xs text-slate-500">
+                JPG, PNG, or WebP — max 5MB. Saved as optimized WebP (up to 1200px wide).
+              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+                  className="max-w-full text-xs text-slate-700 file:mr-2 file:rounded-md file:border-0 file:bg-slate-200 file:px-2 file:py-1 file:text-xs file:font-medium"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] ?? null
+                    setUploadFile(file)
+                    setUploadError(null)
+                    setUploadSuccess(null)
+                    if (file) {
+                      const msg = validateUploadFile(file)
+                      if (msg) setUploadError(msg)
+                    }
                   }}
                 />
+                <Button
+                  type="button"
+                  loading={uploading}
+                  disabled={uploading || !uploadFile}
+                  onClick={() => void handleImageUpload()}
+                >
+                  {uploading ? 'Uploading…' : 'Upload'}
+                </Button>
               </div>
+              {uploadError ? (
+                <p className="mt-2 text-xs text-red-600" role="alert">
+                  {uploadError}
+                </p>
+              ) : null}
+              {uploadSuccess ? (
+                <p className="mt-2 text-xs text-emerald-700" role="status">
+                  {uploadSuccess}
+                </p>
+              ) : null}
             </div>
-          ) : null}
+
+            {imagePreviewUrl ? (
+              <div className="mt-3">
+                <p className="mb-2 text-xs text-slate-500">Preview</p>
+                {previewFailed ? (
+                  <p className="text-sm text-slate-500">Image preview unavailable</p>
+                ) : (
+                  <div className="inline-flex overflow-hidden rounded-md border border-slate-200 bg-white">
+                    <img
+                      src={imagePreviewUrl}
+                      alt="Product preview"
+                      className="h-32 w-32 object-cover"
+                      onError={() => setPreviewFailed(true)}
+                    />
+                  </div>
+                )}
+              </div>
+            ) : null}
+
+            <details
+              className="mt-3 rounded-md border border-slate-200 bg-white"
+              open={manualUrlOpen}
+              onToggle={(e) => setManualUrlOpen(e.currentTarget.open)}
+            >
+              <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-slate-600">
+                Advanced: paste image URL
+              </summary>
+              <div className="border-t border-slate-100 px-3 py-2">
+                <input
+                  value={values.imageUrl}
+                  onChange={(e) => {
+                    const next = e.target.value
+                    setValues((p) => ({ ...p, imageUrl: next }))
+                    setPreviewFailed(false)
+                    if (next.trim() && isValidUrl(next.trim())) {
+                      setErrors((prev) => {
+                        const copy = { ...prev }
+                        delete copy.imageUrl
+                        return copy
+                      })
+                    }
+                  }}
+                  placeholder="/uploads/products/… or https://…"
+                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs outline-none focus:ring-1 focus:ring-slate-900"
+                />
+              </div>
+            </details>
+
+            {errors.imageUrl ? (
+              <p className="mt-2 text-xs text-red-600" role="alert">
+                {errors.imageUrl}
+              </p>
+            ) : null}
+          </div>
           <Field label="Description" error={errors.description} required className="sm:col-span-2">
             <textarea
               rows={4}
@@ -349,6 +543,7 @@ export function AdminProductForm({
               onChange={(e) => setValues((p) => ({ ...p, description: e.target.value }))}
               className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-slate-900"
             />
+            <p className="mt-1 text-xs text-slate-500">At least 20 characters.</p>
           </Field>
           <Field label="How to use" error={errors.howToUse} required className="sm:col-span-2">
             <textarea
@@ -357,6 +552,7 @@ export function AdminProductForm({
               onChange={(e) => setValues((p) => ({ ...p, howToUse: e.target.value }))}
               className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-slate-900"
             />
+            <p className="mt-1 text-xs text-slate-500">At least 10 characters.</p>
           </Field>
         </div>
       </Card>

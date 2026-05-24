@@ -1,9 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../../auth/AuthContext'
 import { getProducts } from '../../features/catalog/catalogApi'
 import type { CatalogProduct } from '../../features/catalog/catalogTypes'
 import { useCart } from '../../features/cart/CartContext'
 import { formatAud } from '../../features/cart/money'
+import {
+  effectiveWholesaleUnit,
+  isApprovedWholesaleUser,
+  normalizeWholesaleCatalogProduct,
+} from '../../features/wholesale/wholesalePricing'
+import { WholesaleUnitPrice } from '../../features/wholesale/components/WholesaleUnitPrice'
+import { WholesaleProductPreview } from './components/WholesaleProductPreview'
+import { WholesalePricingNote } from './components/WholesalePricingNote'
+import { WholesaleSupportCard } from './components/WholesaleSupportCard'
 import { WS_PRIMARY, WS_SECONDARY, WS_SECONDARY_SM } from './wholesaleUi'
 
 function BulkListEmptyIcon() {
@@ -35,28 +45,32 @@ function newLineId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
 }
 
-function productToCartPayload(p: CatalogProduct) {
+function productToCartPayload(p: CatalogProduct, approved: boolean, quantity: number) {
+  const normalized = normalizeWholesaleCatalogProduct(p, approved)
+  const unit = effectiveWholesaleUnit(normalized, approved)
   return {
-    productId: p.id,
-    slug: p.slug,
-    name: p.name,
-    imageUrl: p.imageUrl,
-    price: p.price,
-    compareAtPrice: p.compareAtPrice,
-    stockQuantity: p.stockQuantity,
-    categoryName: p.categories[0]?.name,
-    shortDescription: p.shortDescription,
+    productId: normalized.id,
+    slug: normalized.slug,
+    name: normalized.name,
+    imageUrl: normalized.imageUrl,
+    price: unit,
+    compareAtPrice: normalized.compareAtPrice ?? null,
+    stockQuantity: normalized.stockQuantity,
+    categoryName: normalized.categories[0]?.name,
+    shortDescription: normalized.shortDescription,
+    quantity,
+    pricingMode: approved ? ('wholesale' as const) : undefined,
   }
 }
 
-async function fetchAllProducts(signal: AbortSignal): Promise<CatalogProduct[]> {
+async function fetchAllProducts(signal: AbortSignal, approved: boolean): Promise<CatalogProduct[]> {
   const first = await getProducts({ page: 1, limit: 100, sort: 'name_asc' }, signal)
   const acc = [...first.products]
   for (let page = 2; page <= first.pagination.totalPages; page += 1) {
     const res = await getProducts({ page, limit: 100, sort: 'name_asc' }, signal)
     acc.push(...res.products)
   }
-  return acc
+  return acc.map((p) => normalizeWholesaleCatalogProduct(p, approved))
 }
 
 function findProductByCsvName(products: CatalogProduct[], rawName: string): CatalogProduct | null {
@@ -92,7 +106,9 @@ function parseCsv(text: string): Array<{ productName: string; quantity: number; 
 }
 
 export function WholesaleBulkOrdersPage() {
-  const { addItem } = useCart()
+  const { user } = useAuth()
+  const approved = isApprovedWholesaleUser(user)
+  const { addManyItems, summary } = useCart()
   const [products, setProducts] = useState<CatalogProduct[]>([])
   const [loadingProducts, setLoadingProducts] = useState(true)
   const [productsError, setProductsError] = useState<string | null>(null)
@@ -109,7 +125,7 @@ export function WholesaleBulkOrdersPage() {
     const ac = new AbortController()
     setLoadingProducts(true)
     setProductsError(null)
-    fetchAllProducts(ac.signal)
+    fetchAllProducts(ac.signal, approved)
       .then(setProducts)
       .catch((e) => {
         if (e instanceof Error && e.name === 'AbortError') return
@@ -117,9 +133,21 @@ export function WholesaleBulkOrdersPage() {
       })
       .finally(() => setLoadingProducts(false))
     return () => ac.abort()
-  }, [])
+  }, [approved])
 
   const productById = useMemo(() => new Map(products.map((p) => [p.id, p])), [products])
+  const selectedProduct = selectedId ? productById.get(selectedId) : undefined
+
+  const bulkTotals = useMemo(() => {
+    let totalQty = 0
+    let totalAmount = 0
+    for (const line of lines) {
+      const unit = effectiveWholesaleUnit(line.product, approved)
+      totalQty += line.quantity
+      totalAmount += line.quantity * unit
+    }
+    return { totalQty, totalAmount }
+  }, [lines, approved])
 
   const clearBanners = useCallback(() => {
     setErrorBanner(null)
@@ -139,17 +167,18 @@ export function WholesaleBulkOrdersPage() {
       setErrorBanner('Enter a quantity of at least 1.')
       return
     }
+    const normalized = normalizeWholesaleCatalogProduct(p, approved)
     setLines((prev) => {
-      const idx = prev.findIndex((l) => l.product.id === p.id)
+      const idx = prev.findIndex((l) => l.product.id === normalized.id)
       if (idx >= 0) {
         const next = [...prev]
         next[idx] = { ...next[idx], quantity: next[idx].quantity + qty }
         return next
       }
-      return [...prev, { id: newLineId(), product: p, quantity: qty }]
+      return [...prev, { id: newLineId(), product: normalized, quantity: qty }]
     })
     setQtyInput('1')
-  }, [clearBanners, productById, selectedId, qtyInput])
+  }, [approved, clearBanners, productById, selectedId, qtyInput])
 
   const removeLine = useCallback((id: string) => {
     setLines((prev) => prev.filter((l) => l.id !== id))
@@ -188,7 +217,11 @@ export function WholesaleBulkOrdersPage() {
             rowErrors.push(`Line ${row.lineNo}: no product match for "${row.productName}".`)
             continue
           }
-          additions.push({ id: newLineId(), product: p, quantity: row.quantity })
+          additions.push({
+            id: newLineId(),
+            product: normalizeWholesaleCatalogProduct(p, approved),
+            quantity: row.quantity,
+          })
         }
         if (additions.length === 0) {
           setErrorBanner(rowErrors.slice(0, 8).join(' ') || 'No valid rows in CSV.')
@@ -214,7 +247,7 @@ export function WholesaleBulkOrdersPage() {
       reader.readAsText(file)
       if (inputEl) inputEl.value = ''
     },
-    [clearBanners, products],
+    [approved, clearBanners, products],
   )
 
   const addAllToCart = useCallback(() => {
@@ -223,29 +256,42 @@ export function WholesaleBulkOrdersPage() {
       setErrorBanner('Add products to the list first.')
       return
     }
+    if (!approved) {
+      setErrorBanner('Wholesale pricing requires an approved wholesale account.')
+      return
+    }
+
     const warnings: string[] = []
-    const errors: string[] = []
-    let added = 0
+    const payloads: ReturnType<typeof productToCartPayload>[] = []
+
     for (const line of lines) {
-      const p = line.product
+      const p = normalizeWholesaleCatalogProduct(line.product, true)
       const cap = Math.max(0, p.stockQuantity)
       if (cap <= 0) {
-        errors.push(`${p.name}: out of stock.`)
+        warnings.push(`${p.name}: out of stock.`)
         continue
       }
       const q = Math.min(line.quantity, cap)
       if (q < line.quantity) {
         warnings.push(`${p.name}: list ${line.quantity} → cart ${q} (stock cap).`)
       }
-      const payload = productToCartPayload(p)
-      const { added: ok, message } = addItem({ ...payload, quantity: q })
-      if (ok) added += 1
-      else errors.push(`${p.name}: ${message}`)
+      payloads.push(productToCartPayload(p, true, q))
     }
-    if (added > 0) {
-      setSuccessBanner(`Added ${added} line(s) to your cart. Open cart to review.`)
+
+    if (payloads.length === 0) {
+      setErrorBanner(warnings.join(' ') || 'No lines could be added.')
+      return
+    }
+
+    const { addedCount, errors } = addManyItems(payloads)
+
+    if (addedCount > 0) {
+      const itemQty = payloads.reduce((s, p) => s + p.quantity, 0)
+      setSuccessBanner(
+        `Added ${addedCount} line(s) to your cart (${itemQty} items). Use View cart below.`,
+      )
       setLines([])
-      window.setTimeout(() => setSuccessBanner(null), 6000)
+      window.setTimeout(() => setSuccessBanner(null), 8000)
     }
     if (warnings.length) {
       setWarningBanner(warnings.slice(0, 8).join(' '))
@@ -254,7 +300,10 @@ export function WholesaleBulkOrdersPage() {
     if (errors.length) {
       setErrorBanner(errors.slice(0, 8).join(' '))
     }
-  }, [addItem, clearBanners, lines])
+    if (addedCount === 0 && !errors.length && warnings.length) {
+      setErrorBanner('No items were added. Check stock levels.')
+    }
+  }, [addManyItems, approved, clearBanners, lines])
 
   return (
     <div className="space-y-5">
@@ -266,10 +315,9 @@ export function WholesaleBulkOrdersPage() {
         <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-700">
           Order large quantities quickly using bulk tools
         </p>
-        <p className="mt-2 max-w-2xl text-xs leading-5 text-neutral-600">
-          Build a list below, then use Add all to cart. Each line is capped at live stock the same way as
-          the rest of checkout.
-        </p>
+        <div className="mt-3 max-w-2xl">
+          <WholesalePricingNote />
+        </div>
       </div>
 
       {successBanner ? (
@@ -295,8 +343,8 @@ export function WholesaleBulkOrdersPage() {
         ) : productsError ? (
           <p className="mt-3 text-sm text-red-700">{productsError}</p>
         ) : (
-          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-            <label className="block min-w-[200px] flex-1 text-sm">
+          <div className="mt-4 max-w-xl">
+            <label className="block text-sm">
               <span className="text-xs font-medium uppercase tracking-wide text-neutral-500">Product</span>
               <select
                 value={selectedId}
@@ -311,20 +359,27 @@ export function WholesaleBulkOrdersPage() {
                 ))}
               </select>
             </label>
-            <label className="block w-full max-w-[160px] text-sm">
-              <span className="text-xs font-medium uppercase tracking-wide text-neutral-500">Quantity</span>
-              <input
-                type="number"
-                min={1}
-                step={1}
-                value={qtyInput}
-                onChange={(e) => setQtyInput(e.target.value)}
-                className="mt-1 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 tabular-nums"
-              />
-            </label>
-            <button type="button" onClick={addLineFromForm} className={WS_PRIMARY}>
-              Add
-            </button>
+            {selectedProduct ? (
+              <WholesaleProductPreview product={selectedProduct} approved={approved} />
+            ) : null}
+            <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+              <label className="block w-full max-w-[160px] text-sm">
+                <span className="text-xs font-medium uppercase tracking-wide text-neutral-500">
+                  Quantity
+                </span>
+                <input
+                  type="number"
+                  min={1}
+                  step={1}
+                  value={qtyInput}
+                  onChange={(e) => setQtyInput(e.target.value)}
+                  className="mt-1 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 tabular-nums"
+                />
+              </label>
+              <button type="button" onClick={addLineFromForm} className={WS_PRIMARY}>
+                Add
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -372,39 +427,67 @@ Desert Lime Cream Cleanser,12`}
           </div>
         ) : (
           <ul className="mt-4 divide-y divide-neutral-100">
-            {lines.map((line) => (
-              <li
-                key={line.id}
-                className="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0"
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="font-medium text-neutral-900">{line.product.name}</div>
-                  <div className="text-xs text-neutral-500">
-                    {formatAud(line.product.price)} each · stock {line.product.stockQuantity}
-                    {line.quantity > line.product.stockQuantity ? (
-                      <span className="ml-1 font-medium text-amber-800">
-                        · cart caps at {line.product.stockQuantity}
+            {lines.map((line) => {
+              const unit = effectiveWholesaleUnit(line.product, approved)
+              const lineTotal = line.quantity * unit
+              return (
+                <li
+                  key={line.id}
+                  className="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium text-neutral-900">{line.product.name}</div>
+                    <div className="mt-0.5">
+                      <WholesaleUnitPrice product={line.product} approved={approved} listStyle />
+                      <p className="mt-1 text-xs font-medium text-neutral-800">
+                        Qty {line.quantity} × {formatAud(unit)} = {formatAud(lineTotal)}
+                      </p>
+                      <span className="mt-0.5 block text-xs text-neutral-500">
+                        stock {line.product.stockQuantity}
+                        {line.quantity > line.product.stockQuantity ? (
+                          <span className="ml-1 font-medium text-amber-800">
+                            · cart caps at {line.product.stockQuantity}
+                          </span>
+                        ) : null}
                       </span>
-                    ) : null}
+                    </div>
                   </div>
-                </div>
-                <div className="tabular-nums text-sm font-medium text-neutral-800">Qty {line.quantity}</div>
-                <button type="button" onClick={() => removeLine(line.id)} className={WS_SECONDARY_SM}>
-                  Remove
-                </button>
-              </li>
-            ))}
+                  <button type="button" onClick={() => removeLine(line.id)} className={WS_SECONDARY_SM}>
+                    Remove
+                  </button>
+                </li>
+              )
+            })}
           </ul>
         )}
 
         {lines.length > 0 ? (
-          <div className="mt-6 border-t border-neutral-100 pt-4">
-            <Link to="/cart" className={WS_SECONDARY}>
-              View cart
-            </Link>
+          <div className="mt-6 space-y-3 border-t border-neutral-200 pt-4">
+            <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm">
+              <div className="flex flex-wrap justify-between gap-2">
+                <span className="text-neutral-600">Total quantity</span>
+                <span className="font-semibold tabular-nums text-neutral-900">{bulkTotals.totalQty}</span>
+              </div>
+              <div className="mt-1 flex flex-wrap justify-between gap-2">
+                <span className="text-neutral-600">Wholesale total</span>
+                <span className="font-semibold tabular-nums text-neutral-900">
+                  {formatAud(bulkTotals.totalAmount)}
+                </span>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <Link to="/cart" className={WS_SECONDARY}>
+                View cart{summary.itemCount > 0 ? ` (${summary.itemCount})` : ''}
+              </Link>
+              {summary.itemCount === 0 ? (
+                <span className="text-xs text-neutral-500">Add items to cart first.</span>
+              ) : null}
+            </div>
           </div>
         ) : null}
       </div>
+
+      <WholesaleSupportCard />
     </div>
   )
 }

@@ -3,6 +3,7 @@ import { Seo } from '../components/seo/Seo'
 import { Card } from '../components/ui/Card'
 import { SmartImage } from '../components/media/SmartImage'
 import { Reveal } from '../components/animation/Reveal'
+import { BUSINESS_DETAILS } from '../config/businessDetails'
 
 const ABOUT_HERO_IMAGE = '/images/about/about-product-autumn.png'
 
@@ -74,6 +75,29 @@ export function AboutPage() {
             <p className="mt-2 text-sm leading-relaxed text-neutral-700">
               We do not test on animals. Explore ingredients on each product page and shop with
               confidence.
+            </p>
+          </Card>
+        </Reveal>
+
+        <Reveal>
+          <Card>
+            <h2 className="text-sm font-semibold text-neutral-900">Contact</h2>
+            <p className="mt-2 text-sm leading-relaxed text-neutral-700">
+              {BUSINESS_DETAILS.name} · {BUSINESS_DETAILS.abnDisplay}
+              <br />
+              {BUSINESS_DETAILS.addressLine}
+            </p>
+            <p className="mt-3 text-sm text-neutral-700">
+              <a
+                href={`mailto:${BUSINESS_DETAILS.supportEmail}`}
+                className="font-medium text-neutral-900 underline underline-offset-2"
+              >
+                {BUSINESS_DETAILS.supportEmail}
+              </a>
+              <br />
+              <a href={`tel:${BUSINESS_DETAILS.phoneTel}`} className="text-neutral-800">
+                {BUSINESS_DETAILS.phone}
+              </a>
             </p>
           </Card>
         </Reveal>

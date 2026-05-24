@@ -14,6 +14,20 @@ function resolveApiBaseUrl(): string {
 
 const API_BASE_URL = resolveApiBaseUrl()
 
+/** Same-origin `/api` in dev, or `VITE_API_BASE_URL` in production builds. */
+export function getApiBaseUrl(): string {
+  return API_BASE_URL
+}
+
+/** API path for browser requests. Dev always uses same-origin `/api` (Vite proxy). */
+export function buildApiUrl(path: string): string {
+  const normalized = path.startsWith('/') ? path : `/${path}`
+  if (import.meta.env.DEV) return normalized
+  return API_BASE_URL ? `${API_BASE_URL}${normalized}` : normalized
+}
+
+import { ApiRequestError } from './apiErrors'
+
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
 export async function apiFetch<TResponse, TBody = unknown>(
@@ -46,10 +60,14 @@ export async function apiFetch<TResponse, TBody = unknown>(
     | null
 
   if (!res.ok || !data || data.success === false) {
+    const err = data?.error
     const message =
-      data?.error?.message ||
-      'Something went wrong while talking to the server. Please try again.'
-    throw new Error(message)
+      err?.message || 'Something went wrong while talking to the server. Please try again.'
+    throw new ApiRequestError({
+      code: err?.code ?? 'REQUEST_FAILED',
+      message,
+      details: err?.details as ApiRequestError['details'],
+    })
   }
 
   return data.data as TResponse
