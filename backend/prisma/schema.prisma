@@ -55,10 +55,28 @@ model User {
 
   orders              Order[]
   loyaltyTransactions LoyaltyTransaction[]
+  passwordResetTokens PasswordResetToken[]
 
   @@index([role])
   @@index([createdAt])
   @@index([wholesaleApprovalStatus])
+}
+
+/// One-time password reset tokens. The plaintext token is emailed/logged; only the SHA-256 hash
+/// is stored in the DB. Tokens expire after 60 minutes and can be used at most once.
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// SHA-256 hex digest of the random token. The plaintext token is never stored.
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 enum LoyaltyTransactionType {
@@ -136,6 +154,12 @@ model Order {
   shippingAmount  Decimal @db.Decimal(12, 2)
   totalAmount     Decimal @db.Decimal(12, 2)
 
+  /// Coupon snapshot applied at checkout (revalidated server-side). Discount is taken off the
+  /// subtotal before shipping is added, so `totalAmount = (subtotal - discountAmount) + shipping`.
+  couponCode          String?
+  discountPercentage  Int?
+  discountAmount      Decimal @default(0) @db.Decimal(12, 2)
+
   status        OrderStatus        @default(PENDING)
   paymentStatus OrderPaymentStatus @default(UNPAID)
 
@@ -148,6 +172,7 @@ model Order {
   items               OrderItem[]
   payments            OrderPayment[]
   loyaltyTransactions LoyaltyTransaction[]
+  couponUsages        DiscountCouponUsage[]
 
   @@index([userId])
   @@index([email])
@@ -261,6 +286,57 @@ model Product {
   @@index([isFeatured])
   @@index([name])
   @@index([shopSortOrder])
+}
+
+/// Percentage-only discount coupons. Codes are uppercase (`BIRTHDAY20`) and unique.
+/// Discount is applied to the **subtotal** before shipping; shipping always stays flat $12.
+model DiscountCoupon {
+  id String @id @default(cuid())
+
+  /// Uppercase code (e.g. BIRTHDAY20). Always normalised before save.
+  code       String  @unique
+  /// Whole-number percent, 1..100.
+  percentage Int
+  isActive   Boolean @default(true)
+
+  appliesToCustomers Boolean @default(true)
+  appliesToWholesale Boolean @default(false)
+
+  startsAt          DateTime?
+  endsAt            DateTime?
+  totalUsageLimit   Int?
+  perCustomerLimit  Int?      @default(1)
+  usedCount         Int       @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  usages DiscountCouponUsage[]
+
+  @@index([isActive])
+  @@index([endsAt])
+}
+
+/// One row per successful coupon redemption — used to enforce per-customer limits.
+/// `userId` is preferred; `email` is the fallback for guest orders.
+model DiscountCouponUsage {
+  id       String @id @default(cuid())
+  couponId String
+  coupon   DiscountCoupon @relation(fields: [couponId], references: [id], onDelete: Cascade)
+
+  userId String?
+  email  String?
+
+  orderId String?
+  order   Order?  @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@unique([couponId, orderId])
+  @@index([couponId])
+  @@index([userId])
+  @@index([email])
+  @@index([orderId])
 }
 
 /// Public-facing brand events: pop-ups, community events, and seasonal moments.

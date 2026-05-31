@@ -213,7 +213,7 @@ export function AdminDashboardPage() {
           <h2 className="text-base font-semibold text-slate-900">Admin portal status</h2>
           <p className="mt-2 text-sm text-slate-500">
             The admin portal is now integrated for catalogue, sales, wholesale moderation, content,
-            and business settings. Customer management remains the next planned module.
+            and business settings. Customer management is now available.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             {[
@@ -223,7 +223,7 @@ export function AdminDashboardPage() {
               { label: 'Orders', ready: true },
               { label: 'Events', ready: true },
               { label: 'Wholesale', ready: true },
-              { label: 'Customers', ready: false },
+              { label: 'Customers', ready: true },
               { label: 'Testimonials', ready: true },
               { label: 'Marketing', ready: true },
               { label: 'Theme', ready: true },

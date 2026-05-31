@@ -28,6 +28,8 @@ import { contentPublicRouter } from '../routes/content.public.routes'
 import { adminContentRouter } from '../routes/admin.content.routes'
 import { adminSecurityRouter } from '../routes/admin.security.routes'
 import { adminUploadRouter } from '../routes/admin.upload.routes'
+import { adminDiscountsRouter } from '../routes/admin.discounts.routes'
+import { discountsPublicRouter } from '../routes/discounts.public.routes'
 import {
   adminEventImageUpload,
   adminProductImageUpload,
@@ -102,6 +104,7 @@ export function createApp() {
   app.use('/api/events', eventsPublicRouter)
   app.use('/api/testimonials', testimonialsRouter)
   app.use('/api/content', contentPublicRouter)
+  app.use('/api/discounts', discountsPublicRouter)
 
   // Single /api/admin app � Express 5 can fail to fall through when multiple
   // `app.use('/api/admin', router)` stacks handle the same prefix.
@@ -144,6 +147,7 @@ export function createApp() {
   adminApi.use('/orders', adminOrdersRouter)
   adminApi.use('/customers', adminCustomersRouter)
   adminApi.use('/wholesale', adminWholesaleRouter)
+  adminApi.use('/discounts', adminDiscountsRouter)
   adminApi.use(adminCatalogRouter)
   adminApi.use(adminSummaryRouter)
   app.use('/api/admin', adminApi)

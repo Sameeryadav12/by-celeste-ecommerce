@@ -205,6 +205,15 @@ export function LoginPage() {
               ) : null}
             </div>
 
+            <div className="-mt-1 text-right">
+              <Link
+                to="/forgot-password"
+                className="text-xs font-medium text-neutral-600 underline-offset-4 hover:text-neutral-900 hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
+
             <button
               type="submit"
               disabled={isSubmitting}

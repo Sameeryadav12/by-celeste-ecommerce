@@ -88,6 +88,14 @@ export const createCheckoutSessionSchema = z
       .max(1000, 'Notes must be 1000 characters or fewer.')
       .optional()
       .transform((v) => (v === '' ? undefined : v)),
+
+    couponCode: z
+      .string()
+      .trim()
+      .toUpperCase()
+      .transform((v) => v.replace(/\s+/g, ''))
+      .optional()
+      .transform((v) => (v === '' ? undefined : v)),
   })
   .strict()
 

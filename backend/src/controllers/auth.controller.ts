@@ -8,9 +8,26 @@ import {
   createWholesaleApplicationUser,
   getSafeUserById,
 } from '../services/auth.service'
-import { loginSchema, signupSchema, loginTotpSchema } from '../services/auth.validation'
+import {
+  forgotPasswordSchema,
+  loginSchema,
+  loginTotpSchema,
+  resetPasswordSchema,
+  signupSchema,
+} from '../services/auth.validation'
 import { verifyAdminTotpForLogin } from '../services/adminTotp.service'
 import { wholesaleApplySchema } from '../services/wholesaleApply.validation'
+import {
+  consumePasswordResetToken,
+  createPasswordResetForEmail,
+  FORGOT_PASSWORD_SAFE_MESSAGE,
+} from '../services/passwordReset.service'
+import {
+  isMailConfigured,
+  sendPasswordResetEmail,
+  sendWholesaleApplicationAlert,
+} from '../services/mail.service'
+import { env } from '../config/env'
 
 export const wholesaleApply = asyncHandler(async (req: Request, res: Response) => {
   const parsed = wholesaleApplySchema.safeParse(req.body)
@@ -26,6 +43,16 @@ export const wholesaleApply = asyncHandler(async (req: Request, res: Response) =
   const user = await createWholesaleApplicationUser(parsed.data)
   const token = signAccessToken({ sub: user.id, email: user.email, role: user.role })
   setAuthCookie(res, token)
+
+  // Best-effort admin alert — never block the application if the SMTP call fails.
+  void sendWholesaleApplicationAlert({
+    applicantName: `${parsed.data.firstName} ${parsed.data.lastName}`,
+    applicantEmail: parsed.data.email,
+    businessName: parsed.data.businessName,
+    abn: parsed.data.abn ?? null,
+    notes: parsed.data.wholesaleNotes ?? null,
+    adminReviewUrl: `${env.FRONTEND_PUBLIC_URL?.replace(/\/+$/, '') ?? ''}/admin/wholesale/${user.id}`,
+  })
 
   res.status(201).json({ success: true, data: { user } })
 })
@@ -123,6 +150,61 @@ export const loginTotp = asyncHandler(async (req: Request, res: Response) => {
 export const logout = asyncHandler(async (_req: Request, res: Response) => {
   clearAuthCookie(res)
   res.status(200).json({ success: true, data: { message: 'Logged out.' } })
+})
+
+export const forgotPassword = asyncHandler(async (req: Request, res: Response) => {
+  const parsed = forgotPasswordSchema.safeParse(req.body)
+  if (!parsed.success) {
+    throw new ApiError({
+      statusCode: 400,
+      code: 'VALIDATION_ERROR',
+      message: 'Please enter a valid email address.',
+      details: parsed.error.flatten(),
+    })
+  }
+
+  const { delivered, resetUrl } = await createPasswordResetForEmail(parsed.data.email)
+
+  if (delivered && resetUrl) {
+    if (isMailConfigured()) {
+      await sendPasswordResetEmail({
+        to: parsed.data.email,
+        resetUrl,
+        ttlMinutes: env.PASSWORD_RESET_TOKEN_TTL_MIN,
+      })
+    } else if (env.NODE_ENV !== 'production') {
+      // No SMTP yet — log the link to the backend console so the flow is still testable locally.
+      // eslint-disable-next-line no-console
+      console.log(`[passwordReset] Reset link for ${parsed.data.email}: ${resetUrl}`)
+    }
+  }
+
+  res.status(200).json({
+    success: true,
+    data: { message: FORGOT_PASSWORD_SAFE_MESSAGE },
+  })
+})
+
+export const resetPassword = asyncHandler(async (req: Request, res: Response) => {
+  const parsed = resetPasswordSchema.safeParse(req.body)
+  if (!parsed.success) {
+    throw new ApiError({
+      statusCode: 400,
+      code: 'VALIDATION_ERROR',
+      message: 'Please check the password requirements and try again.',
+      details: parsed.error.flatten(),
+    })
+  }
+
+  await consumePasswordResetToken({
+    token: parsed.data.token,
+    newPassword: parsed.data.newPassword,
+  })
+
+  res.status(200).json({
+    success: true,
+    data: { message: 'Your password has been updated. You can now log in with your new password.' },
+  })
 })
 
 export const me = asyncHandler(async (req: Request, res: Response) => {

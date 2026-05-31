@@ -94,6 +94,63 @@ Order numbers look like **BC-1000**, **BC-1001**, etc.
 
 ---
 
+## Discount coupons
+
+Manage all coupons under **Admin → Discounts**.
+
+| Field | Meaning |
+|-------|---------|
+| Coupon code | Customer-typed code (auto-uppercased, e.g. `birthday20` → `BIRTHDAY20`) |
+| Discount percentage | Whole number 1–100, e.g. `20` for 20% off |
+| Applies to customers | Tick to allow retail customers to use this code |
+| Applies to wholesale | Tick to also allow approved wholesale accounts to use this code |
+| Start / end date | Optional window when the code is valid |
+| Total usage limit | Optional cap on how many times the code can be redeemed in total |
+| Per customer limit | Default `1` — one redemption per customer (uses account id or email) |
+| Active | Untick to switch the code off without deleting it |
+
+Rules:
+
+- The discount is applied to the **cart subtotal** **before** the flat **$12** shipping fee.
+- Wholesale already pays 50% of retail. A coupon only works for wholesale accounts when *Applies to wholesale* is ticked. Otherwise the customer sees: *“This coupon is not available for wholesale orders.”*
+- Coupon usage is only recorded once the order is paid (Square webhook). Cancelled or failed payments do not consume a coupon.
+- A coupon you **deactivate** stops working immediately for new orders; previously paid orders keep their discount on record.
+
+### Demo coupon
+
+After running `npm run seed:local` (or `npm run seed:discount-coupons`), the following demo coupon exists:
+
+| Code | Percent | Audience | Per customer | Total limit |
+|------|---------|----------|--------------|-------------|
+| `BIRTHDAY20` | 20% | Customers | 1 | 200 |
+
+Use it in the cart to verify the discount line and updated total.
+
+---
+
+## Emails (Brevo SMTP)
+
+By Celeste uses **Brevo** (Sendinblue) to send transactional emails:
+
+| When | Who receives it | Subject |
+|------|----------------|---------|
+| Customer clicks **Forgot password** | The customer | *Reset your By Celeste password* |
+| Visitor submits a wholesale application | `ADMIN_NOTIFICATION_EMAIL` | *New wholesale application - By Celeste* |
+| Order is paid for the first time | `ADMIN_NOTIFICATION_EMAIL` | *New order received - BC-XXXX* |
+
+The mailbox at `ADMIN_NOTIFICATION_EMAIL` is the operational inbox for Jane / the team. Set it on Render alongside the SMTP credentials.
+
+What Jane needs to do once:
+
+1. Create a Brevo account and verify the sender (`MAIL_FROM_EMAIL`, e.g. `hello@byceleste.com.au`).
+2. Generate an SMTP key under **Settings → SMTP & API → SMTP**.
+3. Provide the SMTP login + key to the developer to paste into Render env vars.
+4. Optional but recommended before launch: add SPF/DKIM for `byceleste.com.au` in Brevo so emails go to inbox, not spam.
+
+If SMTP is not configured yet, the password reset still works — the link is printed in the backend console (developer use only) and the public message stays the same: *"If an account exists for this email, a reset link will be sent."*
+
+---
+
 ## Square payments
 
 - Until Square is connected, checkout shows: *Online payment is not connected yet. Please contact By Celeste.*
@@ -105,7 +162,7 @@ Order numbers look like **BC-1000**, **BC-1001**, etc.
 ## Still needed before go-live
 
 1. Square production setup and one real test payment  
-2. Domain **www.byceleste.com** pointed to live hosting  
+2. Domain **www.byceleste.com.au** pointed to live hosting  
 3. Final product photos (if not all uploaded yet)  
 4. Final policy / legal wording on policy pages  
 5. Agreed launch date  
@@ -121,7 +178,7 @@ Order numbers look like **BC-1000**, **BC-1001**, etc.
 | Support email | jane.byceleste@gmail.com |
 | Phone | 0403 823 357 (About page and wholesale support only) |
 | Address | 10 Mortimer Tce, Leneva VIC 3691 |
-| Website | www.byceleste.com |
+| Website | www.byceleste.com.au |
 
 Footer shows name, ABN, address, email, and website — not phone (keeps footer clean).
 
@@ -164,7 +221,7 @@ Orders use customer-facing numbers **BC-1000**, **BC-1001**, … (not long datab
    - `SQUARE_WEBHOOK_SIGNATURE_KEY`
    - `SQUARE_WEBHOOK_NOTIFICATION_URL` = `https://YOUR-API-HOST/api/webhooks/square` (must match Square dashboard exactly)
    - `SQUARE_ENVIRONMENT=production`
-   - `CHECKOUT_SUCCESS_REDIRECT_URL` = `https://www.byceleste.com/checkout/success` (or your live storefront URL)
+   - `CHECKOUT_SUCCESS_REDIRECT_URL` = `https://www.byceleste.com.au/checkout/success` (or your live storefront URL)
 3. **Test one live payment** — small real order; confirm admin shows **Payment: PAID** and **Order: CONFIRMED**.
 4. **Confirm go-live** — remove demo-only seeds from production; keep failed test orders visible for troubleshooting.
 

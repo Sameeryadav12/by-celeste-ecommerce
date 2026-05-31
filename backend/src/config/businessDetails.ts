@@ -5,6 +5,6 @@ export const BUSINESS_DETAILS = {
   supportEmail: 'jane.byceleste@gmail.com',
   phone: '0403 823 357',
   addressLine: '10 Mortimer Tce, Leneva VIC 3691',
-  website: 'www.byceleste.com',
-  websiteUrl: 'https://www.byceleste.com',
+  website: 'www.byceleste.com.au',
+  websiteUrl: 'https://www.byceleste.com.au',
 } as const

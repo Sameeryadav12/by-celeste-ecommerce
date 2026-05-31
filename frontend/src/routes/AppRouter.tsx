@@ -25,11 +25,14 @@ import { AdminWholesalePage } from '../pages/admin/AdminWholesalePage'
 import { AdminWholesaleDetailPage } from '../pages/admin/AdminWholesaleDetailPage'
 import { AdminTestimonialsPage } from '../pages/admin/AdminTestimonialsPage'
 import { AdminMarketingPage } from '../pages/admin/AdminMarketingPage'
+import { AdminDiscountsPage } from '../pages/admin/AdminDiscountsPage'
 import { AdminThemePage } from '../pages/admin/AdminThemePage'
 import { AdminSettingsPage } from '../pages/admin/AdminSettingsPage'
 import { AdminSecurityPage } from '../pages/admin/AdminSecurityPage'
 import { HomePage } from '../pages/HomePage'
 import { LoginPage } from '../pages/LoginPage'
+import { ForgotPasswordPage } from '../pages/ForgotPasswordPage'
+import { ResetPasswordPage } from '../pages/ResetPasswordPage'
 import { ProductDetailPage } from '../pages/ProductDetailPage'
 import { ShopPage } from '../pages/ShopPage'
 import { SignupPage } from '../pages/SignupPage'
@@ -91,6 +94,7 @@ const router = createBrowserRouter([
           { path: 'testimonials', element: <AdminTestimonialsPage /> },
           { path: 'events', element: <AdminEventsPage /> },
           { path: 'marketing', element: <AdminMarketingPage /> },
+          { path: 'discounts', element: <AdminDiscountsPage /> },
           { path: 'theme', element: <AdminThemePage /> },
           { path: 'settings', element: <AdminSettingsPage /> },
           { path: 'security', element: <AdminSecurityPage /> },
@@ -135,6 +139,8 @@ const router = createBrowserRouter([
       { path: '/testimonials', element: <TestimonialsPage /> },
       { path: '/login', element: <LoginPage /> },
       { path: '/signup', element: <SignupPage /> },
+      { path: '/forgot-password', element: <ForgotPasswordPage /> },
+      { path: '/reset-password', element: <ResetPasswordPage /> },
       { path: '/wholesale/apply', element: <WholesaleApplyPage /> },
       {
         element: <ProtectedRoute />,

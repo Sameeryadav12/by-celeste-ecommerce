@@ -12,6 +12,7 @@ export function CartSummaryCard({
   ctaLabel = 'Continue to checkout',
   showCta = true,
   checkoutSupportNote = 'Secure checkout powered by Square · Flat rate shipping via Australia Post',
+  discount,
 }: {
   subtotal: number
   shipping: number
@@ -22,7 +23,9 @@ export function CartSummaryCard({
   ctaLabel?: string
   showCta?: boolean
   checkoutSupportNote?: string
+  discount?: { code: string; percentage: number; amount: number } | null
 }) {
+  const discountActive = discount && discount.amount > 0
   return (
     <div className="rounded-2xl border border-neutral-200/80 bg-white p-5 shadow-sm">
       <h2 className="text-sm font-semibold text-neutral-900">Order summary</h2>
@@ -32,6 +35,15 @@ export function CartSummaryCard({
           <dt>Subtotal</dt>
           <dd>{formatAud(subtotal)}</dd>
         </div>
+
+        {discountActive ? (
+          <div className="flex items-center justify-between text-emerald-700">
+            <dt>
+              Discount {discount!.code} ({discount!.percentage}%)
+            </dt>
+            <dd className="font-medium">-{formatAud(discount!.amount)}</dd>
+          </div>
+        ) : null}
 
         <div className="space-y-0.5 text-neutral-600">
           <div className="flex items-center justify-between">

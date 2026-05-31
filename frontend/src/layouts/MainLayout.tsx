@@ -230,41 +230,55 @@ export function MainLayout() {
 
           {mobileOpen ? (
             <div className="pb-4 md:hidden">
-              <nav className="space-y-1 border-t border-neutral-200 pt-3">
+              <nav className="flex flex-col gap-1 border-t border-neutral-200 pt-3">
                 {primaryNavItems.map((item) => (
-                  <NavItem
+                  <NavLink
                     key={item.to}
                     to={item.to}
-                    label={item.label}
                     end={item.end}
                     onClick={() => setMobileOpen(false)}
-                  />
+                    className={({ isActive }) =>
+                      [
+                        'block w-full rounded-md px-3 py-2 text-sm transition-colors',
+                        isActive
+                          ? 'bg-neutral-900 font-semibold text-white'
+                          : 'font-medium text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900',
+                      ].join(' ')
+                    }
+                  >
+                    {item.label}
+                  </NavLink>
                 ))}
                 <NavLink
                   to="/cart"
                   onClick={() => setMobileOpen(false)}
-                  className={[
-                    'block',
-                    cartNavBase,
-                    cartFlash ? cartNavFlash : cartNavDefault,
-                  ].join(' ')}
+                  className={({ isActive }) =>
+                    [
+                      'block w-full rounded-md px-3 py-2 text-sm transition-colors',
+                      cartFlash
+                        ? 'bg-emerald-50/95 font-medium text-emerald-950 ring-1 ring-emerald-200/80'
+                        : isActive
+                          ? 'bg-neutral-900 font-semibold text-white'
+                          : 'font-medium text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900',
+                    ].join(' ')
+                  }
                 >
                   Cart{summary.itemCount > 0 ? ` (${summary.itemCount})` : ''}
                 </NavLink>
-                <div className="mt-2 border-t border-neutral-200 pt-2">
+                <div className="mt-2 flex flex-col gap-1 border-t border-neutral-200 pt-2">
                   {isLoadingAuth ? (
                     <div className="h-9 w-28 animate-pulse rounded-md bg-neutral-200" />
                   ) : user ? (
-                    <div className="flex flex-col gap-2">
+                    <>
                       <NavLink
                         to="/account"
                         onClick={() => setMobileOpen(false)}
                         className={({ isActive }) =>
                           [
-                            'block rounded-md px-3 py-2 text-sm transition-colors',
+                            'block w-full rounded-md px-3 py-2 text-sm transition-colors',
                             isActive
                               ? 'bg-neutral-900 font-semibold text-white'
-                              : 'border border-neutral-200/80 bg-neutral-50/90 font-normal text-neutral-800 shadow-sm hover:bg-neutral-100',
+                              : 'font-medium text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900',
                           ].join(' ')
                         }
                       >
@@ -273,24 +287,24 @@ export function MainLayout() {
                       <button
                         type="button"
                         onClick={handleLogout}
-                        className="self-start rounded-md px-2 py-1 text-left text-xs font-normal text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-800"
+                        className="block w-full rounded-md px-3 py-2 text-left text-sm font-medium text-neutral-700 transition hover:bg-neutral-100 hover:text-neutral-900"
                       >
                         Logout
                       </button>
-                    </div>
+                    </>
                   ) : (
-                    <div className="flex flex-col gap-2">
+                    <>
                       <NavLink
                         to="/login"
                         onClick={() => setMobileOpen(false)}
-                        className="block rounded-md px-3 py-2 text-sm font-normal text-neutral-500 hover:text-neutral-900"
+                        className="block w-full rounded-md px-3 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100 hover:text-neutral-900"
                       >
                         Login
                       </NavLink>
                       <Button
                         type="button"
                         variant="primary"
-                        className="py-2 text-sm"
+                        className="mt-1 w-full py-2 text-sm"
                         onClick={() => {
                           setMobileOpen(false)
                           navigate('/signup')
@@ -298,7 +312,7 @@ export function MainLayout() {
                       >
                         Signup
                       </Button>
-                    </div>
+                    </>
                   )}
                 </div>
               </nav>

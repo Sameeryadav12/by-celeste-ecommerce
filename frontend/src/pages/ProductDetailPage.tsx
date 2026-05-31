@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useCallback, useEffect, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
@@ -26,6 +26,15 @@ function productDescriptionParagraphs(description: string): string[] {
 export function ProductDetailPage() {
   const { user } = useAuth()
   const { slug } = useParams<{ slug: string }>()
+  const navigate = useNavigate()
+
+  const handleBack = useCallback(() => {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      navigate(-1)
+      return
+    }
+    navigate('/shop')
+  }, [navigate])
 
   const [product, setProduct] = useState<CatalogProduct | null>(null)
   const [loading, setLoading] = useState(Boolean(slug))
@@ -175,6 +184,15 @@ export function ProductDetailPage() {
     <>
       <Seo title={`${product.name} | By Celeste`} description={product.shortDescription} jsonLd={jsonLd} />
       <section className="space-y-10 sm:space-y-12">
+      <button
+        type="button"
+        onClick={handleBack}
+        className="inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-neutral-700 ring-1 ring-neutral-300 transition hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2"
+        aria-label="Back to shop"
+      >
+        <span aria-hidden="true">&larr;</span>
+        Back to shop
+      </button>
       <div className="grid gap-8 md:grid-cols-2 md:gap-10">
         <div className="space-y-3">
           <div className="overflow-hidden rounded-2xl bg-neutral-100 ring-1 ring-neutral-200/70">

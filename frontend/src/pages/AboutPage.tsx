@@ -94,10 +94,6 @@ export function AboutPage() {
               >
                 {BUSINESS_DETAILS.supportEmail}
               </a>
-              <br />
-              <a href={`tel:${BUSINESS_DETAILS.phoneTel}`} className="text-neutral-800">
-                {BUSINESS_DETAILS.phone}
-              </a>
             </p>
           </Card>
         </Reveal>

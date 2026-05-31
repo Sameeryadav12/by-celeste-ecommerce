@@ -9,6 +9,8 @@ import { env } from '../config/env'
 import { prisma } from '../config/prisma'
 import { parseOrderIdFromPaymentNote } from './checkout.service'
 import { awardLoyaltyForPaidOrderIfEligible } from './loyalty.service'
+import { recordCouponUsageForPaidOrder } from './discountCoupon.service'
+import { sendOrderPaidAdminAlert } from './orderNotification.service'
 
 type SquareWebhookPayload = {
   event_id?: string
@@ -157,6 +159,11 @@ export async function processSquareWebhookRequest(params: {
   }
 
   if (orderPaymentStatus && orderStatus) {
+    const prior = await prisma.order.findUnique({
+      where: { id: orderId },
+      select: { paymentStatus: true },
+    })
+
     await prisma.order.update({
       where: { id: orderId },
       data: {
@@ -170,6 +177,15 @@ export async function processSquareWebhookRequest(params: {
       (orderStatus === OrderStatus.CONFIRMED || orderStatus === OrderStatus.PAID)
     if (paidAndConfirmed) {
       await awardLoyaltyForPaidOrderIfEligible(orderId)
+      // Coupon usage is recorded once payment is confirmed. The unique (couponId, orderId)
+      // index guarantees Square webhook retries do not double-count usage.
+      await recordCouponUsageForPaidOrder({ orderId })
+
+      // Only alert the first time the order transitions to PAID — Square webhook retries are also
+      // de-duplicated by the ProcessedSquareWebhookEvent unique constraint above.
+      if (prior?.paymentStatus !== OrderPaymentStatus.PAID) {
+        void sendOrderPaidAdminAlert(orderId)
+      }
     }
   }
 

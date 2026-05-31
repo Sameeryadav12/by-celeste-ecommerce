@@ -40,6 +40,10 @@ async function main() {
     // eslint-disable-next-line no-console
     console.log('[seed:local] Ensuring one demo paid order …')
     await runDemoPaidOrderSeed()
+    const { runDiscountCouponsSeed } = await import('./seedDiscountCoupons')
+    // eslint-disable-next-line no-console
+    console.log('[seed:local] Ensuring BIRTHDAY20 demo coupon …')
+    await runDiscountCouponsSeed()
     // eslint-disable-next-line no-console
     console.log('[seed:local] Finished.')
   } finally {

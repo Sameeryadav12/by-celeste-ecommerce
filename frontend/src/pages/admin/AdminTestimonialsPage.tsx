@@ -232,8 +232,8 @@ export function AdminTestimonialsPage() {
         ) : (
           <ul className="mt-4 divide-y divide-slate-100">
             {filtered.map((row) => (
-              <li key={row.id} className="flex flex-col gap-3 py-4 sm:flex-row sm:items-start sm:justify-between">
-                <div className="space-y-1">
+              <li key={row.id} className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                <div className="min-w-0 flex-1 space-y-1">
                   <p className="font-medium text-slate-900">{row.customerName}</p>
                   <p className="line-clamp-2 text-sm text-slate-600">{row.text}</p>
                   <div className="flex gap-2">
@@ -241,14 +241,19 @@ export function AdminTestimonialsPage() {
                     {row.isFeatured ? <AdminStatusBadge status="FEATURED" /> : null}
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button type="button" variant="ghost" className="!px-3 !py-1.5 text-xs" onClick={() => onEdit(row)}>
+                <div className="flex shrink-0 flex-wrap items-center gap-2 sm:flex-nowrap sm:gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="!px-3 !py-1.5 text-xs whitespace-nowrap"
+                    onClick={() => onEdit(row)}
+                  >
                     Edit
                   </Button>
                   <Button
                     type="button"
                     variant="ghost"
-                    className="!px-3 !py-1.5 text-xs"
+                    className="!px-3 !py-1.5 text-xs whitespace-nowrap"
                     onClick={() => handleVisibility(row)}
                   >
                     {row.isVisible ? 'Hide' : 'Unhide'}
@@ -256,7 +261,7 @@ export function AdminTestimonialsPage() {
                   <Button
                     type="button"
                     variant="ghost"
-                    className="!px-3 !py-1.5 text-xs text-rose-700 hover:!bg-rose-50"
+                    className="!px-3 !py-1.5 text-xs whitespace-nowrap text-rose-700 hover:!bg-rose-50"
                     onClick={() => void handlePermanentDelete(row)}
                   >
                     Delete permanently

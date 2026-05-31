@@ -22,7 +22,7 @@ Online shop and business tools for **By Celeste**, an Australian skincare brand.
 
 ### Customer website
 
-Public site at the shop domain (target: **www.byceleste.com**):
+Public site at the shop domain (target: **www.byceleste.com.au**):
 
 - Home, shop, product pages, cart, checkout  
 - Events and testimonials  
@@ -78,6 +78,8 @@ Private area at **`/wholesale`** (approved wholesale accounts only):
 - Wholesale application and approval flow  
 - Events with optional images  
 - Admin image upload for products and events  
+- Discount coupons (percentage-only, admin managed, applied before shipping)  
+- Transactional emails via Brevo SMTP (password reset, wholesale alerts, order alerts)  
 - Order numbers BC-1000, BC-1001, …  
 - SEO on main pages  
 
@@ -162,6 +164,10 @@ npm run dev                   # http://localhost:5174
 | `CHECKOUT_SUCCESS_REDIRECT_URL` | For payments | After checkout success |
 | `TOTP_ENCRYPTION_KEY` | Optional | Admin 2FA (64 hex chars) |
 | `JANE_ADMIN_PASSWORD` | Seed only | One-time Jane admin setup |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` | Optional | Brevo SMTP relay for transactional emails |
+| `MAIL_FROM_NAME` / `MAIL_FROM_EMAIL` | With SMTP | Sender identity used by all transactional emails |
+| `ADMIN_NOTIFICATION_EMAIL` | With SMTP | Inbox for wholesale + order alerts and `npm run test:email` |
+| `FRONTEND_PUBLIC_URL` | With SMTP | Base URL used to build links inside emails (e.g. reset password) |
 
 Never commit `.env`. Use placeholders in `.env.example` only.
 
@@ -196,6 +202,7 @@ Migrations live in `backend/prisma/migrations/`.
 | `npm run seed:events` | Sample events |
 | `npm run seed:demo-admin` | Demo users (local only) |
 | `npm run seed:jane-admin` | Jane production admin |
+| `npm run test:email` | Send a test transactional email via Brevo SMTP |
 
 Details: [docs_final/02-demo-accounts-and-seeding.md](./docs_final/02-demo-accounts-and-seeding.md)
 
@@ -223,7 +230,7 @@ Details: [docs_final/02-demo-accounts-and-seeding.md](./docs_final/02-demo-accou
 
 Full guide: **[docs_final/08-deployment.md](./docs_final/08-deployment.md)**
 
-Production domain target: **www.byceleste.com**
+Production domain target: **www.byceleste.com.au**
 
 ---
 
@@ -239,7 +246,7 @@ Production domain target: **www.byceleste.com**
 ## Pending before go-live (client)
 
 1. Square production keys and webhook setup  
-2. DNS for **www.byceleste.com**  
+2. DNS for **www.byceleste.com.au**  
 3. Final product images (if not all uploaded)  
 4. Final policy / legal wording  
 5. Launch sign-off  

@@ -28,6 +28,7 @@ reference/
 assets/
 
 # --- Logs & caches ---
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -78,8 +79,8 @@ Canva/
 wireframes/
 New Wireframes/
 Sprint 4 Wireframes/
-Website_Requirement_Description.png
-Website_Requirement_Description..png
+Website_Requirement_Description*.png
+Freight Calculator Flowchart.png
 Perplexity.txt
 
 # --- Cursor debug logs ---

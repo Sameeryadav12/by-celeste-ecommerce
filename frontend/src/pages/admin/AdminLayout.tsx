@@ -35,6 +35,7 @@ const NAV_GROUPS = [
     label: 'Content',
     items: [
       { to: '/admin/marketing', label: 'Marketing', icon: 'marketing' as const },
+      { to: '/admin/discounts', label: 'Discounts', icon: 'discounts' as const },
     ],
   },
   {

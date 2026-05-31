@@ -11,6 +11,7 @@ export type AdminIconName =
   | 'testimonials'
   | 'events'
   | 'marketing'
+  | 'discounts'
   | 'theme'
   | 'settings'
   | 'security'
@@ -36,6 +37,8 @@ const ICON_PATHS: Record<AdminIconName, string> = {
     'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2ZM8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01',
   marketing:
     'M22 12h-4l-3 9L9 3l-3 9H2',
+  discounts:
+    'M20.59 13.41 13.41 20.59a2 2 0 0 1-2.83 0L3 12.99V4a1 1 0 0 1 1-1h8.99l7.6 7.59a2 2 0 0 1 0 2.83Z M7.5 7.5h.01',
   theme:
     'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10c.55 0 1-.45 1-1v-.5c0-.25-.1-.48-.27-.65a.97.97 0 0 1-.23-.72c.08-.74.72-1.13 1.42-1.13H16a4 4 0 0 0 4-4c0-4.42-3.58-8-8-8ZM6.5 12a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm3-4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm3 4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Z',
   settings:

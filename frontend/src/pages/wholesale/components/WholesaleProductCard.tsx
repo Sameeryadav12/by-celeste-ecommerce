@@ -38,7 +38,10 @@ export function WholesaleProductCard({ product: raw }: { product: CatalogProduct
   return (
     <Card className="group flex h-full flex-col overflow-hidden transform-gpu transition-all duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-lg">
       <div className="flex min-h-0 flex-1 flex-col gap-4">
-        <div className="relative overflow-hidden rounded-xl bg-neutral-100 ring-1 ring-neutral-200/60">
+        <Link
+          to={`/shop/${product.slug}`}
+          className="relative block cursor-pointer overflow-hidden rounded-xl bg-neutral-100 ring-1 ring-neutral-200/60 transition-opacity hover:opacity-95"
+        >
           <SmartImage
             src={product.imageUrl}
             alt={product.name}
@@ -46,11 +49,18 @@ export function WholesaleProductCard({ product: raw }: { product: CatalogProduct
             imgClassName="transform-gpu transition-transform duration-200 ease-in-out group-hover:scale-[1.03]"
             loading="lazy"
           />
-        </div>
+        </Link>
 
         <div className="min-h-0 flex-1 space-y-1">
           <div className="flex items-start justify-between gap-2">
-            <h2 className="text-base font-semibold text-neutral-900">{product.name}</h2>
+            <h2 className="text-base font-semibold text-neutral-900">
+              <Link
+                to={`/shop/${product.slug}`}
+                className="cursor-pointer transition-colors hover:text-neutral-600 hover:underline hover:underline-offset-2"
+              >
+                {product.name}
+              </Link>
+            </h2>
             <span className="shrink-0 rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-neutral-600">
               {stockLabel}
             </span>

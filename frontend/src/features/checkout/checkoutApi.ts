@@ -13,6 +13,7 @@ export type CreateCheckoutSessionBody = {
   postcode: string
   country: string
   notes?: string
+  couponCode?: string
 }
 
 export type CreateCheckoutSessionResponse = {
@@ -24,9 +25,11 @@ export type CreateCheckoutSessionResponse = {
   }
   totals: {
     subtotalAud: string
+    discountAud?: string
     shippingAud: string
     totalAud: string
   }
+  coupon?: { code: string; percentage: number } | null
 }
 
 export type CheckoutReadiness = {

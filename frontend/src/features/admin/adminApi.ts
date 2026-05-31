@@ -684,6 +684,61 @@ export async function deleteAdminTestimonial(id: string) {
   return apiFetch(`/api/admin/testimonials/${id}`, { method: 'DELETE' })
 }
 
+export type AdminDiscountCoupon = {
+  id: string
+  code: string
+  percentage: number
+  isActive: boolean
+  appliesToCustomers: boolean
+  appliesToWholesale: boolean
+  startsAt: string | null
+  endsAt: string | null
+  totalUsageLimit: number | null
+  perCustomerLimit: number | null
+  usedCount: number
+  createdAt: string
+  updatedAt: string
+}
+
+export type AdminDiscountCouponInput = {
+  code: string
+  percentage: number
+  isActive?: boolean
+  appliesToCustomers?: boolean
+  appliesToWholesale?: boolean
+  startsAt?: string | null
+  endsAt?: string | null
+  totalUsageLimit?: number | null
+  perCustomerLimit?: number | null
+}
+
+export async function listAdminDiscountCoupons() {
+  return apiFetch<{ coupons: AdminDiscountCoupon[] }>('/api/admin/discounts').then(
+    (r) => r.coupons,
+  )
+}
+
+export async function createAdminDiscountCoupon(body: AdminDiscountCouponInput) {
+  return apiFetch<{ coupon: AdminDiscountCoupon }>('/api/admin/discounts', {
+    method: 'POST',
+    body,
+  }).then((r) => r.coupon)
+}
+
+export async function updateAdminDiscountCoupon(
+  id: string,
+  body: Partial<AdminDiscountCouponInput>,
+) {
+  return apiFetch<{ coupon: AdminDiscountCoupon }>(`/api/admin/discounts/${id}`, {
+    method: 'PUT',
+    body,
+  }).then((r) => r.coupon)
+}
+
+export async function deleteAdminDiscountCoupon(id: string) {
+  return apiFetch(`/api/admin/discounts/${id}`, { method: 'DELETE' })
+}
+
 export type AdminMarketingContent = {
   homepageHeroHeading: string
   homepageSubtext: string

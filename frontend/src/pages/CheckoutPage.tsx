@@ -43,9 +43,16 @@ const initialForm: CheckoutForm = {
 }
 
 export function CheckoutPage() {
-  const { items, summary } = useCart()
-  const shipping = calculateShipping(summary.subtotal)
-  const total = summary.subtotal + shipping
+  const { items, summary, coupon } = useCart()
+  const discountAmount = (() => {
+    if (!coupon || summary.subtotal <= 0) return 0
+    const raw = (summary.subtotal * coupon.percentage) / 100
+    const rounded = Math.round(raw * 100) / 100
+    return Math.min(rounded, summary.subtotal)
+  })()
+  const discountedSubtotal = Math.max(0, summary.subtotal - discountAmount)
+  const shipping = calculateShipping(discountedSubtotal)
+  const total = discountedSubtotal + shipping
 
   const [form, setForm] = useState<CheckoutForm>(initialForm)
   const [errors, setErrors] = useState<FormErrors>({})
@@ -179,6 +186,7 @@ export function CheckoutPage() {
         postcode: form.postcode.trim(),
         country: form.country.trim() || 'Australia',
         notes: form.notes.trim() || undefined,
+        couponCode: coupon?.code,
       })
 
       window.location.assign(checkoutUrl)
@@ -354,6 +362,11 @@ export function CheckoutPage() {
             shipping={shipping}
             total={total}
             showCta={false}
+            discount={
+              coupon && discountAmount > 0
+                ? { code: coupon.code, percentage: coupon.percentage, amount: discountAmount }
+                : null
+            }
           />
           <p className="text-xs leading-5 text-neutral-500">
             Subtotal, shipping, and total are recalculated on the server when you pay. If anything

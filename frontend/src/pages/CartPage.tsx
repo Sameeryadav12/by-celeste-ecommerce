@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Button } from '../components/ui/Button'
 import { useCart } from '../features/cart/CartContext'
 import { WholesalePricingNote } from './wholesale/components/WholesalePricingNote'
 import { CartSummaryCard } from '../features/cart/components/CartSummaryCard'
+import { CartCouponPanel } from '../features/cart/components/CartCouponPanel'
 import { QuantityControl } from '../features/cart/components/QuantityControl'
 import { formatAud } from '../features/cart/money'
 import { SHIPPING_CONFIG, calculateShipping } from '../features/cart/shippingRules'
@@ -13,11 +14,28 @@ import { getPublicBusinessSettings, type BusinessSettings } from '../features/co
 
 export function CartPage() {
   const [business, setBusiness] = useState<BusinessSettings | null>(null)
-  const { items, summary, pricingMode, incrementItem, decrementItem, removeItem, setItemQuantity, clearCart } =
-    useCart()
+  const {
+    items,
+    summary,
+    pricingMode,
+    coupon,
+    incrementItem,
+    decrementItem,
+    removeItem,
+    setItemQuantity,
+    clearCart,
+  } = useCart()
 
-  const shippingAmount = calculateShipping(summary.subtotal)
-  const total = summary.subtotal + shippingAmount
+  const discountAmount = useMemo(() => {
+    if (!coupon || summary.subtotal <= 0) return 0
+    const raw = (summary.subtotal * coupon.percentage) / 100
+    const rounded = Math.round(raw * 100) / 100
+    return Math.min(rounded, summary.subtotal)
+  }, [coupon, summary.subtotal])
+
+  const discountedSubtotal = Math.max(0, summary.subtotal - discountAmount)
+  const shippingAmount = calculateShipping(discountedSubtotal)
+  const total = discountedSubtotal + shippingAmount
 
   useEffect(() => {
     let cancelled = false
@@ -185,10 +203,16 @@ export function CartPage() {
 
         {/* ── Sidebar ── */}
         <div className="space-y-4 lg:sticky lg:top-6 lg:self-start">
+          <CartCouponPanel />
           <CartSummaryCard
             subtotal={summary.subtotal}
             shipping={shippingAmount}
             total={total}
+            discount={
+              coupon && discountAmount > 0
+                ? { code: coupon.code, percentage: coupon.percentage, amount: discountAmount }
+                : null
+            }
             shippingSubLabel={`${business?.shippingMethodLabel || 'Flat rate shipping'} via ${business?.shippingCarrierWording || SHIPPING_CONFIG.carrierLabel}`}
             checkoutSupportNote={`Secure checkout powered by Square · ${business?.shippingExplanatoryNote || 'Flat rate shipping via Australia Post'}`}
           />

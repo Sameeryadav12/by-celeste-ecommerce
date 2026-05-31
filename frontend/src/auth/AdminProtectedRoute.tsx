@@ -17,8 +17,9 @@ export function AdminProtectedRoute() {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />
   }
 
-  if (user.role !== 'ADMIN') {
-    // Logged-in, but not allowed to access admin.
+  // Only active ADMIN accounts may enter the admin portal. Everyone else (CUSTOMER, WHOLESALE,
+  // inactive) is redirected to the storefront. Backend routes also enforce this via requireRole.
+  if (user.role !== 'ADMIN' || user.isActive === false) {
     return <Navigate to="/" replace />
   }
 

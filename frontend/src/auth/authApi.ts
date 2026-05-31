@@ -91,6 +91,26 @@ export type WholesaleApplyInput = {
   wholesaleNotes?: string
 }
 
+export async function forgotPassword(input: { email: string }): Promise<{ message: string }> {
+  return apiFetch<{ message: string }>('/api/auth/forgot-password', {
+    method: 'POST',
+    body: { email: input.email.trim().toLowerCase() },
+  })
+}
+
+export async function resetPassword(input: {
+  token: string
+  newPassword: string
+}): Promise<{ message: string }> {
+  return apiFetch<{ message: string }>('/api/auth/reset-password', {
+    method: 'POST',
+    body: {
+      token: input.token,
+      newPassword: input.newPassword,
+    },
+  })
+}
+
 export async function wholesaleApply(input: WholesaleApplyInput): Promise<{ user: AuthUser }> {
   return apiFetch<{ user: AuthUser }, WholesaleApplyInput>('/api/auth/wholesale/apply', {
     method: 'POST',

@@ -51,10 +51,6 @@ export function WholesaleSupportPage() {
           >
             {BUSINESS_DETAILS.supportEmail}
           </a>
-          <br />
-          <a href={`tel:${BUSINESS_DETAILS.phoneTel}`} className="text-neutral-800">
-            {BUSINESS_DETAILS.phone}
-          </a>
         </p>
         {business?.footerSupportText ? (
           <p className="mt-4 rounded-lg border border-neutral-100 bg-neutral-50 px-4 py-3 text-sm text-neutral-800">

@@ -8,6 +8,6 @@ export const BUSINESS_DETAILS = {
   phoneTel: '+61403823357',
   addressLine: '10 Mortimer Tce, Leneva VIC 3691',
   addressShort: 'Leneva VIC 3691, Australia',
-  website: 'www.byceleste.com',
-  websiteUrl: 'https://www.byceleste.com',
+  website: 'www.byceleste.com.au',
+  websiteUrl: 'https://www.byceleste.com.au',
 } as const

@@ -18,16 +18,23 @@ export function WholesaleProtectedRoute() {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />
   }
 
+  // Admins never see the wholesale portal automatically — they go to /admin.
   if (user.role === 'ADMIN') {
     return <Navigate to="/admin" replace />
   }
 
-  // Retail account that has never applied — portal is not for them yet
-  if (user.role === 'CUSTOMER' && user.wholesaleApprovalStatus === 'NONE') {
+  // Any retail (CUSTOMER) account — regardless of approval flag — is blocked from the portal.
+  // Send them to the wholesale application page instead.
+  if (user.role === 'CUSTOMER') {
     return <Navigate to="/wholesale/apply" replace />
   }
 
-  if (user.role === 'WHOLESALE' && user.wholesaleApprovalStatus === 'APPROVED') {
+  // Approved + active WHOLESALE accounts only.
+  if (
+    user.role === 'WHOLESALE' &&
+    user.wholesaleApprovalStatus === 'APPROVED' &&
+    user.isActive !== false
+  ) {
     return <Outlet />
   }
 

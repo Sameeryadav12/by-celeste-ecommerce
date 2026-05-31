@@ -71,5 +71,44 @@ export const env = {
   CHECKOUT_SUCCESS_REDIRECT_URL:
     process.env.CHECKOUT_SUCCESS_REDIRECT_URL?.trim() ||
     (process.env.NODE_ENV === 'production' ? undefined : 'http://localhost:5174/checkout/success'),
+
+  /**
+   * Public storefront URL used to build absolute links inside transactional emails. Falls back to
+   * FRONTEND_ORIGIN, and finally to the local Vite dev server in development.
+   */
+  FRONTEND_PUBLIC_URL:
+    process.env.FRONTEND_PUBLIC_URL?.trim() ||
+    process.env.FRONTEND_ORIGIN?.trim() ||
+    (process.env.NODE_ENV === 'production' ? undefined : 'http://localhost:5174'),
+
+  /**
+   * Optional public base URL used to build password-reset links sent to users. When unset, the
+   * link defaults to FRONTEND_PUBLIC_URL / FRONTEND_ORIGIN. The reset page lives at
+   * `${PASSWORD_RESET_LINK_BASE}/reset-password?token=…`.
+   */
+  PASSWORD_RESET_LINK_BASE:
+    process.env.PASSWORD_RESET_LINK_BASE?.trim() ||
+    process.env.FRONTEND_PUBLIC_URL?.trim() ||
+    process.env.FRONTEND_ORIGIN?.trim() ||
+    (process.env.NODE_ENV === 'production' ? undefined : 'http://localhost:5174'),
+
+  /** Lifetime (in minutes) for password reset tokens. 30–60 is recommended. */
+  PASSWORD_RESET_TOKEN_TTL_MIN: Math.max(
+    5,
+    Number(process.env.PASSWORD_RESET_TOKEN_TTL_MIN ?? 60),
+  ),
+
+  /** Brevo (Sendinblue) SMTP relay for transactional emails. Empty values disable email sending. */
+  SMTP_HOST: process.env.SMTP_HOST?.trim() || 'smtp-relay.brevo.com',
+  SMTP_PORT: Number(process.env.SMTP_PORT ?? 587),
+  SMTP_USER: process.env.SMTP_USER?.trim() || undefined,
+  SMTP_PASS: process.env.SMTP_PASS || undefined,
+
+  /** "From" identity on outgoing transactional emails. */
+  MAIL_FROM_NAME: process.env.MAIL_FROM_NAME?.trim() || 'By Celeste',
+  MAIL_FROM_EMAIL: process.env.MAIL_FROM_EMAIL?.trim() || undefined,
+
+  /** Mailbox that receives admin alerts (wholesale application, new paid order, test email). */
+  ADMIN_NOTIFICATION_EMAIL: process.env.ADMIN_NOTIFICATION_EMAIL?.trim() || undefined,
 }
 

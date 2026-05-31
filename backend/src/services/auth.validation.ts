@@ -74,7 +74,38 @@ export const totpDisableSchema = z
   })
   .strict()
 
+/** Strong password rules reused by signup and the password reset flow. */
+const strongPassword = z
+  .string({ required_error: 'Password is required.' })
+  .min(8, 'Password must be at least 8 characters.')
+  .refine((v) => /[a-z]/.test(v), 'Password must contain at least 1 lowercase letter.')
+  .refine((v) => /[A-Z]/.test(v), 'Password must contain at least 1 uppercase letter.')
+  .refine((v) => /\d/.test(v), 'Password must contain at least 1 digit.')
+  .refine(
+    (v) => /[^A-Za-z0-9]/.test(v),
+    'Password must contain at least 1 special character.',
+  )
+
+export const forgotPasswordSchema = z
+  .object({
+    email: z
+      .string({ required_error: 'Email is required.' })
+      .trim()
+      .toLowerCase()
+      .email('Email must be a valid email address.'),
+  })
+  .strict()
+
+export const resetPasswordSchema = z
+  .object({
+    token: z.string({ required_error: 'Reset token is required.' }).trim().min(20, 'Invalid reset token.'),
+    newPassword: strongPassword,
+  })
+  .strict()
+
 export type SignupInput = z.infer<typeof signupSchema>
 export type LoginInput = z.infer<typeof loginSchema>
 export type LoginTotpInput = z.infer<typeof loginTotpSchema>
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>
 

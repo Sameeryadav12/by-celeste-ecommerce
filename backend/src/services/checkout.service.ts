@@ -20,6 +20,7 @@ import { awardLoyaltyForPaidOrderIfEligible } from './loyalty.service'
 import { effectiveProductUnitPrice } from './wholesalePricing'
 import type { PricingViewer } from './wholesalePricing'
 import { allocateOrderNumber } from './orderNumber.service'
+import { evaluateCouponForUse } from './discountCoupon.service'
 
 async function loadPricingViewerForCheckout(userId: string | undefined): Promise<PricingViewer> {
   if (!userId) return null
@@ -129,9 +130,28 @@ export async function createCheckoutSession(params: {
     })
   }
 
-  const shippingAud = calculateShippingAud(Number(subtotalDec))
+  // Revalidate the coupon on the server using the freshly priced subtotal — frontend totals
+  // are never trusted. Throws an ApiError with a friendly message if rejected.
+  let couponCode: string | null = null
+  let discountPercentage: number | null = null
+  let discountAmount = new Prisma.Decimal(0)
+  let discountedSubtotal = subtotalDec
+  if (input.couponCode) {
+    const isWholesale = pricingViewer?.role === 'WHOLESALE' && pricingViewer.wholesaleApprovalStatus === 'APPROVED'
+    const applied = await evaluateCouponForUse({
+      code: input.couponCode,
+      subtotal: subtotalDec,
+      ctx: { isWholesale, userId: userId ?? null, email: input.email },
+    })
+    couponCode = applied.code
+    discountPercentage = applied.percentage
+    discountAmount = applied.discountAmount
+    discountedSubtotal = applied.subtotalAfterDiscount
+  }
+
+  const shippingAud = calculateShippingAud(Number(discountedSubtotal))
   const shippingDec = new Prisma.Decimal(shippingAud.toFixed(2))
-  const totalDec = subtotalDec.add(shippingDec)
+  const totalDec = discountedSubtotal.add(shippingDec)
 
   const order = await prisma.$transaction(async (tx) => {
     const orderNumber = await allocateOrderNumber(tx)
@@ -153,6 +173,9 @@ export async function createCheckoutSession(params: {
         subtotalAmount: subtotalDec,
         shippingAmount: shippingDec,
         totalAmount: totalDec,
+        couponCode: couponCode,
+        discountPercentage: discountPercentage,
+        discountAmount: discountAmount,
         status: OrderStatus.AWAITING_PAYMENT,
         paymentStatus: OrderPaymentStatus.PENDING,
       },
@@ -216,9 +239,13 @@ export async function createCheckoutSession(params: {
       },
       totals: {
         subtotalAud: subtotalDec.toFixed(2),
+        discountAud: discountAmount.toFixed(2),
         shippingAud: shippingDec.toFixed(2),
         totalAud: totalDec.toFixed(2),
       },
+      coupon: couponCode
+        ? { code: couponCode, percentage: discountPercentage ?? 0 }
+        : null,
     }
   } catch (err) {
     await prisma.order.update({
