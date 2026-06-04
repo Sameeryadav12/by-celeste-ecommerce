@@ -1,4 +1,5 @@
 import { env } from '../config/env'
+import { isSquareConfigured, isSquareWebhookConfigured } from '../services/squareClient'
 
 const REQUIRED_ENV = [
   'SQUARE_ACCESS_TOKEN',
@@ -8,12 +9,19 @@ const REQUIRED_ENV = [
 
 export function getAdminSquareReadiness() {
   const missingEnv: string[] = []
-  if (!env.SQUARE_ACCESS_TOKEN?.trim()) missingEnv.push('SQUARE_ACCESS_TOKEN')
-  if (!env.SQUARE_LOCATION_ID?.trim()) missingEnv.push('SQUARE_LOCATION_ID')
-  if (!env.SQUARE_WEBHOOK_SIGNATURE_KEY?.trim()) missingEnv.push('SQUARE_WEBHOOK_SIGNATURE_KEY')
+  if (!isSquareConfigured()) {
+    missingEnv.push('SQUARE_ACCESS_TOKEN')
+    missingEnv.push('SQUARE_LOCATION_ID')
+  }
+  if (!isSquareWebhookConfigured()) {
+    missingEnv.push('SQUARE_WEBHOOK_SIGNATURE_KEY')
+    if (!env.SQUARE_WEBHOOK_NOTIFICATION_URL?.trim()) {
+      missingEnv.push('SQUARE_WEBHOOK_NOTIFICATION_URL')
+    }
+  }
 
   return {
-    connected: missingEnv.length === 0,
+    connected: isSquareConfigured() && isSquareWebhookConfigured(),
     missingEnv,
   }
 }

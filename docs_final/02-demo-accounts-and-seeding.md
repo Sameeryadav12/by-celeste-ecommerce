@@ -4,18 +4,23 @@ How to load sample data and test accounts. **Use demo seeds on local machines on
 
 ---
 
-## Production admin (Jane)
+## Production admin portal
+
+| Purpose | Email |
+|---------|--------|
+| Admin portal login | admin.byceleste@gmail.com |
+| Customer / wholesale support | jane.byceleste@gmail.com |
 
 | Item | Value |
 |------|--------|
-| Email | jane.byceleste@gmail.com |
+| Email | admin.byceleste@gmail.com |
 | Role | ADMIN |
 
-**Password:** Set in `backend/.env` as `JANE_ADMIN_PASSWORD` before running the seed. Jane must change it after first login.
+**Password:** Set in `backend/.env` as `ADMIN_PASSWORD` (or `JANE_ADMIN_PASSWORD`) before running the seed. Change it after first login.
 
 ```bash
 cd backend
-# Add JANE_ADMIN_PASSWORD="your-secure-password" to .env
+# Add ADMIN_PASSWORD="your-secure-password" to .env
 npm run seed:jane-admin
 ```
 
@@ -33,7 +38,7 @@ Do **not** commit `.env` or share passwords in GitHub.
 | `npm run seed:demo-customer` | Retail customer only |
 | `npm run seed:local` | Catalog, events, demo users, one paid demo order |
 | `npm run seed:demo-paid-order` | One PAID / CONFIRMED order for admin UI testing |
-| `npm run seed:jane-admin` | Jane admin account (production handover) |
+| `npm run seed:jane-admin` | Production admin account (production handover) |
 
 Run from the **`backend/`** folder after `npx prisma migrate dev`.
 
@@ -45,7 +50,7 @@ Created by `npm run seed:demo-admin` (override with env vars in `.env.example`):
 
 | Email | Role | Use |
 |-------|------|-----|
-| admin@byceleste.com | ADMIN | Developer demos — **not for production** |
+| admin.byceleste@gmail.com | ADMIN | Production / demo admin (use a strong password in production) |
 | customer@byceleste.com | CUSTOMER | Test retail account |
 | wholesale@byceleste.com | WHOLESALE (approved) | Test wholesale portal |
 

@@ -1,8 +1,9 @@
 import 'dotenv/config'
+import { BUSINESS_DETAILS } from '../config/businessDetails'
 import { prisma } from '../config/prisma'
 import { hashPassword } from '../utils/password'
 
-const DEMO_DEFAULT_EMAIL = 'admin@byceleste.com'
+const DEMO_DEFAULT_EMAIL = BUSINESS_DETAILS.adminEmail
 const DEMO_DEFAULT_PASSWORD = 'Admin123!'
 
 function demoModeEnabled() {
@@ -54,7 +55,18 @@ export async function runAdminSeed() {
       return
     }
 
-    console.log(`[seedAdmin] Admin already exists (unchanged): ${email}`)
+    // Bootstrap re-run: keep the canonical admin login in sync with ADMIN_BOOTSTRAP_* in .env.
+    await prisma.user.update({
+      where: { id: existing.id },
+      data: {
+        firstName: firstName.trim() || existing.firstName,
+        lastName: lastName.trim() || existing.lastName,
+        passwordHash,
+        role: 'ADMIN',
+        isActive: true,
+      },
+    })
+    console.log(`[seedAdmin] Bootstrap admin ensured (password and role refreshed): ${email}`)
     return
   }
 

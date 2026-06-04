@@ -462,7 +462,7 @@ npm run seed:demo-admin
 
 Default demo login:
 
-- **Email:** `admin@byceleste.com`
+- **Email:** `admin.byceleste@gmail.com`
 - **Password:** `Admin123!`
 
 The seed refreshes this user’s password and `ADMIN` role on each run when using `seed:demo-admin`, so demos stay predictable. For production, use strong secrets, do not rely on the demo password, and prefer `ADMIN_BOOTSTRAP_EMAIL` / `ADMIN_BOOTSTRAP_PASSWORD` with `npm run seed:admin` where the user is only created if missing.

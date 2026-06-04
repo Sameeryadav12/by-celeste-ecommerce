@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from 'express'
 import type { Role } from '@prisma/client'
+import { isCanonicalAdminEmail } from '../config/adminAccess'
 import { env } from '../config/env'
 import { ApiError } from '../utils/apiError'
 import { verifyAccessToken } from '../utils/tokens'
@@ -59,6 +60,20 @@ export function requireRole(allowed: Role[]) {
     }
 
     if (!allowed.includes(req.user.role as Role)) {
+      return next(
+        new ApiError({
+          statusCode: 403,
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to access this resource.',
+        }),
+      )
+    }
+
+    if (
+      allowed.includes('ADMIN') &&
+      req.user.role === 'ADMIN' &&
+      !isCanonicalAdminEmail(req.user.email)
+    ) {
       return next(
         new ApiError({
           statusCode: 403,

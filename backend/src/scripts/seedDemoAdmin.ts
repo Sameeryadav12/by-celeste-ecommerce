@@ -4,7 +4,7 @@ import 'dotenv/config'
  * Idempotent demo admin for local / client demos.
  * Enables demo credentials for this process only (does not modify .env).
  *
- * Default: admin@byceleste.com / Admin123!
+ * Default: admin.byceleste@gmail.com / Admin123!
  * Override via env: DEMO_ADMIN_EMAIL, DEMO_ADMIN_PASSWORD
  */
 async function main() {

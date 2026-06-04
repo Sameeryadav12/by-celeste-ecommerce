@@ -31,6 +31,10 @@
     "seed:discount-coupons": "tsx src/scripts/seedDiscountCoupons.ts",
     "test:email": "tsx src/scripts/testEmail.ts",
     "db:backfill-order-numbers": "tsx src/scripts/backfillOrderNumbers.ts",
+    "db:purge-customers-wholesale": "tsx src/scripts/purgeCustomersAndWholesale.ts",
+    "db:purge-discount-coupons": "tsx src/scripts/purgeDiscountCoupons.ts",
+    "db:migrate-admin-email": "tsx src/scripts/migrateAdminEmail.ts",
+    "db:purge-events": "tsx src/scripts/purgeEvents.ts",
     "seed:catalog:prod": "node dist/scripts/seedCatalog.js",
     "seed:events:prod": "node dist/scripts/seedEvents.js"
   },

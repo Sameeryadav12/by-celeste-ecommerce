@@ -16,15 +16,25 @@ export type CreatePaymentLinkResult = {
 export const SQUARE_CHECKOUT_UNAVAILABLE_MESSAGE =
   'Online payment is not connected yet. Please contact By Celeste.'
 
+function isPlaceholderCredential(value: string | undefined): boolean {
+  if (!value?.trim()) return true
+  const v = value.trim().toLowerCase()
+  return v.includes('placeholder') || v.startsWith('replace_')
+}
+
 /** True when Square sandbox/production credentials are set (real hosted checkout). */
 export function isSquareConfigured(): boolean {
-  return Boolean(env.SQUARE_ACCESS_TOKEN?.trim() && env.SQUARE_LOCATION_ID?.trim())
+  return (
+    !isPlaceholderCredential(env.SQUARE_ACCESS_TOKEN) &&
+    !isPlaceholderCredential(env.SQUARE_LOCATION_ID)
+  )
 }
 
 /** Webhook verification (production go-live). */
 export function isSquareWebhookConfigured(): boolean {
-  return Boolean(
-    env.SQUARE_WEBHOOK_SIGNATURE_KEY?.trim() && env.SQUARE_WEBHOOK_NOTIFICATION_URL?.trim(),
+  return (
+    !isPlaceholderCredential(env.SQUARE_WEBHOOK_SIGNATURE_KEY) &&
+    Boolean(env.SQUARE_WEBHOOK_NOTIFICATION_URL?.trim())
   )
 }
 

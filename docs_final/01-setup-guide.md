@@ -122,7 +122,7 @@ npm run seed:events
 npm run seed:demo-admin
 ```
 
-**Jane production admin (set `JANE_ADMIN_PASSWORD` in `.env` first):**
+**Production admin (set `ADMIN_PASSWORD` in `.env` first):**
 
 ```bash
 npm run seed:jane-admin

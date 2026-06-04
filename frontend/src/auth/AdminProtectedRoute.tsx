@@ -1,5 +1,8 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
+import { BUSINESS_DETAILS } from '../config/businessDetails'
 import { useAuth } from './AuthContext'
+
+const CANONICAL_ADMIN_EMAIL = BUSINESS_DETAILS.adminEmail.trim().toLowerCase()
 
 export function AdminProtectedRoute() {
   const { status, user } = useAuth()
@@ -17,9 +20,13 @@ export function AdminProtectedRoute() {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />
   }
 
-  // Only active ADMIN accounts may enter the admin portal. Everyone else (CUSTOMER, WHOLESALE,
-  // inactive) is redirected to the storefront. Backend routes also enforce this via requireRole.
-  if (user.role !== 'ADMIN' || user.isActive === false) {
+  // Only the canonical admin inbox may use the admin portal (see businessDetails.adminEmail).
+  const isAllowedAdmin =
+    user.role === 'ADMIN' &&
+    user.isActive !== false &&
+    user.email.trim().toLowerCase() === CANONICAL_ADMIN_EMAIL
+
+  if (!isAllowedAdmin) {
     return <Navigate to="/" replace />
   }
 

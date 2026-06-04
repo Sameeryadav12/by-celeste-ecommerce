@@ -163,7 +163,7 @@ npm run dev                   # http://localhost:5174
 | `SQUARE_WEBHOOK_NOTIFICATION_URL` | For payments | Public webhook URL |
 | `CHECKOUT_SUCCESS_REDIRECT_URL` | For payments | After checkout success |
 | `TOTP_ENCRYPTION_KEY` | Optional | Admin 2FA (64 hex chars) |
-| `JANE_ADMIN_PASSWORD` | Seed only | One-time Jane admin setup |
+| `ADMIN_PASSWORD` / `JANE_ADMIN_PASSWORD` | Seed only | One-time production admin setup |
 | `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` | Optional | Brevo SMTP relay for transactional emails |
 | `MAIL_FROM_NAME` / `MAIL_FROM_EMAIL` | With SMTP | Sender identity used by all transactional emails |
 | `ADMIN_NOTIFICATION_EMAIL` | With SMTP | Inbox for wholesale + order alerts and `npm run test:email` |
@@ -236,9 +236,9 @@ Production domain target: **www.byceleste.com.au**
 
 ## Handover notes
 
-- **Production admin email:** jane.byceleste@gmail.com  
+- **Production admin email:** admin.byceleste@gmail.com  
 - **Business:** By Celeste, ABN 42 491 484 966, Leneva VIC  
-- **Support:** jane.byceleste@gmail.com  
+- **Support (storefront / wholesale):** jane.byceleste@gmail.com  
 - Client guide: [docs_final/22-client-handover-guide.md](./docs_final/22-client-handover-guide.md)  
 
 ---

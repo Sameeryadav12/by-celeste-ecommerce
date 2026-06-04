@@ -20,12 +20,21 @@ How to put **By Celeste** live for **www.byceleste.com.au**.
 
 - [ ] No `.env` files in Git (only `.env.example`).
 - [ ] Production builds pass: `npm run build` in `backend/` and `frontend/`.
-- [ ] Jane admin created with `npm run seed:jane-admin` (not demo admin).
+- [ ] Production admin created with `npm run seed:jane-admin` (`admin.byceleste@gmail.com`).
 - [ ] `SEED_DEMO_USERS` is **not** set on production.
 
 ---
 
 ## 2. Database
+
+### Supabase + Railway
+
+If the API is on **Railway** and the DB is **Supabase**, use pooled URLs only. See **[RAILWAY-SUPABASE-DATABASE.md](./RAILWAY-SUPABASE-DATABASE.md)** (fixes `ENETUNREACH` / invalid Prisma queries).
+
+- **`DATABASE_URL`** — Transaction pooler, port **6543**, `pgbouncer=true`, `sslmode=require`
+- **`DIRECT_URL`** — Session pooler on `pooler.supabase.com`, port **5432**, `sslmode=require` (migrations only)
+
+### Render Postgres (or other host)
 
 1. Create a **PostgreSQL** database (e.g. Render Postgres).
 2. Copy the connection string into Render **`DATABASE_URL`**.

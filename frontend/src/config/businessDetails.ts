@@ -3,6 +3,7 @@ export const BUSINESS_DETAILS = {
   name: 'By Celeste',
   abn: '42 491 484 966',
   abnDisplay: 'ABN 42 491 484 966',
+  adminEmail: 'admin.byceleste@gmail.com',
   supportEmail: 'jane.byceleste@gmail.com',
   phone: '0403 823 357',
   phoneTel: '+61403823357',

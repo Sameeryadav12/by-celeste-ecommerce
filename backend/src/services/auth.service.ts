@@ -1,4 +1,5 @@
 import type { Role, User } from '@prisma/client'
+import { isCanonicalAdminEmail } from '../config/adminAccess'
 import { prisma } from '../config/prisma'
 import { ApiError } from '../utils/apiError'
 import { hashPassword, verifyPassword } from '../utils/password'
@@ -144,6 +145,15 @@ export async function authenticateUser(input: { email: string; password: string 
 
   const ok = await verifyPassword(input.password, user.passwordHash)
   if (!ok) {
+    throw new ApiError({
+      statusCode: 401,
+      code: 'INVALID_CREDENTIALS',
+      message: 'Email or password is incorrect.',
+    })
+  }
+
+  // Only the canonical admin inbox may use administrator accounts (admin portal + 2FA).
+  if (user.role === 'ADMIN' && !isCanonicalAdminEmail(user.email)) {
     throw new ApiError({
       statusCode: 401,
       code: 'INVALID_CREDENTIALS',

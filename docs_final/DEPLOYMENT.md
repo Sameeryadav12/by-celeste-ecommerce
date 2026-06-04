@@ -53,7 +53,7 @@ Run locally: `cd backend && npm run seed:demo-admin` (idempotent).
 
 | Account | Role | Portal |
 |---------|------|--------|
-| `admin@byceleste.com` | ADMIN | `/admin` |
+| `admin.byceleste@gmail.com` | ADMIN | `/admin` |
 | `wholesale@byceleste.com` | WHOLESALE (approved) | `/wholesale` |
 
 Passwords are set via demo seed env vars — see `backend/.env.example` (comments only; do not commit real passwords). Retail customers use **Sign up** on the storefront; they cannot access `/admin` or full wholesale pricing until approved.

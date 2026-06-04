@@ -1,3 +1,5 @@
+import { BUSINESS_DETAILS } from './businessDetails'
+
 export const POLICY_PENDING_NOTE = 'Final wording to be confirmed by By Celeste.'
 
 export const POLICIES: Record<
@@ -17,7 +19,7 @@ export const POLICIES: Record<
     title: 'Returns & refunds',
     description: 'Returns and refund information for By Celeste orders.',
     paragraphs: [
-      'Contact us at jane.byceleste@gmail.com with your order number if something arrives damaged or incorrect.',
+      `Contact us at ${BUSINESS_DETAILS.supportEmail} with your order number if something arrives damaged or incorrect.`,
       POLICY_PENDING_NOTE,
     ],
   },

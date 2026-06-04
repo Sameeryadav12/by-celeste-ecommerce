@@ -7,12 +7,11 @@ Plain-language guide for **Jane** and the By Celeste team. Technical setup is in
 ## How to log in
 
 1. Open your website and go to **Login** (or visit `/login`).
-2. Sign in with **jane.byceleste@gmail.com** and the password set during handover setup.
+2. Sign in with **admin.byceleste@gmail.com** and the password set during handover setup.
 3. Open **Admin** (or go to `/admin`).
 4. **Change your password** after first login (Account or profile flow as provided).
 5. Optional: turn on **two-factor authentication** under **Admin → Security**.
 
-Demo login `admin@byceleste.com` is for developers only — do not use it on the live shop.
 
 ---
 
@@ -189,15 +188,15 @@ Footer shows name, ABN, address, email, and website — not phone (keeps footer 
 
 Default Instagram: [instagram.com/by_celeste1](https://www.instagram.com/by_celeste1/). Clear Instagram to hide it (no broken link).
 
-## Jane admin account
+## Admin portal account
 
 | Field | Value |
 |-------|--------|
-| Email | jane.byceleste@gmail.com |
+| Admin portal login | admin.byceleste@gmail.com only (other emails cannot access `/admin`) |
 | Role | ADMIN |
-| Password | Set once by your developer using `npm run seed:jane-admin` and `JANE_ADMIN_PASSWORD` in server config — **not stored in this document** |
+| Password | Set once by your developer using `npm run seed:jane-admin` and `ADMIN_PASSWORD` in server config — **not stored in this document** |
 
-**Jane must change this password after first login** (use a strong unique password; optional admin 2FA under Admin → Security).
+Change this password after first login (strong unique password; optional admin 2FA under Admin → Security). Customer and wholesale support stays **jane.byceleste@gmail.com** on the storefront.
 
 Your developer runs once (does not duplicate if the account already exists):
 
@@ -206,7 +205,7 @@ cd backend
 npm run seed:jane-admin
 ```
 
-Demo admin (`admin@byceleste.com`) remains for development only — use Jane’s account in production.
+Use a strong password for the production admin account; change it after first login.
 
 ## Payments (Square)
 

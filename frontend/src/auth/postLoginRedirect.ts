@@ -1,4 +1,7 @@
+import { BUSINESS_DETAILS } from '../config/businessDetails'
 import type { AuthUser } from './authTypes'
+
+const CANONICAL_ADMIN_EMAIL = BUSINESS_DETAILS.adminEmail.trim().toLowerCase()
 
 /** Accepts only same-origin style paths (prevents open redirects). */
 export function safeInternalPath(path: unknown): string | null {
@@ -9,7 +12,9 @@ export function safeInternalPath(path: unknown): string | null {
 }
 
 export function defaultHomePathForUser(user: AuthUser): string {
-  if (user.role === 'ADMIN') return '/admin'
+  if (user.role === 'ADMIN' && user.email.trim().toLowerCase() === CANONICAL_ADMIN_EMAIL) {
+    return '/admin'
+  }
   if (user.role === 'WHOLESALE' && user.wholesaleApprovalStatus === 'APPROVED') return '/wholesale'
   return '/account'
 }
