@@ -12,6 +12,7 @@ import { Seo } from '../components/seo/Seo'
 import { SmartImage } from '../components/media/SmartImage'
 import { productNativeBadges } from '../features/catalog/nativeIngredientHighlights'
 import { howToUseSteps } from '../features/catalog/productDetailFormat'
+import { DEFAULT_OG_IMAGE_PATH, SITE_ORIGIN, absoluteUrl } from '../config/siteSeo'
 
 function productDescriptionParagraphs(description: string): string[] {
   const trimmed = description.trim()
@@ -80,6 +81,11 @@ export function ProductDetailPage() {
         <Seo
           title={title}
           description="This product may be inactive or the link may be incorrect."
+          canonicalUrl={slug ? `${SITE_ORIGIN}/shop/${slug}` : `${SITE_ORIGIN}/shop`}
+          openGraph={{
+            imageUrl: absoluteUrl(DEFAULT_OG_IMAGE_PATH),
+            imageAltText: 'By Celeste',
+          }}
         />
         <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">Product not found</h1>
         <CatalogEmptyState
@@ -99,9 +105,18 @@ export function ProductDetailPage() {
 
   if (loading) {
     const title = 'Product | By Celeste'
+    const canonicalUrl = slug ? `${SITE_ORIGIN}/shop/${slug}` : `${SITE_ORIGIN}/shop`
     return (
       <section className="space-y-8">
-        <Seo title={title} description="Loading product details from By Celeste." />
+        <Seo
+          title={title}
+          description="Loading product details from By Celeste."
+          canonicalUrl={canonicalUrl}
+          openGraph={{
+            imageUrl: absoluteUrl(DEFAULT_OG_IMAGE_PATH),
+            imageAltText: 'By Celeste',
+          }}
+        />
         <div className="grid animate-pulse gap-6 md:grid-cols-2">
           <div className="aspect-square w-full rounded-2xl bg-neutral-200" />
           <div className="space-y-3">
@@ -117,9 +132,18 @@ export function ProductDetailPage() {
 
   if (error || !product) {
     const title = 'Unable to load product | By Celeste'
+    const canonicalUrl = slug ? `${SITE_ORIGIN}/shop/${slug}` : `${SITE_ORIGIN}/shop`
     return (
       <section className="space-y-4">
-        <Seo title={title} description="Something went wrong while loading this product." />
+        <Seo
+          title={title}
+          description="Something went wrong while loading this product."
+          canonicalUrl={canonicalUrl}
+          openGraph={{
+            imageUrl: absoluteUrl(DEFAULT_OG_IMAGE_PATH),
+            imageAltText: 'By Celeste',
+          }}
+        />
         <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">Unable to load product</h1>
         <div className="flex flex-col gap-3 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 sm:flex-row sm:items-center sm:justify-between">
           <p className="min-w-0">{error ?? 'Something went wrong while loading this product.'}</p>
@@ -182,7 +206,16 @@ export function ProductDetailPage() {
 
   return (
     <>
-      <Seo title={`${product.name} | By Celeste`} description={product.shortDescription} jsonLd={jsonLd} />
+      <Seo
+        title={`${product.name} | By Celeste`}
+        description={product.shortDescription}
+        canonicalUrl={`${SITE_ORIGIN}/shop/${product.slug}`}
+        openGraph={{
+          imageUrl: absoluteImageUrl ?? absoluteUrl(DEFAULT_OG_IMAGE_PATH),
+          imageAltText: product.name,
+        }}
+        jsonLd={jsonLd}
+      />
       <section className="space-y-10 sm:space-y-12">
       <button
         type="button"

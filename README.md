@@ -82,7 +82,7 @@ Private area at **`/wholesale`** (approved wholesale accounts only):
 - Discount coupons (percentage-only, admin managed, applied before shipping)  
 - Transactional emails via Brevo SMTP (password reset, wholesale alerts, order alerts)  
 - Order numbers BC-1000, BC-1001, …  
-- SEO on main pages  
+- SEO on public pages (canonical, Open Graph, JSON-LD), plus `sitemap.xml` and `robots.txt`  
 
 ---
 

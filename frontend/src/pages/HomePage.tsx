@@ -18,6 +18,7 @@ import {
   type PublicTestimonial,
   type ThemeSettings,
 } from '../features/content/contentApi'
+import { DEFAULT_OG_IMAGE_PATH, SITE_ORIGIN, absoluteUrl } from '../config/siteSeo'
 
 const DEFAULT_HERO_HEADING = 'Calm, considered skincare by By Celeste'
 
@@ -110,6 +111,30 @@ export function HomePage() {
       <Seo
         title="Natural skincare by By Celeste"
         description="By Celeste is a calm Australian skincare brand with gentle essentials, events, and honest ingredient information."
+        canonicalUrl={`${SITE_ORIGIN}/`}
+        openGraph={{
+          imageUrl: absoluteUrl(DEFAULT_OG_IMAGE_PATH),
+          imageAltText: 'By Celeste',
+        }}
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@graph': [
+            {
+              '@type': 'Organization',
+              name: 'By Celeste',
+              url: SITE_ORIGIN,
+              logo: {
+                '@type': 'ImageObject',
+                url: absoluteUrl(DEFAULT_OG_IMAGE_PATH),
+              },
+            },
+            {
+              '@type': 'WebSite',
+              name: 'By Celeste',
+              url: SITE_ORIGIN,
+            },
+          ],
+        }}
       />
       <section className="space-y-24 sm:space-y-28">
         {/* 1 — Hero: text branding only; visual mark lives in the header */}

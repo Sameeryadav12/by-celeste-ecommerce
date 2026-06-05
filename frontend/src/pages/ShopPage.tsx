@@ -10,6 +10,7 @@ import { ProductCardSkeleton } from '../features/catalog/components/ProductCardS
 import { ProductSearchField } from '../features/catalog/components/ProductSearchField'
 import type { CatalogCategory, CatalogProductsResult, ProductSort } from '../features/catalog/catalogTypes'
 import { Reveal } from '../components/animation/Reveal'
+import { DEFAULT_OG_IMAGE_PATH, SITE_ORIGIN, absoluteUrl } from '../config/siteSeo'
 
 const PAGE_SIZE = 9
 
@@ -156,6 +157,11 @@ export function ShopPage() {
       <Seo
         title="Shop skincare products | By Celeste"
         description="Browse By Celeste skincare products. Search by name, filter by category, and view featured favourites."
+        canonicalUrl={`${SITE_ORIGIN}/shop`}
+        openGraph={{
+          imageUrl: absoluteUrl(DEFAULT_OG_IMAGE_PATH),
+          imageAltText: 'By Celeste',
+        }}
       />
       <section className="space-y-8">
         <div className="space-y-2">

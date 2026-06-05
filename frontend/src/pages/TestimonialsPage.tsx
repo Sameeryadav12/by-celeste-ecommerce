@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { getPublicTestimonials, type PublicTestimonial } from '../features/content/contentApi'
 import { BrandIcon } from '../components/icons/BrandIcon'
 import { Reveal } from '../components/animation/Reveal'
+import { DEFAULT_OG_IMAGE_PATH, SITE_ORIGIN, absoluteUrl } from '../config/siteSeo'
 
 export function TestimonialsPage() {
   const [testimonials, setTestimonials] = useState<PublicTestimonial[]>([])
@@ -30,6 +31,11 @@ export function TestimonialsPage() {
       <Seo
         title="Testimonials | By Celeste"
         description="Read what By Celeste customers say about their skincare favourites."
+        canonicalUrl={`${SITE_ORIGIN}/testimonials`}
+        openGraph={{
+          imageUrl: absoluteUrl(DEFAULT_OG_IMAGE_PATH),
+          imageAltText: 'By Celeste',
+        }}
       />
       <section className="space-y-8">
         <div className="space-y-3">

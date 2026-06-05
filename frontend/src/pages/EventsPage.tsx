@@ -8,6 +8,7 @@ import { EventCardSkeleton } from '../features/events/components/EventCardSkelet
 import { getEvents, type GetEventsQuery } from '../features/events/eventsApi'
 import type { EventItem } from '../features/events/eventsTypes'
 import { Reveal } from '../components/animation/Reveal'
+import { DEFAULT_OG_IMAGE_PATH, SITE_ORIGIN, absoluteUrl } from '../config/siteSeo'
 
 function buildQuery(overrides: GetEventsQuery): GetEventsQuery {
   return overrides
@@ -65,6 +66,11 @@ export function EventsPage() {
       <Seo
         title="Events | By Celeste"
         description="Discover By Celeste pop-ups and community moments. Explore upcoming events across Australia."
+        canonicalUrl={`${SITE_ORIGIN}/events`}
+        openGraph={{
+          imageUrl: absoluteUrl(DEFAULT_OG_IMAGE_PATH),
+          imageAltText: 'By Celeste',
+        }}
       />
       <section className="space-y-6">
       <div className="space-y-3">

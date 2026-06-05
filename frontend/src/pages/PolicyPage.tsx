@@ -8,6 +8,8 @@ import { BUSINESS_DETAILS } from '../config/businessDetails'
 
 import { POLICIES } from '../config/policies'
 
+import { DEFAULT_OG_IMAGE_PATH, SITE_ORIGIN, absoluteUrl } from '../config/siteSeo'
+
 
 
 export function PolicyPage() {
@@ -46,7 +48,15 @@ export function PolicyPage() {
 
     <>
 
-      <Seo title={`${policy.title} | By Celeste`} description={policy.description} />
+      <Seo
+        title={`${policy.title} | By Celeste`}
+        description={policy.description}
+        canonicalUrl={slug ? `${SITE_ORIGIN}/policies/${slug}` : `${SITE_ORIGIN}/policies`}
+        openGraph={{
+          imageUrl: absoluteUrl(DEFAULT_OG_IMAGE_PATH),
+          imageAltText: policy.title,
+        }}
+      />
 
       <div className="mx-auto max-w-2xl space-y-6">
 

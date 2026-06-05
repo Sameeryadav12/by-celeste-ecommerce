@@ -35,6 +35,13 @@ Plain-language guide for **Jane** and the By Celeste team. Technical setup is in
 
 ---
 
+## SEO basics
+
+- Public pages now include canonical URLs and Open Graph metadata.
+- Home and product pages include JSON-LD structured data (no ratings).
+- `https://www.byceleste.com.au/sitemap.xml` is generated from live products and published events.
+- `https://www.byceleste.com.au/robots.txt` allows public pages and blocks admin, checkout, cart, and API.
+
 ## Manage products
 
 1. Go to **Admin → Products**.

@@ -9,6 +9,7 @@ import { Seo } from '../components/seo/Seo'
 import { SmartImage } from '../components/media/SmartImage'
 import { downloadEventIcs, googleMapsSearchUrl } from '../features/events/eventCalendar'
 import { BrandIcon } from '../components/icons/BrandIcon'
+import { DEFAULT_OG_IMAGE_PATH, SITE_ORIGIN, absoluteUrl } from '../config/siteSeo'
 
 export function EventDetailPage() {
   const { slug } = useParams<{ slug: string }>()
@@ -58,6 +59,11 @@ export function EventDetailPage() {
         <Seo
           title={title}
           description="Discover details about upcoming By Celeste pop-ups and community events."
+          canonicalUrl={slug ? `${SITE_ORIGIN}/events/${slug}` : `${SITE_ORIGIN}/events`}
+          openGraph={{
+            imageUrl: absoluteUrl(DEFAULT_OG_IMAGE_PATH),
+            imageAltText: 'By Celeste',
+          }}
         />
         <Card>
           <div className="space-y-3 animate-pulse" aria-busy>
@@ -78,6 +84,11 @@ export function EventDetailPage() {
         <Seo
           title={title}
           description="This event may be unpublished or the link may be incorrect."
+          canonicalUrl={slug ? `${SITE_ORIGIN}/events/${slug}` : `${SITE_ORIGIN}/events`}
+          openGraph={{
+            imageUrl: absoluteUrl(DEFAULT_OG_IMAGE_PATH),
+            imageAltText: 'By Celeste',
+          }}
         />
         <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">Event not found</h1>
         <Card>
@@ -153,6 +164,15 @@ export function EventDetailPage() {
       <Seo
         title={`${event.title} | By Celeste`}
         description={event.shortDescription}
+        canonicalUrl={`${SITE_ORIGIN}/events/${event.slug}`}
+        openGraph={{
+          imageUrl: event.imageUrl
+            ? event.imageUrl.startsWith('/')
+              ? `${SITE_ORIGIN}${event.imageUrl}`
+              : event.imageUrl
+            : absoluteUrl(DEFAULT_OG_IMAGE_PATH),
+          imageAltText: event.title,
+        }}
         jsonLd={jsonLd}
       />
       <section className="space-y-6">

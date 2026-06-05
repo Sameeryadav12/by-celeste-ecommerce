@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /account
+Disallow: /checkout
+Disallow: /cart
+Disallow: /wholesale/dashboard
+Disallow: /api
+
+Sitemap: https://www.byceleste.com.au/sitemap.xml
+

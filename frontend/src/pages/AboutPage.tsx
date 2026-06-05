@@ -4,6 +4,7 @@ import { Card } from '../components/ui/Card'
 import { SmartImage } from '../components/media/SmartImage'
 import { Reveal } from '../components/animation/Reveal'
 import { BUSINESS_DETAILS } from '../config/businessDetails'
+import { DEFAULT_OG_IMAGE_PATH, SITE_ORIGIN, absoluteUrl } from '../config/siteSeo'
 
 const ABOUT_HERO_IMAGE = '/images/about/about-product-autumn.png'
 
@@ -13,6 +14,11 @@ export function AboutPage() {
       <Seo
         title="About us | By Celeste"
         description="Established in Albury NSW in 2006, By Celeste crafts nourishing clay and body products by hand using ingredients from local orchards, vineyards and olive groves."
+        canonicalUrl={`${SITE_ORIGIN}/about`}
+        openGraph={{
+          imageUrl: absoluteUrl(DEFAULT_OG_IMAGE_PATH),
+          imageAltText: 'By Celeste',
+        }}
       />
 
       <section className="space-y-12 sm:space-y-14">

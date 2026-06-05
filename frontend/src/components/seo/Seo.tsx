@@ -6,6 +6,7 @@ export type SeoProps = {
   canonicalUrl?: string
   openGraph?: {
     imageUrl?: string
+    imageAltText?: string
   }
   jsonLd?: unknown
   children?: ReactNode
@@ -67,11 +68,16 @@ export function Seo({ title, description, canonicalUrl, openGraph, jsonLd }: Seo
       upsertMeta({ property: 'og:image' }, openGraph.imageUrl)
     }
 
+    if (openGraph?.imageAltText) {
+      upsertMeta({ property: 'og:image:alt' }, openGraph.imageAltText)
+      upsertMeta({ name: 'twitter:image:alt' }, openGraph.imageAltText)
+    }
+
     // Simple Twitter card for better previews.
     upsertMeta({ name: 'twitter:card' }, 'summary')
     upsertMeta({ name: 'twitter:title' }, title)
     if (description) upsertMeta({ name: 'twitter:description' }, description)
-  }, [canonicalUrl, computedCanonical, description, openGraph?.imageUrl, title])
+  }, [canonicalUrl, computedCanonical, description, openGraph?.imageUrl, openGraph?.imageAltText, title])
 
   return (
     <>
