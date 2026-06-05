@@ -21,6 +21,7 @@ import { effectiveProductUnitPrice } from './wholesalePricing'
 import type { PricingViewer } from './wholesalePricing'
 import { allocateOrderNumber } from './orderNumber.service'
 import { evaluateCouponForUse } from './discountCoupon.service'
+import { assertWholesaleMinimumOrder } from '../config/wholesaleOrderRules'
 
 async function loadPricingViewerForCheckout(userId: string | undefined): Promise<PricingViewer> {
   if (!userId) return null
@@ -129,6 +130,9 @@ export async function createCheckoutSession(params: {
       lineTotal,
     })
   }
+
+  // Approved wholesale buyers must meet the product subtotal minimum before shipping/discounts.
+  assertWholesaleMinimumOrder(pricingViewer, subtotalDec)
 
   // Revalidate the coupon on the server using the freshly priced subtotal — frontend totals
   // are never trusted. Throws an ApiError with a friendly message if rejected.

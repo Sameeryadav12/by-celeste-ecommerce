@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
+import { useAuth } from '../auth/AuthContext'
 import { Button } from '../components/ui/Button'
 import { useCart } from '../features/cart/CartContext'
 import { WholesalePricingNote } from './wholesale/components/WholesalePricingNote'
@@ -11,8 +12,15 @@ import { SHIPPING_CONFIG, calculateShipping } from '../features/cart/shippingRul
 import { Seo } from '../components/seo/Seo'
 import { SmartImage } from '../components/media/SmartImage'
 import { getPublicBusinessSettings, type BusinessSettings } from '../features/content/contentApi'
+import { WholesaleMinimumOrderNote } from '../features/wholesale/components/WholesaleMinimumOrderNote'
+import { isApprovedWholesaleUser } from '../features/wholesale/wholesalePricing'
+import {
+  WHOLESALE_MINIMUM_ORDER_MESSAGE,
+  evaluateWholesaleMinimum,
+} from '../features/wholesale/wholesaleOrderRules'
 
 export function CartPage() {
+  const { user } = useAuth()
   const [business, setBusiness] = useState<BusinessSettings | null>(null)
   const {
     items,
@@ -36,6 +44,18 @@ export function CartPage() {
   const discountedSubtotal = Math.max(0, summary.subtotal - discountAmount)
   const shippingAmount = calculateShipping(discountedSubtotal)
   const total = discountedSubtotal + shippingAmount
+
+  const approvedWholesale = isApprovedWholesaleUser(user)
+  const wholesaleMinimum = useMemo(
+    () =>
+      evaluateWholesaleMinimum({
+        isApprovedWholesale: approvedWholesale,
+        productSubtotal: summary.subtotal,
+      }),
+    [approvedWholesale, summary.subtotal],
+  )
+  const checkoutBlockedByWholesaleMinimum =
+    wholesaleMinimum.applies && !wholesaleMinimum.meetsMinimum
 
   useEffect(() => {
     let cancelled = false
@@ -98,9 +118,16 @@ export function CartPage() {
         </Link>
       </div>
 
-      {pricingMode === 'wholesale' ? (
-        <div className="max-w-xl">
+      {pricingMode === 'wholesale' || approvedWholesale ? (
+        <div className="max-w-xl space-y-2">
           <WholesalePricingNote />
+          {approvedWholesale ? (
+            <WholesaleMinimumOrderNote
+              isApprovedWholesale
+              productSubtotal={summary.subtotal}
+              showSubtotal
+            />
+          ) : null}
         </div>
       ) : null}
 
@@ -215,6 +242,10 @@ export function CartPage() {
             }
             shippingSubLabel={`${business?.shippingMethodLabel || 'Flat rate shipping'} via ${business?.shippingCarrierWording || SHIPPING_CONFIG.carrierLabel}`}
             checkoutSupportNote={`Secure checkout powered by Square · ${business?.shippingExplanatoryNote || 'Flat rate shipping via Australia Post'}`}
+            checkoutDisabled={checkoutBlockedByWholesaleMinimum}
+            checkoutDisabledMessage={
+              checkoutBlockedByWholesaleMinimum ? WHOLESALE_MINIMUM_ORDER_MESSAGE : undefined
+            }
           />
         </div>
       </div>

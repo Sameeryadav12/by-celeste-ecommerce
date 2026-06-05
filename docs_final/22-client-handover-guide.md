@@ -235,7 +235,8 @@ Webhook + redirect URLs must match your live domain in Square and backend env.
 ## Wholesale pricing
 
 - Approved wholesale accounts pay **50% of retail** (shop, bulk orders, cart, checkout). UI shows wholesale + RRP.
-- The wholesale portal shows: **“Wholesale pricing is 50% off retail pricing.”** (dashboard, shop, bulk orders, cart when wholesale items are in cart).
+- **Wholesale minimum order:** approved wholesale buyers need at least **$300 product subtotal before shipping**. Shipping does not count. Retail customers and guests are not affected. Discount coupons do not bypass this minimum — eligibility uses the pre-discount product subtotal.
+- The wholesale portal shows: **“Wholesale pricing is 50% off retail pricing.”** and the $300 minimum note (dashboard, shop, bulk orders, cart when wholesale items are in cart).
 - **Wholesale support** card: jane.byceleste@gmail.com — *For wholesale questions, contact By Celeste.* (dashboard, shop, bulk orders; full page under **Support**).
 - Wholesale users **buy products only** — they cannot list or sell products on the site.
 - Apply and approve accounts under **Admin → Wholesale**.

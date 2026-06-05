@@ -11,6 +11,8 @@ export function CartSummaryCard({
   ctaTo = '/checkout',
   ctaLabel = 'Continue to checkout',
   showCta = true,
+  checkoutDisabled = false,
+  checkoutDisabledMessage,
   checkoutSupportNote = 'Secure checkout powered by Square · Flat rate shipping via Australia Post',
   discount,
 }: {
@@ -22,6 +24,8 @@ export function CartSummaryCard({
   ctaTo?: string
   ctaLabel?: string
   showCta?: boolean
+  checkoutDisabled?: boolean
+  checkoutDisabledMessage?: string
   checkoutSupportNote?: string
   discount?: { code: string; percentage: number; amount: number } | null
 }) {
@@ -65,11 +69,22 @@ export function CartSummaryCard({
 
       {showCta ? (
         <div className="mt-5 space-y-3">
-          <Link to={ctaTo} className="block">
-            <Button type="button" className="w-full">
+          {checkoutDisabled && checkoutDisabledMessage ? (
+            <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">
+              {checkoutDisabledMessage}
+            </p>
+          ) : null}
+          {checkoutDisabled ? (
+            <Button type="button" className="w-full" disabled>
               {ctaLabel}
             </Button>
-          </Link>
+          ) : (
+            <Link to={ctaTo} className="block">
+              <Button type="button" className="w-full">
+                {ctaLabel}
+              </Button>
+            </Link>
+          )}
           <p className="text-center text-[11px] leading-relaxed text-neutral-400">
             {checkoutSupportNote}
           </p>

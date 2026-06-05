@@ -207,6 +207,7 @@ For long-term production, plan **cloud storage** (e.g. S3, Cloudinary). That int
 - [ ] Login and account pages work
 - [ ] `/admin` requires admin login
 - [ ] `/wholesale` requires approved wholesale login
+- [ ] Approved wholesale checkout blocked below **$300 product subtotal** (before shipping; coupons do not bypass)
 - [ ] CSV export from admin products/orders
 
 ---

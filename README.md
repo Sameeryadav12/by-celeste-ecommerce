@@ -47,6 +47,7 @@ Private area at **`/admin`** (admin login required):
 Private area at **`/wholesale`** (approved wholesale accounts only):
 
 - 50% off retail pricing  
+- **$300 minimum product subtotal** before shipping (approved wholesale only)  
 - Shop, bulk orders, cart, checkout  
 - Order history and support information  
 

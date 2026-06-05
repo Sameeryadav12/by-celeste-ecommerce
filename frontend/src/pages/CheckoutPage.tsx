@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../auth/AuthContext'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { useCart } from '../features/cart/CartContext'
@@ -9,6 +10,12 @@ import { formatAud } from '../features/cart/money'
 import { calculateShipping } from '../features/cart/shippingRules'
 import { createCheckoutSession, fetchCheckoutReadiness } from '../features/checkout/checkoutApi'
 import { Seo } from '../components/seo/Seo'
+import { WholesaleMinimumOrderNote } from '../features/wholesale/components/WholesaleMinimumOrderNote'
+import { isApprovedWholesaleUser } from '../features/wholesale/wholesalePricing'
+import {
+  WHOLESALE_MINIMUM_ORDER_MESSAGE,
+  evaluateWholesaleMinimum,
+} from '../features/wholesale/wholesaleOrderRules'
 
 const AU_STATES = ['NSW', 'VIC', 'QLD', 'WA', 'SA', 'TAS', 'ACT', 'NT'] as const
 
@@ -43,6 +50,7 @@ const initialForm: CheckoutForm = {
 }
 
 export function CheckoutPage() {
+  const { user } = useAuth()
   const { items, summary, coupon } = useCart()
   const discountAmount = (() => {
     if (!coupon || summary.subtotal <= 0) return 0
@@ -53,6 +61,18 @@ export function CheckoutPage() {
   const discountedSubtotal = Math.max(0, summary.subtotal - discountAmount)
   const shipping = calculateShipping(discountedSubtotal)
   const total = discountedSubtotal + shipping
+
+  const approvedWholesale = isApprovedWholesaleUser(user)
+  const wholesaleMinimum = useMemo(
+    () =>
+      evaluateWholesaleMinimum({
+        isApprovedWholesale: approvedWholesale,
+        productSubtotal: summary.subtotal,
+      }),
+    [approvedWholesale, summary.subtotal],
+  )
+  const checkoutBlockedByWholesaleMinimum =
+    wholesaleMinimum.applies && !wholesaleMinimum.meetsMinimum
 
   const [form, setForm] = useState<CheckoutForm>(initialForm)
   const [errors, setErrors] = useState<FormErrors>({})
@@ -156,6 +176,10 @@ export function CheckoutPage() {
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
+    if (checkoutBlockedByWholesaleMinimum) {
+      setSubmitError(WHOLESALE_MINIMUM_ORDER_MESSAGE)
+      return
+    }
     if (paymentBlockedMessage) {
       setSubmitError(paymentBlockedMessage)
       return
@@ -209,6 +233,16 @@ export function CheckoutPage() {
           Square&apos;s secure hosted checkout — we never collect card numbers on this site.
         </p>
       </div>
+
+      {approvedWholesale ? (
+        <div className="max-w-xl">
+          <WholesaleMinimumOrderNote
+            isApprovedWholesale
+            productSubtotal={summary.subtotal}
+            showSubtotal
+          />
+        </div>
+      ) : null}
 
       {paymentBlockedMessage ? (
         <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
@@ -332,7 +366,11 @@ export function CheckoutPage() {
               <Button
                 type="submit"
                 className="w-full sm:w-auto"
-                disabled={submitting || Boolean(paymentBlockedMessage)}
+                disabled={
+                  submitting ||
+                  Boolean(paymentBlockedMessage) ||
+                  checkoutBlockedByWholesaleMinimum
+                }
               >
                 {submitting ? 'Starting secure checkout…' : 'Continue to Secure Payment'}
               </Button>

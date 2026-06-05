@@ -12,6 +12,7 @@ import {
 } from '../../features/wholesale/wholesalePricing'
 import { WholesaleUnitPrice } from '../../features/wholesale/components/WholesaleUnitPrice'
 import { WholesaleProductPreview } from './components/WholesaleProductPreview'
+import { WholesaleMinimumOrderNote } from '../../features/wholesale/components/WholesaleMinimumOrderNote'
 import { WholesalePricingNote } from './components/WholesalePricingNote'
 import { WholesaleSupportCard } from './components/WholesaleSupportCard'
 import { WS_PRIMARY, WS_SECONDARY, WS_SECONDARY_SM } from './wholesaleUi'
@@ -315,8 +316,15 @@ export function WholesaleBulkOrdersPage() {
         <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-700">
           Order large quantities quickly using bulk tools
         </p>
-        <div className="mt-3 max-w-2xl">
+        <div className="mt-3 max-w-2xl space-y-2">
           <WholesalePricingNote />
+          {approved ? (
+            <WholesaleMinimumOrderNote
+              isApprovedWholesale
+              productSubtotal={summary.subtotal}
+              showSubtotal
+            />
+          ) : null}
         </div>
       </div>
 
