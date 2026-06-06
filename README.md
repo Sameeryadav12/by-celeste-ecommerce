@@ -1,65 +1,58 @@
-# By Celeste — E-commerce Platform
+# By Celeste E-Commerce Platform
 
-[![CI](https://github.com/Sameeryadav12/by-celeste-ecommerce/actions/workflows/ci.yml/badge.svg)](https://github.com/Sameeryadav12/by-celeste-ecommerce/actions/workflows/ci.yml)
+A full-stack e-commerce website with customer shopping, admin management, wholesale ordering, Square payment readiness, and SEO support.
 
-**Repository:** [github.com/Sameeryadav12/by-celeste-ecommerce](https://github.com/Sameeryadav12/by-celeste-ecommerce)
+**Live demo:** [www.byceleste.com.au](https://www.byceleste.com.au/)
 
-Online shop and business tools for **By Celeste**, an Australian skincare brand. Customers can browse and buy products. Staff use an **admin portal** to manage the shop. Approved **wholesale** buyers get half-price ordering.
+**Portfolio repository:** [github.com/Sameeryadav12/by-celeste-ecommerce](https://github.com/Sameeryadav12/by-celeste-ecommerce)
 
----
-
-## Who this is for
-
-| Reader | Start here |
-|--------|------------|
-| **Jane / client** | [docs_final/22-client-handover-guide.md](./docs_final/22-client-handover-guide.md) |
-| **Developer setting up locally** | [docs_final/01-setup-guide.md](./docs_final/01-setup-guide.md) |
-| **Deploying to production** | [docs_final/08-deployment.md](./docs_final/08-deployment.md) |
+> **Important:** This repository is a portfolio-safe version. Private credentials, production environment variables, and client handover secrets are excluded. Use `.env.example` placeholders for local setup.
 
 ---
 
-## What the system does
+## 1. Project Overview
 
-### Customer website
+By Celeste is a production-style e-commerce platform for an Australian skincare brand. It includes a public storefront, secure admin portal, wholesale buyer area, product catalog, cart and checkout flow, events, testimonials, and operational tooling for day-to-day business use.
 
-Public site at the shop domain (target: **www.byceleste.com.au**):
-
-- Home, shop, product pages, cart, checkout  
-- Events and testimonials  
-- Policy pages (shipping, returns, privacy, terms)  
-- Customer accounts (orders, profile, password)  
-
-### Admin portal
-
-Private area at **`/admin`** (admin login required):
-
-- Dashboard (Square status, low stock, policy reminders)  
-- Products, categories, ingredients  
-- Orders and customers  
-- Wholesale approvals  
-- Events and testimonials  
-- Marketing, theme, business settings  
-- Security (optional 2FA)  
-- CSV exports  
-
-### Wholesale portal
-
-Private area at **`/wholesale`** (approved wholesale accounts only):
-
-- 50% off retail pricing  
-- **$300 minimum product subtotal** before shipping (approved wholesale only)  
-- Shop, bulk orders, cart, checkout  
-- Order history and support information  
-
-### Backend and database
-
-- **Node.js API** (Express) stores all business data  
-- **PostgreSQL** database via Prisma  
-- **Square** for card payments when configured  
+The live site is deployed and publicly accessible at [www.byceleste.com.au](https://www.byceleste.com.au/).
 
 ---
 
-## Tools used
+## 2. My Role
+
+**Sameer Yadav** — Lead Developer and Frontend Developer
+
+I worked as part of a team to deliver and refine the platform. My contributions included:
+
+- Frontend pages and UI improvements
+- Customer website features and product detail experience
+- Cart and checkout UX improvements
+- Admin portal polishing
+- Wholesale portal finalisation, including the **$300 wholesale minimum order rule**
+- Discount coupon system support
+- Password reset flow
+- Brevo email integration support
+- Square setup support
+- SEO optimisation (metadata, sitemap, robots.txt, structured data)
+- Production deployment support
+- Bug fixing, testing, and client handover documentation
+
+---
+
+## 3. Key Features
+
+- Product catalog with categories, ingredients, search, and filters
+- Shopping cart, coupons, and flat-rate shipping
+- Square hosted checkout (when configured)
+- Customer accounts, order history, and loyalty points
+- Wholesale application, approval workflow, and bulk ordering
+- Admin dashboard for products, orders, customers, events, and content
+- Transactional email readiness (Brevo SMTP)
+- SEO support on public pages
+
+---
+
+## 4. Tech Stack
 
 | Layer | Technology |
 |-------|------------|
@@ -67,207 +60,166 @@ Private area at **`/wholesale`** (approved wholesale accounts only):
 | Backend | Node.js, Express 5, TypeScript, Zod |
 | Database | PostgreSQL, Prisma |
 | Payments | Square (hosted checkout + webhooks) |
+| Email | Brevo SMTP (transactional) |
+| Deployment | Vercel (frontend), Railway (API), Supabase (PostgreSQL) |
 
 ---
 
-## Key features
-
-- Full product catalog with categories and ingredients  
-- Shopping cart and flat-rate shipping ($12 per order)  
-- Square checkout when connected; safe message when not  
-- Customer accounts, order history, loyalty points  
-- Wholesale application and approval flow  
-- Events with optional images  
-- Admin image upload for products and events  
-- Discount coupons (percentage-only, admin managed, applied before shipping)  
-- Transactional emails via Brevo SMTP (password reset, wholesale alerts, order alerts)  
-- Order numbers BC-1000, BC-1001, …  
-- SEO on public pages (canonical, Open Graph, JSON-LD), plus `sitemap.xml` and `robots.txt`  
-
----
-
-## Project architecture (simple view)
+## 5. Architecture
 
 ```
-Browser  →  Vercel (React website)
-              ↓ API calls
-           Render (Express API)
+Browser  →  Vercel (React SPA)
+              ↓ REST API
+           Railway (Express API)
               ↓
-           PostgreSQL
+           Supabase PostgreSQL
               ↓
            Square (payments)
 ```
 
-Local development: Vite on port **5174** proxies `/api` to the API on port **4000**.
+Local development uses Vite on port **5174** with a proxy to the API on port **4000**.
 
 ---
 
-## Repository layout
+## 6. Customer Website
 
-```
-├── frontend/       React storefront + admin + wholesale UI
-├── backend/        Express API, Prisma, seeds, uploads
-├── docs_final/     Handover and technical documentation
-├── docs/           Additional project notes
-├── .github/        CI workflows
-└── README.md       This file
-```
-
-Design wireframes and Canva exports are **not** in Git (see `.gitignore`); keep them locally if needed.
+Public routes include home, shop, product detail, cart, checkout, events, testimonials, about, and policy pages. Product pages support structured data for search engines.
 
 ---
 
-## Quick start (developers)
+## 7. Admin Portal
+
+Protected area at `/admin` for staff operations:
+
+- Products, categories, ingredients
+- Orders and customers
+- Wholesale approvals
+- Events, testimonials, marketing, theme, and business settings
+- Optional admin 2FA
+- CSV exports
+
+---
+
+## 8. Wholesale Portal
+
+Protected area at `/wholesale` for approved trade buyers:
+
+- Wholesale pricing (50% off retail where configured)
+- Bulk order tools
+- Order history
+- **$300 minimum product subtotal** before shipping for approved wholesale checkout
+
+---
+
+## 9. Security and Access Control
+
+- Role-based access (customer, wholesale, admin)
+- JWT auth with HTTP-only cookies
+- Server-side validation for checkout and wholesale rules
+- Admin routes protected by role checks
+- Secrets stored in environment variables only (never committed)
+
+---
+
+## 10. Payment and Email Integration
+
+- **Square:** hosted checkout and webhook handling when tokens are configured
+- **Brevo:** SMTP for password reset, order alerts, and wholesale application notifications
+
+Both integrations use environment variables. See `.env.example` for placeholders.
+
+---
+
+## 11. SEO and Deployment
+
+- Page titles, meta descriptions, canonical URLs, and Open Graph tags
+- JSON-LD on home and product pages
+- `robots.txt` and build-time `sitemap.xml`
+- Frontend on Vercel; API on Railway; database on Supabase
+
+---
+
+## 12. What I Learned
+
+- Building a multi-role e-commerce app with separate customer, admin, and wholesale flows
+- Enforcing business rules on both frontend and backend (e.g. wholesale minimum order)
+- Integrating third-party payment and email services safely
+- Deploying a split frontend/API stack with CORS and cookie configuration
+- Writing portfolio-safe documentation and excluding secrets from version control
+
+---
+
+## 13. Local Setup
 
 ```bash
 git clone https://github.com/Sameeryadav12/by-celeste-ecommerce.git
 cd by-celeste-ecommerce
-```
 
-Follow **[docs_final/01-setup-guide.md](./docs_final/01-setup-guide.md)** for full steps.
-
-**Short version:**
-
-```bash
 # Backend
 cd backend
-cp .env.example .env          # edit DATABASE_URL, JWT_ACCESS_SECRET
+cp .env.example .env    # edit with local placeholders
 npm install
 npx prisma migrate dev
 npx prisma generate
-npm run seed:catalog
-npm run seed:events
-npm run dev                   # http://localhost:4000
+npm run dev             # http://localhost:4000
 
 # Frontend (new terminal)
 cd frontend
 npm install
-npm run dev                   # http://localhost:5174
+npm run dev             # http://localhost:5174
 ```
 
----
-
-## Environment variables
-
-### Backend (`backend/.env` from `.env.example`)
-
-| Variable | Required | Purpose |
-|----------|----------|---------|
-| `DATABASE_URL` | Yes | PostgreSQL connection |
-| `JWT_ACCESS_SECRET` | Yes | Auth tokens |
-| `FRONTEND_ORIGIN` | Production | CORS and cookies (e.g. `http://localhost:5174` locally) |
-| `AUTH_COOKIE_SECURE` | Production | `true` on HTTPS |
-| `AUTH_COOKIE_SAMESITE` | Production | `lax` or `none` for cross-site cookies |
-| `SQUARE_ACCESS_TOKEN` | For payments | Square API |
-| `SQUARE_LOCATION_ID` | For payments | Square location |
-| `SQUARE_WEBHOOK_SIGNATURE_KEY` | For payments | Webhook verification |
-| `SQUARE_WEBHOOK_NOTIFICATION_URL` | For payments | Public webhook URL |
-| `CHECKOUT_SUCCESS_REDIRECT_URL` | For payments | After checkout success |
-| `TOTP_ENCRYPTION_KEY` | Optional | Admin 2FA (64 hex chars) |
-| `ADMIN_PASSWORD` / `JANE_ADMIN_PASSWORD` | Seed only | One-time production admin setup |
-| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` | Optional | Brevo SMTP relay for transactional emails |
-| `MAIL_FROM_NAME` / `MAIL_FROM_EMAIL` | With SMTP | Sender identity used by all transactional emails |
-| `ADMIN_NOTIFICATION_EMAIL` | With SMTP | Inbox for wholesale + order alerts and `npm run test:email` |
-| `FRONTEND_PUBLIC_URL` | With SMTP | Base URL used to build links inside emails (e.g. reset password) |
-
-Never commit `.env`. Use placeholders in `.env.example` only.
-
-### Frontend (`frontend/.env.local` optional)
-
-| Variable | When |
-|----------|------|
-| `VITE_API_BASE_URL` | Production build only — Render API URL, no trailing slash |
-
-Leave unset for local dev (Vite proxy).
+See [docs_final/01-setup-guide.md](./docs_final/01-setup-guide.md) for full setup notes.
 
 ---
 
-## Database
+## 14. Environment Variables
 
-```bash
-cd backend
-npx prisma migrate dev      # local development
-npx prisma migrate deploy     # production
-npx prisma generate
-```
+Copy `backend/.env.example` and `frontend/.env.example`. Use placeholders only.
 
-Migrations live in `backend/prisma/migrations/`.
+| Variable | Purpose |
+|----------|---------|
+| `DATABASE_URL` | PostgreSQL connection |
+| `DIRECT_URL` | Prisma migrations (pooler/direct URL) |
+| `JWT_ACCESS_SECRET` | Auth tokens |
+| `FRONTEND_ORIGIN` | CORS and cookies |
+| `SQUARE_*` | Payment integration |
+| `SMTP_*` | Brevo email |
+| `VITE_API_BASE_URL` | Frontend → API URL (production build) |
 
----
-
-## Seed commands
-
-| Command | Purpose |
-|---------|---------|
-| `npm run seed:catalog` | Products and catalog |
-| `npm run seed:events` | Sample events |
-| `npm run seed:demo-admin` | Demo users (local only) |
-| `npm run seed:jane-admin` | Jane production admin |
-| `npm run test:email` | Send a test transactional email via Brevo SMTP |
-
-Details: [docs_final/02-demo-accounts-and-seeding.md](./docs_final/02-demo-accounts-and-seeding.md)
+Never commit `.env` files.
 
 ---
 
-## Run and build
+## 15. Screenshots
 
-| Task | Command |
-|------|---------|
-| Dev API | `cd backend && npm run dev` |
-| Dev UI | `cd frontend && npm run dev` |
-| Build API | `cd backend && npm run build` |
-| Build UI | `cd frontend && npm run build` |
-| Run API (compiled) | `cd backend && npm start` |
-
----
-
-## Deployment
-
-| Component | Suggested host |
-|-----------|----------------|
-| Frontend | Vercel (`frontend/`) |
-| Backend | Render (`backend/`) |
-| Database | Render PostgreSQL |
-
-Full guide: **[docs_final/08-deployment.md](./docs_final/08-deployment.md)**
-
-Production domain target: **www.byceleste.com.au**
+<!-- Add screenshots here -->
+| Page | Screenshot |
+|------|------------|
+| Home | _Add screenshot_ |
+| Shop | _Add screenshot_ |
+| Product detail | _Add screenshot_ |
+| Admin dashboard | _Add screenshot_ |
+| Wholesale portal | _Add screenshot_ |
 
 ---
 
-## Handover notes
+## 16. Future Improvements
 
-- **Production admin email:** admin.byceleste@gmail.com  
-- **Business:** By Celeste, ABN 42 491 484 966, Leneva VIC  
-- **Support (storefront / wholesale):** jane.byceleste@gmail.com  
-- Client guide: [docs_final/22-client-handover-guide.md](./docs_final/22-client-handover-guide.md)  
-
----
-
-## Pending before go-live (client)
-
-1. Square production keys and webhook setup  
-2. DNS for **www.byceleste.com.au**  
-3. Final product images (if not all uploaded)  
-4. Final policy / legal wording  
-5. Launch sign-off  
+- Admin-editable SEO fields
+- Cloud storage for uploaded product/event images
+- Automated E2E test suite
+- Enhanced analytics and reporting
+- Wholesale self-service invoice exports
 
 ---
 
-## Security
+## Documentation
 
-- Do not commit `.env`, tokens, or real passwords  
-- `frontend/public/images/reference/` is gitignored (competitor reference only)  
-- Uploaded images on Render disk may not persist — plan cloud storage for production  
-
----
-
-## Documentation index
-
-See **[docs_final/README.md](./docs_final/README.md)** for all technical docs.
+Technical and handover docs are in [docs_final/](./docs_final/). Treat production credentials as private even if example emails appear in handover notes.
 
 ---
 
 ## License
 
-[MIT](./LICENSE)
+MIT — see [LICENSE](./LICENSE).

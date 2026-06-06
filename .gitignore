@@ -86,3 +86,11 @@ Perplexity.txt
 # --- Cursor debug logs ---
 .cursor/
 debug-*.log
+
+# --- Assessment / meeting / portfolio-local only ---
+**/meeting-screenshots/
+**/assessment/
+**/assessment-*/
+**/*meeting*.png
+**/*meeting*.jpg
+poster/
